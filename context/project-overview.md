@@ -1567,7 +1567,6 @@ tables.
 # backend/.env — jamais commité ; backend/.env.example l'est
 DATABASE_URL="postgresql://soniclight:soniclight@localhost:5433/soniclight"
 JWT_SECRET=""              # généré : openssl rand -base64 32
-JWT_EXPIRES_IN="7d"
 PORT="3000"
 NODE_ENV="development"
 CLIENT_ORIGINS="http://localhost:5173"   # liste d'origines autorisées par CORS, séparées par des virgules

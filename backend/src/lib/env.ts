@@ -4,6 +4,8 @@ const EnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(3000),
   DATABASE_URL: z.url(),
+  // HS256 is only as strong as its secret. Generate one with: openssl rand -base64 32
+  JWT_SECRET: z.string().min(32, "must be at least 32 characters (openssl rand -base64 32)"),
   // Comma-separated list of exact origins allowed by CORS — never "*".
   CLIENT_ORIGINS: z
     .string()

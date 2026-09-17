@@ -22,8 +22,9 @@ In Progress — démarré le 17 septembre 2026.
   (pas d'énumération des comptes). Retourne `{ token, user }`.
 - `GET /api/auth/me` : l'utilisateur courant, relu **en base** — seule source fiable de
   l'identité et du rôle côté client.
-- `lib/jwt.ts` : signature et vérification HS256, `JWT_SECRET` et `JWT_EXPIRES_IN` validés
-  au boot dans `env.ts`.
+- `lib/jwt.ts` : signature et vérification HS256 (algorithme épinglé), `JWT_SECRET` validé
+  au boot dans `env.ts` (32 caractères minimum). Durée de vie fixe de 7 jours, constante
+  dans le code : aucune raison de la rendre configurable.
 - `requireAuth` (en-tête `Authorization: Bearer`, sinon `401`) et `requireAdmin` (après
   `requireAuth`, sinon `403`).
 - DTO de sortie construit explicitement : `{ id, userName, role }` — `passwordHash` ne sort
