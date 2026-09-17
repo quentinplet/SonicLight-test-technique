@@ -45,13 +45,12 @@ describe("login", () => {
 
   it("gives the same error for a wrong password and an unknown user name", async () => {
     await register(credentials);
-    const wrongPassword = login({ ...credentials, password: "wrong-password" });
-    const unknownUser = login({ ...credentials, userName: "nobody" });
+    // Each login is awaited as soon as it starts: a rejection is never left unhandled.
+    const wrongPassword = await login({ ...credentials, password: "wrong-password" }).catch((e: unknown) => e);
+    const unknownUser = await login({ ...credentials, userName: "nobody" }).catch((e: unknown) => e);
 
-    await expect(wrongPassword).rejects.toThrow(UnauthorizedError);
-    await expect(unknownUser).rejects.toThrow(UnauthorizedError);
-    const messages = await Promise.all([wrongPassword, unknownUser].map((p) => p.catch((e: Error) => e.message)));
-    expect(messages[0]).toBe(messages[1]);
+    expect(wrongPassword).toBeInstanceOf(UnauthorizedError);
+    expect(unknownUser).toEqual(wrongPassword);
   });
 });
 
