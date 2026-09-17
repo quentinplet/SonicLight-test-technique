@@ -13,9 +13,9 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
 
-    "rootDir": "src",
     "outDir": "dist",
     "sourceMap": true
   },
-  "include": ["src"]
+  // Typecheck covers the seed and the Prisma config too; only src/ is built (tsconfig.build.json).
+  "include": ["src", "prisma/seed.ts", "prisma.config.ts"]
 }
