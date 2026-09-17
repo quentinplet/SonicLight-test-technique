@@ -22,7 +22,7 @@ model User {
   role         Role     @default(USER)
   createdAt    DateTime @default(now())
 
-  drawings Drawing[]
+  drawing Drawing?
 
   @@map("users")
 }
@@ -38,10 +38,10 @@ model Drawing {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userId String @db.Uuid
+  /// Unique: one drawing per user, enforced by the database rather than by the code.
+  /// Replacing a drawing is an upsert on this column.
+  userId String @unique @db.Uuid
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  /// Personal gallery query: a user's drawings, most recent first.
-  @@index([userId, createdAt(sort: Desc)])
   @@map("drawings")
 }

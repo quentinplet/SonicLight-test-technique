@@ -133,9 +133,19 @@ public repository.
   preflight; an origin that does not match exactly fails as an opaque network error with
   nothing in the server log.
 - **`VITE_*` is inlined at build time, never read at runtime.** Changing `VITE_API_URL` on a
-  deployed service does nothing without a rebuild. The symptom is `undefined/api/drawings`.
+  deployed service does nothing without a rebuild. The symptom is `undefined/api/drawing`.
 - **There is no `Dockerfile` for the client, on purpose.** `docker compose` is `db` +
   `server` only. The CDN ingests `dist/` directly, so a client image would never run.
+- **One drawing per user** (IRCAM answer, `context/exercise-brief.md`). `Drawing.userId` is
+  unique; user routes are singular (`/api/drawing`) and take no drawing id — the token
+  names the resource. Saving is an `upsert` on `userId`. Only `/api/admin/*` addresses a
+  drawing by id, and the admin can delete it.
+- **`prisma migrate dev` refuses non-interactive shells when it has a warning to confirm**
+  (e.g. adding a unique constraint). From an agent shell, generate the SQL with
+  `npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script`
+  into a new `prisma/migrations/<timestamp>_<name>/migration.sql`, apply it with
+  `migrate deploy`, then confirm `migrate dev` reports "Already in sync". Still generated,
+  never hand-written.
 - **Admin authorisation is enforced server-side.** Hiding the admin link in the Vue
   router is a UX detail, not a security boundary. Every `/api/admin/*` route passes
   through the role middleware, and that is where the check actually lives.
