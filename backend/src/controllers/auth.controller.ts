@@ -1,16 +1,16 @@
 import type { Request, Response } from "express";
 import { parseBody } from "../lib/validation.js";
-import { CredentialsSchema } from "../schemas/auth.schema.js";
+import { LoginSchema, RegisterSchema } from "../schemas/auth.schema.js";
 import * as authService from "../services/auth.service.js";
 
 export async function register(req: Request, res: Response): Promise<void> {
-  const credentials = parseBody(CredentialsSchema, req.body);
-  res.status(201).json(await authService.register(credentials));
+  const input = parseBody(RegisterSchema, req.body);
+  res.status(201).json(await authService.register(input));
 }
 
 export async function login(req: Request, res: Response): Promise<void> {
-  const credentials = parseBody(CredentialsSchema, req.body);
-  res.json(await authService.login(credentials));
+  const input = parseBody(LoginSchema, req.body);
+  res.json(await authService.login(input));
 }
 
 export async function me(req: Request, res: Response): Promise<void> {

@@ -4,7 +4,7 @@ import { Prisma } from "../generated/prisma/client.js";
 import type { Role } from "../generated/prisma/enums.js";
 import { signToken } from "../lib/jwt.js";
 import { prisma } from "../lib/prisma.js";
-import type { Credentials } from "../schemas/auth.schema.js";
+import type { LoginInput, RegisterInput } from "../schemas/auth.schema.js";
 
 const BCRYPT_COST = 10;
 
@@ -31,7 +31,7 @@ export interface AuthResult {
 
 const userDto = { id: true, userName: true, role: true } as const;
 
-export async function register({ userName, password }: Credentials): Promise<AuthResult> {
+export async function register({ userName, password }: RegisterInput): Promise<AuthResult> {
   const passwordHash = await hashPassword(password);
   try {
     // role is never taken from the input: every registration is a USER.
@@ -46,7 +46,7 @@ export async function register({ userName, password }: Credentials): Promise<Aut
   }
 }
 
-export async function login({ userName, password }: Credentials): Promise<AuthResult> {
+export async function login({ userName, password }: LoginInput): Promise<AuthResult> {
   const account = await prisma.user.findUnique({ where: { userName } });
   const passwordMatches = await bcrypt.compare(password, account?.passwordHash ?? DUMMY_HASH);
   if (!account || !passwordMatches) {

@@ -60,6 +60,13 @@ garde de route prête à servir), sonification.
   vident jamais la base de dev ni le seed), et un service Postgres dans le job `server` de
   la CI. C'est l'infrastructure qu'exigeront les tests d'isolation des dessins.
 - Dépendances : `jsonwebtoken` (liste figée) + `@types/jsonwebtoken` (types, dev).
+- **Interface en anglais**, pour l'instant (l'i18n reste hors périmètre). Le front réagit au
+  `code` d'erreur avec ses propres textes (`auth.invalidCredentials`, `auth.userNameTaken`…),
+  et n'affiche tel quel le `message` de l'API que pour `request.invalidBody` : les messages
+  des schémas Zod sont écrits pour être lus, et le formulaire vérifie déjà les mêmes règles.
+- **Deux schémas Zod** : `RegisterSchema` applique les règles de format, un message clair par
+  champ (`abort: true`) ; `LoginSchema` vérifie seulement que les champs sont remplis — un
+  identifiant hors format est un 401, pas un 400.
 
 **Pièges attendus** :
 

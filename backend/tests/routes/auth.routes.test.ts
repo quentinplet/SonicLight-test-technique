@@ -40,10 +40,24 @@ describe("auth routes", () => {
     expect((await res.json()).user.role).toBe("USER");
   });
 
-  it("answers an invalid body with a 400", async () => {
+  it("answers an invalid registration with one clear message per failing field", async () => {
     const res = await post("/register", { userName: "a", password: "short" });
     expect(res.status).toBe(400);
-    expect(await res.json()).toMatchObject({ code: "request.invalidBody" });
+    expect(await res.json()).toEqual({
+      code: "request.invalidBody",
+      message: "User name must be at least 3 characters. Password must be at least 8 characters.",
+    });
+  });
+
+  it("says a field is required rather than too short when it is empty", async () => {
+    const res = await post("/register", { userName: "", password: "" });
+    expect((await res.json()).message).toBe("User name is required. Password is required.");
+  });
+
+  it("does not apply registration format rules at login", async () => {
+    // Too short to register, but only an invalid credential at login — not a 400.
+    const res = await post("/login", { userName: "ab", password: "short" });
+    expect(res.status).toBe(401);
   });
 
   it("refuses a password longer than bcrypt can hash", async () => {
