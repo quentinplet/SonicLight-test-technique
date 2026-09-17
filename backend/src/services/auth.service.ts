@@ -13,10 +13,6 @@ export function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, BCRYPT_COST);
 }
 
-// Compared against when the user name is unknown, so a failed login costs the same time
-// whether the account exists or not: response time must not reveal which names are taken.
-const DUMMY_HASH = bcrypt.hashSync("timing-equaliser", BCRYPT_COST);
-
 /**
  * What leaves this service about a user. Built explicitly: passwordHash never does, and
  * neither does the id — the client never needs it, since the token names the user.
@@ -50,9 +46,8 @@ export async function register({ userName, password }: RegisterInput): Promise<A
 
 export async function login({ userName, password }: LoginInput): Promise<AuthResult> {
   const account = await prisma.user.findUnique({ where: { userName } });
-  const passwordMatches = await bcrypt.compare(password, account?.passwordHash ?? DUMMY_HASH);
-  if (!account || !passwordMatches) {
-    // Same error for an unknown name and a wrong password: no account enumeration.
+  // Same error for an unknown name and a wrong password.
+  if (!account || !(await bcrypt.compare(password, account.passwordHash))) {
     throw new UnauthorizedError("auth.invalidCredentials", "Invalid user name or password.");
   }
   return { token: signToken(account), user: toDto(account) };

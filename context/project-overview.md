@@ -971,17 +971,13 @@ l'expiration, mais il ne déduit **jamais** de son contenu qu'il est administrat
 
 Au démarrage de l'application, si un jeton est présent en `localStorage`, le client appelle
 `GET /api/auth/me`. C'est le serveur — seul détenteur du secret de signature — qui confirme
-l'identité et le rôle. Un `401` sur n'importe quel appel vide le store et redirige vers
-`/login`.
+l'identité et le rôle. Un `401` sur un appel qui portait un jeton termine la session ; la
+garde de route renvoie vers `/login` à la navigation suivante.
 
 ```ts
-// stores/auth.ts — esquisse
+// stores/auth.ts — le store possède la session, jeton compris
 const TOKEN_KEY = "soniclight.token";
-
-// localStorage peut lever (navigation privée, stockage bloqué) : jamais d'accès nu.
-function readToken(): string | null {
-  try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
-}
+const token = ref(localStorage.getItem(TOKEN_KEY));
 ```
 
 Corollaire : **`POST /api/auth/logout` n'existe pas.** Avec un jeton sans état stocké côté
@@ -991,17 +987,18 @@ exemple de cohérence entre une décision et ses conséquences.
 
 ### Le transport des appels
 
-Toutes les requêtes passent par un unique wrapper dans `src/api/http.ts`, seul endroit où
-l'en-tête est injecté. Aucun composant, aucune vue n'ajoute d'en-tête à la main.
+Toutes les requêtes passent par un unique wrapper dans `src/api/http.ts` (une trentaine de
+lignes), seul endroit où l'en-tête est injecté. Il ne fait que ça : il ne navigue pas et ne
+stocke rien. Aucun composant, aucune vue n'ajoute d'en-tête à la main.
 
 ```ts
-// api/http.ts — le seul endroit qui connaît le jeton
-const token = readToken();
-const res = await fetch(path, {
+// api/http.ts — lit le jeton dans le store, ne le stocke pas
+const auth = useAuthStore();
+const res = await fetch(`${API_URL}${path}`, {
   ...init,
   headers: {
     "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(auth.token ? { Authorization: `Bearer ${auth.token}` } : {}),
     ...init.headers,
   },
 });
@@ -1676,7 +1673,7 @@ Git est un critère d'évaluation. L'historique cible, dans l'ordre :
 | 25  | La garde de route Vue est un confort d'interface ; la sécurité est le middleware serveur.   |
 | 26  | `AudioContext` n'est créé ou repris que dans un gestionnaire d'événement utilisateur.       |
 | 27  | **Aucun `v-html`, nulle part.** Le jeton vit en `localStorage` : le XSS est le risque n°1 ([§12](#12-authentification)). |
-| 28  | Le jeton n'est lu et injecté qu'à un seul endroit, `api/http.ts`. Tout accès à `localStorage` est protégé par un `try/catch`. |
+| 28  | Le store `auth` possède le jeton (seul accès à `localStorage`) ; `api/http.ts` est le seul à l'envoyer. Le client HTTP ne navigue pas. |
 | 29  | Le rôle affiché vient de `GET /api/auth/me`, jamais du payload du JWT décodé côté client.   |
 
 ---

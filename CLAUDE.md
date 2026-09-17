@@ -119,9 +119,11 @@ public repository.
   `v-html` anywhere in this codebase, no user content is rendered as HTML, and the frontend
   dependency list stays frozen. These are not style preferences — they are what makes the
   storage choice acceptable.
-- **The token is read and injected in exactly one place: `frontend/src/api/http.ts`.** No
-  component, view or store builds an `Authorization` header by hand. Every `localStorage`
-  access is wrapped in `try/catch` — it throws in private browsing.
+- **The auth store owns the token** (`frontend/src/stores/auth.ts`, the only code touching
+  `localStorage`); **`frontend/src/api/http.ts` is the only code that sends it**, reading
+  `auth.token`. No component or view builds an `Authorization` header. A 401 on a request
+  that carried a token calls `auth.logout()` — no redirect from the HTTP module; the route
+  guards send the user to `/login` on the next navigation.
 - **Never trust the JWT payload client-side.** It is base64, not encrypted, so it proves
   nothing in the browser. Reading `exp` to log out cleanly is fine; deriving `role` from it
   is not. Identity and role come from `GET /api/auth/me`, answered by the server.

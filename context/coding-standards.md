@@ -34,8 +34,8 @@ deliberate and documented — but the trade is stated, never silently taken.
 - Local state with `ref`/`reactive`. Pinia holds exactly one store, `auth`, because it is
   the only state shared across unrelated routes. A store per screen would be ceremony
 - All HTTP goes through `src/api/` modules — components never call `fetch` directly. Those
-  modules in turn go through `src/api/http.ts`, the one place that reads the token and sets the
-  `Authorization` header
+  modules in turn go through `src/api/http.ts`, the one place that sets the `Authorization`
+  header, from the token held by the auth store
 - Props and emits are typed with `defineProps<T>()` / `defineEmits<T>()` generics, never the
   runtime object form
 - Router guards protect `/admin` and the authenticated routes. This is **UX, not security** —
@@ -166,10 +166,12 @@ optional:
   text. It is the only free-text field in the app, capped at 80 characters
 - **No frontend dependency beyond the Vue core.** Every third-party library is more script
   running in the page, which is more XSS surface. This is why the dependency list is frozen
-- The token is read and injected in **exactly one place**, `src/api/http.ts`. No component, no
-  view, no store builds an `Authorization` header by hand
-- Every `localStorage` access is wrapped in `try/catch` — it throws in private browsing and
-  when site data is blocked. Never a bare `localStorage.getItem()`
+- The auth store owns the token and is the only code that reads or writes `localStorage`;
+  `src/api/http.ts` is the only code that sends it. No component or view builds an
+  `Authorization` header by hand
+- **Keep the HTTP client small**: fetch, headers, `ApiError` on non-2xx, `auth.logout()` on a
+  401 that carried a token. It does not navigate — route guards do. No `try/catch` around
+  `localStorage`: a deliberate simplification (it only throws when site data is blocked)
 - 7-day expiry. `logout` is a `removeItem`; there is deliberately **no `POST /api/auth/logout`**
   endpoint, because a stateless token cannot be revoked server-side and an endpoint would
   suggest otherwise
