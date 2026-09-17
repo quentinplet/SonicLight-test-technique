@@ -65,7 +65,8 @@ npx tsc --noEmit       # typecheck alone
 
 ### Database
 
-PostgreSQL 16 runs in Docker (service `db`, port 5432, database `soniclight`):
+PostgreSQL 16 runs in Docker (service `db`, host port **5433**, database `soniclight`).
+Not 5432, so it can coexist with a local Postgres already bound there:
 
 ```bash
 docker compose up -d db          # start the database alone

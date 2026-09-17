@@ -1547,7 +1547,7 @@ tables.
 
 ```bash
 # backend/.env — jamais commité ; backend/.env.example l'est
-DATABASE_URL="postgresql://soniclight:soniclight@localhost:5432/soniclight"
+DATABASE_URL="postgresql://soniclight:soniclight@localhost:5433/soniclight"
 JWT_SECRET=""              # généré : openssl rand -base64 32
 JWT_EXPIRES_IN="7d"
 PORT="3000"

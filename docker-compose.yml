@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: soniclight
+      POSTGRES_PASSWORD: soniclight
+      POSTGRES_DB: soniclight
+    # Host port 5433, not 5432: a local Postgres already on 5432 is common and would collide.
+    ports:
+      - "5433:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    # depends_on alone waits for the container to start, not for Postgres to accept connections.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U soniclight -d soniclight"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  db-data:
