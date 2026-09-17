@@ -11,7 +11,7 @@ liste les dessins de tous les utilisateurs.
 | Côté      | Technologies                                                   |
 | --------- | -------------------------------------------------------------- |
 | Frontend  | Vue 3 (`<script setup>`), Vite, TypeScript, Vue Router, Pinia   |
-| Backend   | Express 5, TypeScript, Prisma 6                                 |
+| Backend   | Express 5, TypeScript, Prisma 7                                 |
 | Base      | PostgreSQL 16 (Docker)                                          |
 
 Deux packages npm indépendants, `frontend/` et `backend/`, installés et lancés séparément.

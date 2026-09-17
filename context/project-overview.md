@@ -7,7 +7,7 @@
 ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
 ![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)
-![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?logo=prisma&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma&logoColor=white)
 ![Postgres](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white)
 
@@ -190,7 +190,7 @@ d'entretien.
 
 | Domaine     | Contenu                                                                                      |
 | ----------- | -------------------------------------------------------------------------------------------- |
-| **Auth**    | Inscription (email + mot de passe), connexion, déconnexion, session persistante au refresh   |
+| **Auth**    | Inscription (nom d'utilisateur + mot de passe), connexion, déconnexion, session persistante au refresh   |
 | **Dessin**  | Canvas plein écran, tracé à la souris et au doigt, choix de couleur, choix d'épaisseur, gomme d'annulation (undo), effacer tout |
 | **Sauver**  | Titre + enregistrement, redirection vers la galerie personnelle                              |
 | **Retrouver** | Galerie « Mes dessins » : vignettes, titre, date, ouverture en lecture, suppression         |
@@ -218,7 +218,7 @@ d'entretien.
 Modération et suppression de dessins par l'admin · rôles au-delà de `USER`/`ADMIN` ·
 partage public d'un dessin par lien · édition d'un dessin déjà enregistré · calques ·
 formes géométriques, remplissage, texte · export PNG/SVG · collaboration temps réel ·
-OAuth · réinitialisation de mot de passe · vérification d'email · pagination ·
+OAuth · réinitialisation de mot de passe · email · pagination ·
 internationalisation · mode hors ligne.
 
 > Cette liste n'est pas une liste de regrets : c'est la démonstration qu'un arbitrage a eu
@@ -357,7 +357,7 @@ flowchart TB
     end
 
     subgraph Data["Couche données"]
-        PR["Prisma 6"]
+        PR["Prisma 7"]
         PG[("PostgreSQL 16<br/>strokes en jsonb")]
     end
 
@@ -376,7 +376,7 @@ flowchart TB
 | Backend        | Express 5 + TypeScript                                 | Express reste la référence Node, immédiatement lisible par un relecteur. TypeScript pour le typage du format de dessin, partagé des deux côtés |
 | Couches        | Route → Controller → Service → Prisma                  | Voir [§6](#6-architecture-backend-en-couches)                                                                                                  |
 | **Pas** de repository | Les services appellent Prisma directement       | Prisma **est** déjà la couche d'accès. Un repository par-dessus ne ferait que transférer des appels ([§6](#6-architecture-backend-en-couches)) |
-| ORM            | Prisma 6, migrations versionnées                       | Schéma déclaratif lisible, migrations générées, client typé de bout en bout                                                                    |
+| ORM            | Prisma 7, migrations versionnées                       | Schéma déclaratif lisible, migrations générées, client typé de bout en bout                                                                    |
 | Base           | PostgreSQL 16, traits en `jsonb`                       | Voir [§8](#8-modèle-de-données) — un dessin est un document, pas une relation                                                                  |
 | Auth           | JWT signé, stocké en `localStorage`, en-tête `Bearer`  | Pattern standard d'une SPA devant une API sans état, et maîtrisé. Le risque XSS est assumé et compensé ([§12](#12-authentification))           |
 | Validation     | Zod, sur chaque corps de requête                       | Un schéma Zod sert **à la fois** de validateur runtime et de type TypeScript — une seule source de vérité                                      |
@@ -393,7 +393,7 @@ flowchart TB
 | `daisyui`                 | client | Plugin Tailwind purement CSS : composants génériques, thème sur mesure |
 | `vitest`                  | client, server | Tests                                               |
 | `express`, `@types/express` | server | Le serveur HTTP                                           |
-| `@prisma/client`, `prisma` | server | ORM et migrations                                          |
+| `@prisma/client`, `prisma`, `@prisma/adapter-pg`, `pg` | server | ORM et migrations — Prisma 7 exige un adaptateur de driver |
 | `zod`                     | server | Validation des entrées + inférence de types                 |
 | `jsonwebtoken`            | server | Signature et vérification du JWT                            |
 | `bcryptjs`                | server | Hachage des mots de passe                                   |
@@ -570,8 +570,7 @@ erDiagram
 
     USER {
         uuid id PK
-        string email UK
-        string displayName
+        string userName UK
         string passwordHash
         enum role "USER | ADMIN"
         datetime createdAt
@@ -595,7 +594,7 @@ Deux tables. C'est tout, et c'est délibéré.
 | --- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | **Les traits en `jsonb`, pas en table `Stroke`**     | Un dessin est lu et écrit **en entier, toujours**. On ne requête jamais « les traits rouges », on ne met jamais à jour un point isolé. Une table `Stroke` + une table `Point` produirait des milliers de lignes par dessin pour un agrégat qui n'est jamais découpé — un coût de jointure pur, sans bénéfice |
 | 2   | `role` sur `User`, pas de table `Role`              | Deux valeurs, aucune permission granulaire. Une énumération suffit ; une table de rôles serait une abstraction sans second cas                                                                                              |
-| 3   | `displayName` distinct de l'email                   | L'interface admin affiche l'auteur de chaque dessin. Exposer l'email d'un utilisateur à un autre écran est un choix de confidentialité par défaut qu'on préfère éviter                                                     |
+| 3   | Un seul `userName`, pas d'email                  | Aucune fonctionnalité n'a besoin d'un email (ni réinitialisation, ni notification). Un nom unique sert à la fois d'identifiant de connexion et de nom d'auteur affiché dans l'admin — un champ de moins, une donnée personnelle de moins |
 | 4   | Pas de champ `thumbnail`                            | La vignette se rend côté client en rejouant les traits sur un petit canvas. Stocker un PNG dérivé dupliquerait la source de vérité pour un gain invisible à cette échelle ([§19](#19-questions-ouvertes) Q4)               |
 | 5   | `onDelete: Cascade` sur `Drawing.userId`            | Supprimer un compte supprime ses dessins. Aucun intérêt à conserver des dessins orphelins                                                                                                                                  |
 | 6   | Index `(userId, createdAt DESC)`                    | C'est la requête de la galerie personnelle, la plus fréquente de l'application                                                                                                                                             |
@@ -726,12 +725,14 @@ prérequis.
 // backend/prisma/schema.prisma
 
 generator client {
-  provider = "prisma-client-js"
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"   // non commité
+  importFileExtension = "js"                        // résout sous tsx comme sous node
 }
 
+// Prisma 7 : l'URL de connexion vit dans prisma.config.ts, plus dans le schéma.
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -741,8 +742,7 @@ enum Role {
 
 model User {
   id           String    @id @default(uuid()) @db.Uuid
-  email        String    @unique
-  displayName  String    @db.VarChar(60)
+  userName     String    @unique @db.VarChar(60)
   passwordHash String
   role         Role      @default(USER)
   createdAt    DateTime  @default(now())
@@ -792,7 +792,7 @@ model Drawing {
 backend/prisma/seed.ts
 ```
 
-Crée, si absents : un compte `admin@soniclight.local` (rôle `ADMIN`), deux comptes
+Crée, si absents : un compte `admin` (rôle `ADMIN`), deux comptes
 utilisateur, et trois à quatre dessins générés programmatiquement (spirales, ondes) répartis
 entre eux. Chaque étape est gardée par un test d'existence, donc rejouable sans doublon.
 
@@ -1495,7 +1495,7 @@ Le `docker-compose` local lance `migrate deploy` **puis** le seed. Le déploieme
 `migrate deploy` **seul**.
 
 C'est la distinction à ne pas rater : la même image, déployée avec le même point d'entrée,
-insérerait `admin@soniclight.local` et deux comptes de démonstration dans la base de
+insérerait le compte `admin` et deux comptes de démonstration dans la base de
 production — avec des mots de passe connus, écrits dans un dépôt Git. Le seed est gardé par
 `NODE_ENV !== "production"`, et cette garde est du code, pas une intention.
 

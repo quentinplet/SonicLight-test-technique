@@ -83,7 +83,7 @@ Prisma lives entirely in `backend/`, so every command runs from there:
 npx prisma migrate dev --name <name>   # create + apply a migration (into prisma/migrations)
 npx prisma migrate deploy              # apply pending migrations (CI / production)
 npx prisma migrate status              # check applied vs pending
-npx prisma generate                    # regenerate the client after a schema change
+npx prisma generate                    # regenerate the client — migrate dev no longer does it (Prisma 7)
 npx prisma studio                      # browse the data
 npm run seed                           # tsx prisma/seed.ts — demo users + drawings
 ```

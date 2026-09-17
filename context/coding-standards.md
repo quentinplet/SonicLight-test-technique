@@ -1,7 +1,7 @@
 # Coding Standards — SonicLight
 
 Stack: Vue 3 (`<script setup>`, Vite, Pinia) on the frontend, Express 5 + TypeScript /
-Prisma 6 (PostgreSQL 16) on the backend. See `context/project-overview.md` for the full
+Prisma 7 (PostgreSQL 16) on the backend. See `context/project-overview.md` for the full
 spec and `context/exercise-brief.md` for the constraints this exercise is graded on.
 
 This is a one-week technical exercise. Where a rule below trades rigour for speed, that is
@@ -126,12 +126,12 @@ finished and committed.
 
 ## Database
 
-- Prisma 6 + PostgreSQL 16 for all data access. No raw SQL
+- Prisma 7 + PostgreSQL 16 for all data access. No raw SQL
 - Schema changes go through `prisma migrate dev`. **Never `prisma db push`** — it diverges
   silently from the migration history and makes the database unreproducible
 - `prisma migrate deploy` in Docker and any non-local environment: it applies existing
   migrations and never generates or resets
-- After editing `schema.prisma`, run `prisma generate` (or `migrate dev`, which includes it)
+- After editing `schema.prisma`, run `prisma generate` — since Prisma 7, `migrate dev` no longer does it
   or the client keeps stale types and the errors make no sense
 - Strokes are stored as `jsonb` on `Drawing.data`, not as `Stroke`/`Point` tables. A drawing
   is always read, written and deleted whole — it is a document, not a relation. The day a
