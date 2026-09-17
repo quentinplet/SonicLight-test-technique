@@ -8,15 +8,20 @@ import { resetDatabase } from "../helpers/db.js";
 const credentials = { userName: "alice", password: "correct-horse" };
 
 beforeEach(resetDatabase);
+
+/** The id is no longer in responses: tests read it from the database. */
+async function idOf(userName: string): Promise<string> {
+  return (await prisma.user.findUniqueOrThrow({ where: { userName } })).id;
+}
+
 afterAll(() => prisma.$disconnect());
 
 describe("register", () => {
-  it("creates a USER and returns a token for it, without the password hash", async () => {
+  it("creates a USER and returns a token for it, without the password hash or the id", async () => {
     const { token, user } = await register(credentials);
 
-    expect(user).toEqual({ id: expect.any(String), userName: "alice", role: "USER" });
-    expect(user).not.toHaveProperty("passwordHash");
-    expect(verifyToken(token)).toEqual({ id: user.id, role: "USER" });
+    expect(user).toEqual({ userName: "alice", role: "USER" });
+    expect(verifyToken(token)).toEqual({ id: await idOf("alice"), role: "USER" });
   });
 
   it("refuses a user name that is already taken", async () => {
@@ -52,14 +57,16 @@ describe("login", () => {
 
 describe("getMe", () => {
   it("reads the role from the database, not from the token", async () => {
-    const { user } = await register(credentials);
-    await prisma.user.update({ where: { id: user.id }, data: { role: "ADMIN" } });
-    expect((await getMe(user.id)).role).toBe("ADMIN");
+    await register(credentials);
+    const id = await idOf("alice");
+    await prisma.user.update({ where: { id }, data: { role: "ADMIN" } });
+    expect(await getMe(id)).toEqual({ userName: "alice", role: "ADMIN" });
   });
 
   it("rejects a token whose account no longer exists", async () => {
-    const { user } = await register(credentials);
+    await register(credentials);
+    const id = await idOf("alice");
     await resetDatabase();
-    await expect(getMe(user.id)).rejects.toThrow(UnauthorizedError);
+    await expect(getMe(id)).rejects.toThrow(UnauthorizedError);
   });
 });

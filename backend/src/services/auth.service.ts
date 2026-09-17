@@ -17,9 +17,11 @@ export function hashPassword(password: string): Promise<string> {
 // whether the account exists or not: response time must not reveal which names are taken.
 const DUMMY_HASH = bcrypt.hashSync("timing-equaliser", BCRYPT_COST);
 
-/** What leaves this service about a user. Built explicitly: passwordHash never does. */
+/**
+ * What leaves this service about a user. Built explicitly: passwordHash never does, and
+ * neither does the id — the client never needs it, since the token names the user.
+ */
 export interface UserDto {
-  id: string;
   userName: string;
   role: Role;
 }
@@ -29,14 +31,14 @@ export interface AuthResult {
   user: UserDto;
 }
 
-const userDto = { id: true, userName: true, role: true } as const;
+const toDto = ({ userName, role }: UserDto): UserDto => ({ userName, role });
 
 export async function register({ userName, password }: RegisterInput): Promise<AuthResult> {
   const passwordHash = await hashPassword(password);
   try {
     // role is never taken from the input: every registration is a USER.
-    const user = await prisma.user.create({ data: { userName, passwordHash }, select: userDto });
-    return { token: signToken(user), user };
+    const user = await prisma.user.create({ data: { userName, passwordHash } });
+    return { token: signToken(user), user: toDto(user) };
   } catch (err) {
     // The unique index decides, not a prior lookup: two simultaneous sign-ups cannot both win.
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
@@ -53,14 +55,13 @@ export async function login({ userName, password }: LoginInput): Promise<AuthRes
     // Same error for an unknown name and a wrong password: no account enumeration.
     throw new UnauthorizedError("auth.invalidCredentials", "Invalid user name or password.");
   }
-  const user: UserDto = { id: account.id, userName: account.userName, role: account.role };
-  return { token: signToken(user), user };
+  return { token: signToken(account), user: toDto(account) };
 }
 
 /** Re-read from the database: the source of truth for identity and role, not the token. */
 export async function getMe(userId: string): Promise<UserDto> {
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: userDto });
+  const user = await prisma.user.findUnique({ where: { id: userId } });
   // A valid token for a deleted account.
   if (!user) throw new UnauthorizedError("auth.unauthorized", "Missing or invalid token.");
-  return user;
+  return toDto(user);
 }

@@ -32,7 +32,7 @@ describe("auth routes", () => {
     const me = await fetch(`${server.url}/api/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
     expect(me.status).toBe(200);
     // Trimmed and lowercased by the schema.
-    expect(await me.json()).toMatchObject({ userName: "alice", role: "USER" });
+    expect(await me.json()).toEqual({ userName: "alice", role: "USER" });
   });
 
   it("ignores a role sent in the registration body", async () => {
