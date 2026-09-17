@@ -1197,7 +1197,7 @@ audio à ~100 ms d'avance suffisent largement · pas d'export audio.
 
 ### Principes
 
-Sombre, sobre, l'interface disparaît derrière le dessin.
+Clair, sobre, l'interface disparaît derrière le dessin. **Mode clair uniquement**, pas de variante sombre.
 
 **Tailwind 4 + DaisyUI 5, avec un thème sur mesure.** Deux dépendances de développement, aucun
 runtime, aucun composant JavaScript.
@@ -1320,8 +1320,10 @@ se concurrencer.
    trait par trait, automatiquement, en deux secondes. C'est l'effet marquant du projet, et il
    démontre à lui seul qu'on a stocké de la géométrie et non une image. Le cacher derrière un
    bouton, c'est le perdre.
-2. **Sombre par défaut.** Les couleurs de trait ressortent, et c'est la convention des outils
-   créatifs.
+2. **Clair, et seulement clair.** Choix du porteur du projet : une seule apparence à concevoir
+   et à vérifier. Conséquence à traiter au lot dessin : sur fond blanc, les teintes claires de
+   la palette de traits (jaune `#eab308` à 1,9:1, vert, cyan) ressortent mal — la palette sera
+   ajustée pour atteindre au moins 3:1, le minimum WCAG pour un élément graphique.
 3. **Barre d'outils sous le canvas**, jamais par-dessus (voir plus haut).
 4. **Raccourcis clavier** : `Cmd/Ctrl+Z` annule, `Échap` ferme la modale, `Entrée` valide le
    titre. Trois lignes de code, et c'est ce qui sépare une démonstration d'un outil.
@@ -1337,31 +1339,28 @@ Un seul fichier, `frontend/src/style.css`, sans fichier de configuration JavaScr
 
 ```css
 @import "tailwindcss";
-@plugin "daisyui";
+@plugin "daisyui" { themes: false; }   /* aucun thème fourni, aucune variante sombre */
 
 /* Thème DaisyUI sur mesure — ce qui évite de livrer l'apparence par défaut de l'outil. */
 @plugin "daisyui/theme" {
   name: "soniclight";
   default: true;
-  color-scheme: dark;
+  color-scheme: light;
 
-  --color-base-100:  #12121a;   /* surfaces (cartes, modale) */
-  --color-base-200:  #0d0d14;   /* fond de page */
-  --color-base-300:  #2a2a36;   /* bordures */
-  --color-base-content: #e8e8ef;
-  --color-primary:   #7c5cff;
+  --color-base-100:  #ffffff;   /* cartes, modale */
+  --color-base-200:  #f4f4f5;   /* fond de page */
+  --color-base-300:  #e4e4e7;   /* bordures */
+  --color-base-content: #18181b; /* 17,7:1 sur blanc */
+  --color-primary:   #6d4aff;   /* l'unique accent — 5,2:1 avec du texte blanc */
   --color-primary-content: #ffffff;
-
-  --radius-box:   0.75rem;
-  --radius-field: 0.5rem;
-}
-
-/* Tokens propres au canvas, hors du vocabulaire DaisyUI. */
-@theme {
-  --color-canvas: #ffffff;
-  --color-ink:    #12121a;
+  --color-error:     #b91c1c;   /* seule autre couleur : une erreur doit se voir */
+  /* secondary, accent, neutral, info, success, warning : niveaux de gris */
 }
 ```
+
+> **Le violet est assombri par rapport à la première version** (`#7c5cff` → `#6d4aff`) : sur
+> fond clair, du texte blanc sur `#7c5cff` ne donne que 4,35:1, sous le seuil AA de 4,5:1.
+> Les ratios sont calculés, pas estimés à l'œil.
 
 > **Les couleurs de trait ne sont pas des tokens de thème.** Elles sont **des données** : elles
 > arrivent du `jsonb` d'un dessin et se posent en variable CSS en ligne
@@ -1386,7 +1385,7 @@ teinte → timbre distingue clairement les quatre formes d'onde :
 
 Le minimum, mais fait : focus visible sur tous les contrôles, `aria-label` sur chaque bouton
 icône seul, palette de couleurs annoncée par son nom et non par sa seule pastille, contraste
-du texte vérifié sur le fond sombre.
+du texte vérifié sur fond clair (ratios WCAG AA calculés, voir les tokens).
 
 Le canvas lui-même n'est pas accessible au clavier — c'est une limite réelle du produit, à
 citer honnêtement en entretien plutôt qu'à masquer.

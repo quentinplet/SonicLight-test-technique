@@ -302,14 +302,16 @@ components. The split is the decision, not the tool:
   would make the gallery visually incoherent and the hue → timbre mapping arbitrary
 - Colour never carries meaning alone: every icon-only button has an `aria-label`, and every
   palette swatch is named
-- Dark by default: stroke colours read better, and it is the convention for creative tools
+- **Light mode only**, no dark variant (`themes: false`, one custom theme). Text and accent meet
+  WCAG AA on white; light stroke colours (yellow, green, cyan) must be darkened to at least
+  3:1 when the drawing palette is built
 - **The one constraint that holds the design together: nothing on screen is coloured except the
   drawing.** The whole interface is greyscale plus a single accent; the only saturated colours
   in the app are the stroke colours. Three corollaries — nothing floats over the canvas,
   monospace is reserved for technical and meta text (counters, event names, timestamps), and
   the replay is the product's only animation
-- **Style every native form control or drop it.** A bare `input[type=range]` renders a white
-  track on a dark theme and is the one element that betrays the design. `accent-color`, or
+- **Style every native form control or drop it.** A bare `input[type=range]` renders the browser's
+  default track and is the one element that betrays the design. `accent-color`, or
   DaisyUI's `range range-primary`
 
 ## UX rules that outweigh the tooling
