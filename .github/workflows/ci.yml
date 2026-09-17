@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      # ci, never install: the lockfile is honoured exactly.
+      - run: npm ci
+      # Before the typecheck, or tsc fails on missing types without naming the cause.
+      # Needs no database: prisma.config.ts tolerates an absent DATABASE_URL.
+      - run: npx prisma generate
+      - run: npx tsc --noEmit
+      - run: npm test
+      - run: npm run build
+
+  client:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      # vue-tsc --build: a bare `vue-tsc --noEmit` on the solution tsconfig checks no file.
+      - run: npm run type-check
+      - run: npm run build-only
+        env:
+          VITE_API_URL: http://localhost:3000
