@@ -244,7 +244,9 @@ secret. A `401` on any call clears the store and redirects.
 - API routes are kebab-case and plural (`/api/drawings`, `/api/admin/drawings`)
 - Prisma models are PascalCase singular (`Drawing`), tables are lowercase plural via `@@map`
   (`drawings`)
-- Tests sit beside what they test: `drawing.service.test.ts`
+- Tests live in `backend/tests/`, mirroring `src/`: the test of `src/services/drawing.service.ts`
+  is `tests/services/drawing.service.test.ts`. Shared test code goes in `tests/helpers/`.
+  Outside `src/`, so the build never has to exclude them
 
 ## File Organization
 

@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto";
 import express from "express";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { signToken } from "../lib/jwt.js";
-import { startServer, type TestServer } from "../test/server.js";
-import { requireAdmin, requireAuth } from "./auth.js";
-import { errorHandler } from "./errorHandler.js";
+import { signToken } from "../../src/lib/jwt.js";
+import { startServer, type TestServer } from "../helpers/server.js";
+import { requireAdmin, requireAuth } from "../../src/middleware/auth.js";
+import { errorHandler } from "../../src/middleware/errorHandler.js";
 
 let server: TestServer;
 

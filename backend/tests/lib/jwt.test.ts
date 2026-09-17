@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import jwt from "jsonwebtoken";
 import { describe, expect, it } from "vitest";
-import { type AuthUser, signToken, verifyToken } from "./jwt.js";
+import { type AuthUser, signToken, verifyToken } from "../../src/lib/jwt.js";
 
 const user: AuthUser = { id: randomUUID(), role: "USER" };
 const secret = process.env.JWT_SECRET ?? "";

@@ -4,6 +4,7 @@ import { defineConfig } from "vitest/config";
 // development database. A real environment (CI) can still override each one.
 export default defineConfig({
   test: {
+    include: ["tests/**/*.test.ts"],
     env: {
       NODE_ENV: "test",
       DATABASE_URL:

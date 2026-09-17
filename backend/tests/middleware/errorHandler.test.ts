@@ -1,8 +1,8 @@
 import express from "express";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { ConflictError } from "../errors/app-error.js";
-import { startServer, type TestServer } from "../test/server.js";
-import { errorHandler, notFoundHandler } from "./errorHandler.js";
+import { ConflictError } from "../../src/errors/app-error.js";
+import { startServer, type TestServer } from "../helpers/server.js";
+import { errorHandler, notFoundHandler } from "../../src/middleware/errorHandler.js";
 
 let server: TestServer;
 
