@@ -63,8 +63,9 @@ Gotchas.
 npm run dev            # tsx watch --env-file=.env src/index.ts — API on http://localhost:3000
 npm run build          # tsc -p tsconfig.build.json — emits src/ only to dist/
 npm start              # node dist/index.js (production)
-npm test               # vitest
-npx tsc --noEmit       # typecheck alone — covers src/, prisma/seed.ts, prisma.config.ts
+npm run test:db        # create/migrate the soniclight_test database — once, then after each migration
+npm test               # vitest — tests/ (mirrors src/), against soniclight_test, never the dev DB
+npx tsc --noEmit       # typecheck alone — covers src/, tests/, prisma/seed.ts, configs
 ```
 
 The frontend and the API run in two terminals. With the API down, the home page shows

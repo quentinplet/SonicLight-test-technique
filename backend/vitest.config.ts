@@ -5,6 +5,8 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     include: ["tests/**/*.test.ts"],
+    // Database tests share one test database: files run one after another.
+    fileParallelism: false,
     env: {
       NODE_ENV: "test",
       DATABASE_URL:
