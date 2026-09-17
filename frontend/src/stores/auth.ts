@@ -1,43 +1,47 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import * as authApi from '@/api/auth'
-import { clearToken, hasToken, setToken } from '@/api/http'
 
-// The only store of the project: the one state shared by unrelated routes.
+const TOKEN_KEY = 'soniclight.token'
+
+// The only store of the project: it owns the session, token included.
 export const useAuthStore = defineStore('auth', () => {
+  const token = ref(localStorage.getItem(TOKEN_KEY))
   const user = ref<authApi.User | null>(null)
 
   // UI comfort only: the real admin check is requireAdmin on the server.
   const isAdmin = computed(() => user.value?.role === 'ADMIN')
 
-  async function login(credentials: authApi.Credentials): Promise<void> {
-    const result = await authApi.login(credentials)
-    setToken(result.token)
+  function startSession(result: authApi.AuthResult): void {
+    token.value = result.token
+    localStorage.setItem(TOKEN_KEY, result.token)
     user.value = result.user
+  }
+
+  async function login(credentials: authApi.Credentials): Promise<void> {
+    startSession(await authApi.login(credentials))
   }
 
   async function register(credentials: authApi.Credentials): Promise<void> {
-    const result = await authApi.register(credentials)
-    setToken(result.token)
-    user.value = result.user
+    startSession(await authApi.register(credentials))
   }
 
-  // No server call: a stateless token cannot be revoked, forgetting it is the logout.
+  // No server call: a stateless token cannot be revoked.
   function logout(): void {
-    clearToken()
+    token.value = null
+    localStorage.removeItem(TOKEN_KEY)
     user.value = null
   }
 
-  /** On startup: if a token is stored, ask the server who it belongs to. */
+  /** On startup: the role comes from the server, never from the decoded token. */
   async function restore(): Promise<void> {
-    if (!hasToken()) return
+    if (!token.value) return
     try {
       user.value = await authApi.getMe()
     } catch {
-      // Expired token (http.ts already logged out and redirected), or API down: start signed out.
       logout()
     }
   }
 
-  return { user, isAdmin, login, register, logout, restore }
+  return { token, user, isAdmin, login, register, logout, restore }
 })
