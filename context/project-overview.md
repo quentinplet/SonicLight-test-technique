@@ -93,9 +93,12 @@ qui consulte les dessins de *tous* les utilisateurs est par définition une ress
 protéger : sans authentification réelle, n'importe qui y accède. L'authentification n'est donc
 pas un sur-scope, c'est la conséquence directe de l'exigence n°4.
 
-**C. « Consulter » les dessins côté admin veut dire les voir, pas les gérer.** L'admin liste,
-filtre, ouvre et rejoue. Il ne modifie pas, ne renomme pas, ne modère pas. Toute fonction de
-gestion est hors périmètre tant que le MVP n'est pas fini ([§3](#3-périmètre-fonctionnel--priorisation)).
+**C. Un dessin par utilisateur, et l'admin modère.** L'hypothèse initiale — plusieurs
+dessins par utilisateur, un admin qui consulte sans gérer — a été **invalidée par les
+réponses de l'IRCAM** ([§19](#19-questions-ouvertes)) : chaque utilisateur a **un seul**
+dessin, qu'il peut remplacer ou supprimer, et l'admin voit tous les dessins et peut les
+**supprimer**. Il ne les modifie pas. La contrainte « un seul dessin » est portée par la
+base (`userId` unique), pas seulement par le code.
 
 ```mermaid
 flowchart LR
@@ -191,10 +194,11 @@ d'entretien.
 | Domaine     | Contenu                                                                                      |
 | ----------- | -------------------------------------------------------------------------------------------- |
 | **Auth**    | Inscription (nom d'utilisateur + mot de passe), connexion, déconnexion, session persistante au refresh   |
+| **Responsive** | Desktop **et** mobile — exigence confirmée par l'IRCAM. Canvas, barre d'outils et vue admin utilisables au doigt sur petit écran |
 | **Dessin**  | Canvas plein écran, tracé à la souris et au doigt, choix de couleur, choix d'épaisseur, gomme d'annulation (undo), effacer tout |
-| **Sauver**  | Titre + enregistrement, redirection vers la galerie personnelle                              |
-| **Retrouver** | Galerie « Mes dessins » : vignettes, titre, date, ouverture en lecture, suppression         |
-| **Admin**   | Route protégée listant **tous** les dessins avec leur auteur, tri par date, ouverture d'un dessin |
+| **Sauver**  | Titre + enregistrement. **Un seul dessin par utilisateur** : enregistrer à nouveau remplace l'ancien |
+| **Retrouver** | « Mon dessin » : rejeu, titre, date de dernière modification, suppression                  |
+| **Admin**   | Route protégée listant **tous** les dessins avec leur auteur, tri par date, ouverture et **suppression** (modération) |
 
 ### P1 — Le premier palier de bonus
 
@@ -215,7 +219,7 @@ d'entretien.
 
 ### Explicitement hors scope
 
-Modération et suppression de dessins par l'admin · rôles au-delà de `USER`/`ADMIN` ·
+Plusieurs dessins par utilisateur · modification d'un dessin par l'admin · rôles au-delà de `USER`/`ADMIN` ·
 partage public d'un dessin par lien · édition d'un dessin déjà enregistré · calques ·
 formes géométriques, remplissage, texte · export PNG/SVG · collaboration temps réel ·
 OAuth · réinitialisation de mot de passe · email · pagination ·
@@ -443,9 +447,9 @@ backend/src/
 qui dépasse une dizaine de lignes a de la logique au mauvais endroit.
 
 ```ts
-// controllers/drawings.controller.ts
-export async function getById(req: Request, res: Response) {
-  const drawing = await drawingService.getById(req.params.id, req.user!.id);
+// controllers/drawing.controller.ts
+export async function getMine(req: Request, res: Response) {
+  const drawing = await drawingService.getMine(req.user!.id);
   if (!drawing) return res.status(404).json({ code: "drawing.notFound" });
   return res.json(drawing);
 }
@@ -470,26 +474,32 @@ l'impose par la signature** :
 // services/drawing.service.ts
 
 // Impossible d'appeler sans fournir le propriétaire. Le compilateur fait le travail.
-export function getById(id: string, userId: string): Promise<Drawing | null> {
-  return prisma.drawing.findFirst({ where: { id, userId } });
+// Un seul dessin par utilisateur : le userId SUFFIT à désigner la ressource.
+export function getMine(userId: string): Promise<Drawing | null> {
+  return prisma.drawing.findUnique({ where: { userId } });
 }
 
-export function listMine(userId: string): Promise<DrawingSummary[]> { /* … */ }
+// Crée ou remplace — upsert sur la colonne unique, atomique.
+export function saveMine(userId: string, input: DrawingInput): Promise<Drawing> { /* … */ }
 
-export function remove(id: string, userId: string): Promise<boolean> { /* … */ }
+export function removeMine(userId: string): Promise<boolean> { /* … */ }
 
 // L'accès admin est une fonction SÉPARÉE, au nom explicite — jamais un paramètre
-// optionnel `userId?` sur la fonction ci-dessus, qui rendrait l'oubli silencieux.
+// optionnel `userId?` sur les fonctions ci-dessus, qui rendrait l'oubli silencieux.
 export function listAllForAdmin(): Promise<DrawingWithAuthor[]> { /* … */ }
+export function getByIdForAdmin(id: string): Promise<Drawing | null> { /* … */ }
+export function removeForAdmin(id: string): Promise<boolean> { /* … */ }
 ```
 
-> **`findFirst({ id, userId })` plutôt que `findUnique({ id })` suivi d'une comparaison.**
-> La vérification est dans la requête, pas après elle. Impossible de l'oublier, impossible
-> de charger en mémoire une ressource qui ne nous appartient pas.
+> **Le `userId` est la clé de la requête, jamais un filtre ajouté après.** Un utilisateur
+> ayant au plus un dessin, `findUnique({ where: { userId } })` le désigne entièrement : les
+> routes utilisateur n'acceptent **aucun identifiant de dessin** venu du client. Il n'existe
+> donc pas de requête « charger par id, puis vérifier le propriétaire » à oublier — et
+> aucun moyen de viser le dessin d'un autre.
 
-> **Un 404, jamais un 403, quand la ressource appartient à quelqu'un d'autre.** Un 403
-> confirmerait au demandeur que l'identifiant existe. Le seul 403 du projet est celui de
-> `requireAdmin`, où l'existence de la route n'est pas un secret.
+> **Pas de 403 côté utilisateur.** Sans id dans l'URL, un utilisateur ne peut pas désigner une
+> ressource qui ne lui appartient pas : sans dessin, c'est un 404. Le seul 403 du projet est
+> celui de `requireAdmin`, où l'existence de la route n'est pas un secret.
 
 ### Pourquoi pas de couche repository
 
@@ -566,7 +576,7 @@ précisément une interface d'administration pour montrer qu'on sait séparer le
 
 ```mermaid
 erDiagram
-    USER ||--o{ DRAWING : "possède"
+    USER ||--o| DRAWING : "possède"
 
     USER {
         uuid id PK
@@ -596,8 +606,8 @@ Deux tables. C'est tout, et c'est délibéré.
 | 2   | `role` sur `User`, pas de table `Role`              | Deux valeurs, aucune permission granulaire. Une énumération suffit ; une table de rôles serait une abstraction sans second cas                                                                                              |
 | 3   | Un seul `userName`, pas d'email                  | Aucune fonctionnalité n'a besoin d'un email (ni réinitialisation, ni notification). Un nom unique sert à la fois d'identifiant de connexion et de nom d'auteur affiché dans l'admin — un champ de moins, une donnée personnelle de moins |
 | 4   | Pas de champ `thumbnail`                            | La vignette se rend côté client en rejouant les traits sur un petit canvas. Stocker un PNG dérivé dupliquerait la source de vérité pour un gain invisible à cette échelle ([§19](#19-questions-ouvertes) Q4)               |
-| 5   | `onDelete: Cascade` sur `Drawing.userId`            | Supprimer un compte supprime ses dessins. Aucun intérêt à conserver des dessins orphelins                                                                                                                                  |
-| 6   | Index `(userId, createdAt DESC)`                    | C'est la requête de la galerie personnelle, la plus fréquente de l'application                                                                                                                                             |
+| 5   | `onDelete: Cascade` sur `Drawing.userId`            | Supprimer un compte supprime son dessin. Aucun intérêt à conserver des dessins orphelins                                                                                                                                  |
+| 6   | **`userId` unique**, aucun autre index              | Un seul dessin par utilisateur (réponse de l'IRCAM) : la base l'impose, deux enregistrements simultanés ne peuvent pas créer deux lignes, et remplacer devient un `upsert` sur cette colonne. L'index unique sert aussi la seule requête côté utilisateur. La liste admin tient en quelques dizaines de lignes : un index de tri n'y serait même pas utilisé |
 | 7   | Pas de soft delete                                  | Aucune exigence de corbeille dans l'énoncé. `DELETE` supprime                                                                                                                                                              |
 
 > **Le `jsonb` est le point qu'un relecteur va challenger.** La réponse tient en une phrase :
@@ -747,7 +757,7 @@ model User {
   role         Role      @default(USER)
   createdAt    DateTime  @default(now())
 
-  drawings     Drawing[]
+  drawing      Drawing?
 
   @@map("users")
 }
@@ -763,11 +773,10 @@ model Drawing {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userId    String   @db.Uuid
+  /// Unique : un seul dessin par utilisateur, imposé par la base. Remplacer = upsert.
+  userId    String   @unique @db.Uuid
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  /// Requête de la galerie personnelle : les dessins d'un utilisateur, du plus récent au plus ancien.
-  @@index([userId, createdAt(sort: Desc)])
   @@map("drawings")
 }
 ```
@@ -817,9 +826,9 @@ un détail d'accueil qui pèse plus lourd qu'il n'en a l'air sur la première im
 | `/login`         | invité             | Connexion                                                |
 | `/register`      | invité             | Inscription                                              |
 | `/`              | authentifié        | Le canvas — écran d'accueil, on dessine tout de suite    |
-| `/drawings`      | authentifié        | « Mes dessins » — vignettes, ouverture, suppression      |
-| `/drawings/:id`  | authentifié        | Lecture d'un dessin : rejeu visuel, puis audio (P2)      |
-| `/admin`         | authentifié + ADMIN | Tous les dessins, tous utilisateurs confondus            |
+| `/drawing`       | authentifié        | « Mon dessin » : rejeu visuel, puis audio (P2), suppression |
+| `/admin`         | authentifié + ADMIN | Tous les dessins, tous utilisateurs confondus, suppression |
+| `/admin/drawings/:id` | authentifié + ADMIN | Lecture d'un dessin de n'importe quel utilisateur   |
 
 > **Le canvas est la page d'accueil, pas la galerie.** L'application sert à dessiner ; la
 > première action possible après connexion doit être de dessiner, pas de naviguer vers un
@@ -832,18 +841,25 @@ un détail d'accueil qui pèse plus lourd qu'il n'en a l'air sur la première im
 | `/api/auth/register`   | `POST`   | —       | Crée le compte, pose le cookie, retourne l'utilisateur |
 | `/api/auth/login`      | `POST`   | —       | Pose le cookie, retourne l'utilisateur                 |
 | `/api/auth/me`         | `GET`    | auth    | L'utilisateur courant — seule source fiable de l'identité et du rôle ([§12](#12-authentification)) |
-| `/api/drawings`        | `GET`    | auth    | Mes dessins, sans le `data` (résumés seulement)        |
-| `/api/drawings`        | `POST`   | auth    | Enregistre un dessin                                   |
-| `/api/drawings/:id`    | `GET`    | auth    | Un de mes dessins, `data` compris                      |
-| `/api/drawings/:id`    | `DELETE` | auth    | Supprime un de mes dessins                             |
+| `/api/drawing`         | `GET`    | auth    | Mon dessin, `data` compris — 404 si je n'en ai pas     |
+| `/api/drawing`         | `PUT`    | auth    | Crée ou remplace mon dessin                            |
+| `/api/drawing`         | `DELETE` | auth    | Supprime mon dessin                                    |
 | `/api/admin/drawings`  | `GET`    | admin   | Tous les dessins avec leur auteur, sans le `data`      |
 | `/api/admin/drawings/:id` | `GET` | admin   | N'importe quel dessin, `data` compris                  |
+| `/api/admin/drawings/:id` | `DELETE` | admin | Supprime n'importe quel dessin (modération)           |
 
-> **`GET /api/drawings` ne renvoie pas le `data`.** Une liste de vingt dessins complets, c'est
-> plusieurs mégaoctets de JSON pour afficher vingt titres. La liste renvoie
-> `{ id, title, createdAt, strokeCount }` ; le `data` n'arrive qu'à l'ouverture d'un dessin.
-> Conséquence assumée : les vignettes de la galerie sont rendues après un second appel, ou
-> remplacées par une carte texte ([§19](#19-questions-ouvertes) Q4).
+> **`/api/drawing` est au singulier, sans identifiant.** Un utilisateur a au plus un dessin :
+> le jeton suffit à le désigner. Aucun id n'est accepté du client sur ces routes, donc aucun
+> moyen d'en viser un autre — l'isolation est structurelle, pas seulement vérifiée.
+
+> **`PUT` et pas `POST`.** Enregistrer remplace une ressource unique : envoyer deux fois la
+> même requête laisse le même état. C'est la définition d'une opération idempotente, donc
+> de `PUT`. La ligne est conservée (même id, `createdAt` d'origine), seuls `title`, `data`
+> et `updatedAt` changent.
+
+> **`GET /api/admin/drawings` ne renvoie pas le `data`.** Une liste de vingt dessins complets,
+> c'est plusieurs mégaoctets de JSON pour afficher vingt titres. La liste renvoie
+> `{ id, title, updatedAt, author, strokeCount }` ; le `data` n'arrive qu'à l'ouverture.
 
 ### Pipeline d'une écriture
 
@@ -1259,7 +1275,7 @@ corollaires en découlent :
 
 ```
 ┌────────────────────────────────────────────────────────────┐
-│  ◈ SonicLight        Dessiner   Mes dessins   Admin    👤  │
+│  ◈ SonicLight        Dessiner   Mon dessin    Admin    👤  │
 ├────────────────────────────────────────────────────────────┤
 │                                                            │
 │     ┌────────────────────────────────────────────────┐     │
@@ -1307,9 +1323,9 @@ se concurrencer.
 3. **Barre d'outils sous le canvas**, jamais par-dessus (voir plus haut).
 4. **Raccourcis clavier** : `Cmd/Ctrl+Z` annule, `Échap` ferme la modale, `Entrée` valide le
    titre. Trois lignes de code, et c'est ce qui sépare une démonstration d'un outil.
-5. **États vides travaillés.** La galerie d'un nouvel utilisateur est le deuxième écran qu'il
-   voit. Un cadre en pointillés avec « Aucun dessin — commencez à dessiner » vaut mieux qu'une
-   grille vide.
+5. **États vides travaillés.** « Mon dessin » pour un nouvel utilisateur, et la liste admin
+   sans aucun dessin, sont des écrans réellement vus. Un cadre en pointillés avec « Aucun
+   dessin — commencez à dessiner » vaut mieux qu'une page vide.
 6. **Pas de scintillement au chargement.** Les vignettes se rendent depuis les traits : prévoir
    un squelette à la hauteur finale, sinon la grille saute quand les données arrivent.
 
@@ -1433,7 +1449,7 @@ de développement reproduit déjà à l'identique ([§12](#12-authentification))
 1. **`VITE_API_URL` est inliné au build, pas lu à l'exécution.** Le définir dans les variables
    d'environnement du service après coup ne change rien : il faut rebuilder. C'est l'erreur
    la plus fréquente de ce montage, et elle se manifeste par un front qui appelle
-   `undefined/api/drawings`.
+   `undefined/api/drawing`.
 2. **GitHub Pages demande deux réglages que Vercel et Netlify font seuls.** Le site est servi
    depuis un sous-chemin (`/nom-du-depot/`), donc `base` doit être renseigné dans
    `vite.config.ts`, sinon aucun asset ne se charge. Et une SPA a besoin d'un repli pour les
@@ -1585,9 +1601,9 @@ Git est un critère d'évaluation. L'historique cible, dans l'ordre :
 | 8   | `feat(client): login and register screens`                    | Le cycle d'authentification est bouclé de bout en bout |
 | 9   | `feat(drawing): canvas capture with normalised coordinates`   | **Le cœur du projet**                             |
 | 10  | `feat(drawing): color, width, undo and clear controls`        | La barre d'outils                                 |
-| 11  | `feat(drawing): save and list own drawings`                   | API + galerie personnelle                         |
-| 12  | `feat(drawing): open and render a saved drawing`              | « Retrouver son dessin » — **le P0 est complet**  |
-| 13  | `feat(admin): list all drawings with their author`            | L'interface d'administration                      |
+| 11  | `feat(drawing): save or replace the user's single drawing`    | API `PUT/GET/DELETE /api/drawing`                 |
+| 12  | `feat(drawing): open and render a saved drawing`              | « Retrouver son dessin »                          |
+| 13  | `feat(admin): list and moderate all drawings`                 | Liste, lecture, suppression — **le P0 est complet** |
 | 14  | `test(server): cover ownership isolation in drawing service`  | Les tests qui comptent                            |
 | 15  | `feat(db): seed demo users and drawings`                      | Le jeu de démonstration                           |
 | 16  | `feat(drawing): animate stroke-by-stroke replay`              | P1                                                |
@@ -1672,13 +1688,15 @@ Git est un critère d'évaluation. L'historique cible, dans l'ordre :
 | #   | Question                                                                            | Hypothèse retenue en attendant                                                                                        |
 | --- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | Q1  | Le compte administrateur est-il attribué (seed / variable d'environnement) ou un utilisateur peut-il s'inscrire comme admin ? | Attribué au seed. Aucune escalade possible depuis l'interface                                                          |
-| Q2  | Un utilisateur a-t-il **un** dessin ou **plusieurs** ? L'énoncé dit « son dessin » au singulier, puis « les dessins enregistrés par les différents utilisateurs » au pluriel | Plusieurs. Le singulier semble générique, et la contrainte inverse serait arbitraire — mais c'est **la** question à poser |
-| Q3  | L'admin doit-il pouvoir supprimer ou modérer, ou seulement consulter ?              | Consulter seulement — « consulter » est le verbe de l'énoncé                                                           |
-| Q4  | Les dessins doivent-ils être publics entre utilisateurs, ou strictement privés hors admin ? | Strictement privés. Seul l'admin voit ceux des autres                                                                  |
+| Q2  | Un utilisateur a-t-il **un** dessin ou **plusieurs** ? L'énoncé dit « son dessin » au singulier, puis « les dessins enregistrés par les différents utilisateurs » au pluriel | ~~Plusieurs~~ → **Un seul, remplaçable** (réponse IRCAM). `userId` unique, `PUT /api/drawing` |
+| Q3  | L'admin doit-il pouvoir supprimer ou modérer, ou seulement consulter ?              | ~~Consulter seulement~~ → **Il peut modérer, notamment supprimer** (réponse IRCAM) |
+| Q4  | Les dessins doivent-ils être publics entre utilisateurs, ou strictement privés hors admin ? | **Strictement privés** — hypothèse confirmée par l'IRCAM                                  |
 
-Ces quatre questions partent dans un mail unique, court, avant le premier commit de code.
-Les hypothèses tiennent lieu de réponse si le retour tarde — l'exercice ne s'arrête pas
-faute de réponse, et les hypothèses sont documentées dans le README.
+**Réponses reçues le 17 septembre 2026** (reprises dans `@context/exercise-brief.md`). Deux
+hypothèses sur trois étaient fausses : c'est exactement pour ça que la question devait être
+posée avant d'écrire le code métier. Le coût du changement s'est limité à une migration,
+parce qu'aucun service ni écran n'existait encore. L'IRCAM a aussi précisé que l'application
+doit être **responsive** (desktop et mobile) et laissé **le mapping de sonification libre**.
 
 ### Tranchées unilatéralement — sujets d'entretien
 

@@ -107,20 +107,21 @@ finished and committed.
   leaks between accounts:
   1. `requireAuth` → resolve `req.user` from the JWT cookie, else `401`
   2. Zod `safeParse` of the body → `400` with the failing fields
-  3. Load through the service **with `userId` in the signature** → `404` if missing *or*
-     owned by someone else
+  3. Load through the service **with `userId` in the signature** → `404` if missing
   4. Mutate through Prisma
   5. Return an explicitly built DTO — `passwordHash` never leaves a service
-- Ownership is enforced by the query, not after it: `findFirst({ where: { id, userId } })`,
-  never `findUnique({ id })` followed by a comparison
+- **One drawing per user** (confirmed by IRCAM): `userId` is unique, and it is the whole key.
+  User routes (`/api/drawing`) take **no drawing id** from the client —
+  `findUnique({ where: { userId } })`, and saving is an `upsert` on `userId`. There is no
+  "load by id, then compare the owner" step to forget
 - Admin access is a **separate, explicitly named service function**
-  (`listAllForAdmin()`), never an optional `userId?` parameter on the user-facing one. An
+  (`listAllForAdmin()`, `getByIdForAdmin()`, `removeForAdmin()`), never an optional `userId?` parameter on the user-facing one. An
   optional parameter makes the omission silent; a separate function makes it deliberate
-- A resource owned by another user returns **`404`, never `403`** — a `403` would confirm the
-  id exists. The only `403` in the project is `requireAdmin`, where the route's existence is
-  not a secret
-- `GET /api/drawings` returns summaries without `data`. Twenty full drawings is megabytes of
-  JSON to render twenty titles
+- No `403` on user routes: without an id in the URL, a user cannot even name someone else's
+  drawing — no drawing is a `404`. The only `403` in the project is `requireAdmin`, where the
+  route's existence is not a secret
+- `GET /api/admin/drawings` returns summaries without `data`. Twenty full drawings is
+  megabytes of JSON to render twenty titles
 - Async route handlers are wrapped so a rejected promise reaches the error middleware.
   Express 5 forwards rejections natively — verify this rather than assuming it
 
@@ -140,8 +141,9 @@ finished and committed.
   on the way **out**. The database enforces no shape; Zod is the only guarantee
 - Hard bounds on the payload (`≤ 1000` strokes, `≤ 5000` points per stroke) are validation,
   not decoration — without them a client can post a 200 MB `jsonb` row
-- `@@index([userId, createdAt(sort: Desc)])` exists because that is the personal gallery
-  query, the most frequent in the app. No other index until a query justifies one
+- `userId @unique` is the only index beyond primary keys and `userName`: it enforces one
+  drawing per user and serves the user query. No other index until a query justifies one —
+  the admin list is a few dozen rows
 - `onDelete: Cascade` on `Drawing.userId` — orphan drawings serve no purpose
 - No soft delete, no `thumbnail` column, no `Role` table. See `project-overview.md` §8
 - The seed is idempotent: every step guarded by an existence check, safe to replay
@@ -241,7 +243,7 @@ secret. A `401` on any call clears the store and redirects.
 
 ```text
 frontend/src/
-├── views/        one per route — DrawView, GalleryView, DrawingView, AdminView, LoginView
+├── views/        one per route — DrawView, MyDrawingView, AdminView, AdminDrawingView, LoginView
 ├── components/   shared presentational pieces — DrawingCard, ColorPicker, ToolBar
 ├── composables/  useDrawing, useCanvasReplay, useSonification
 ├── stores/       auth.ts — the only store
@@ -310,16 +312,17 @@ components. The split is the decision, not the tool:
   Three lines, and the difference between a demo and a tool
 - **The toolbar sits below the canvas**, never over it — a floating control ends up under the
   cursor at the exact moment someone is drawing
-- **Empty states are written, not omitted.** A new user's gallery is the second screen they
-  see
+- **Empty states are written, not omitted.** A new user's "my drawing" page is the second
+  screen they see
 - **Skeletons match final height.** Thumbnails render from strokes, so a grid without reserved
   height jumps when the data lands
 
 ## Testing
 
 - Vitest on both packages
-- The tests that matter are the **ownership tests**: a user cannot read, open or delete
-  another user's drawing; a non-admin cannot reach an admin route. These are the tests to
+- The tests that matter are the **ownership tests**: a user's calls only ever reach their
+  own drawing, saving twice replaces rather than duplicates, and a non-admin cannot reach an
+  admin route — including `DELETE /api/admin/drawings/:id`. These are the tests to
   write first and the ones worth discussing
 - Plus schema tests: `DrawingDataSchema` rejects out-of-range coordinates, oversized payloads
   and an unknown `version`
@@ -340,7 +343,7 @@ managed Postgres. Two origins in production, which is why development is cross-o
   grades. `docker compose` is `db` + `server`, and that still satisfies the Docker bonus
 - **`VITE_*` variables are inlined at build time, not read at runtime.** Setting `VITE_API_URL`
   in a service's environment after the fact changes nothing — it needs a rebuild. The symptom
-  is a front calling `undefined/api/drawings`
+  is a front calling `undefined/api/drawing`
 - **Prefer Vercel or Netlify over GitHub Pages.** Pages serves from a subpath, so `base` must
   be set in `vite.config.ts` or no asset loads, and an SPA needs a deep-link fallback
   (`index.html` copied to `404.html`). The other two handle both natively and deploy on push

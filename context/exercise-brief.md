@@ -37,6 +37,28 @@ the candidate's to decide. Asking questions before starting is explicitly encour
 brief says « vous pouvez et **devez** nous poser toutes les questions que vous jugez
 nécessaires avant de commencer le développement ».
 
+## Answers from IRCAM — 17 September 2026
+
+Received in reply to the questions sent before development. They are part of the contract
+and override any earlier assumption:
+
+> 1. L'application doit être responsive et fonctionner aussi bien sur desktop que sur mobile.
+> 2. Un utilisateur est limité à un seul dessin. Il peut toutefois écraser son ancien dessin
+>    et en soumettre un nouveau. Dans ce cas, l'ancien dessin est remplacé.
+> 3. Seul l'administrateur peut voir les dessins de l'ensemble des utilisateurs. Un
+>    utilisateur ne peut voir que son propre dessin.
+> 4. Oui, l'administrateur peut modérer les dessins, notamment les supprimer si nécessaire.
+> 5. Cette partie étant optionnelle, vous êtes libre de définir le mapping que vous
+>    souhaitez pour la sonification.
+
+| #   | Consequence                                                                          |
+| --- | ------------------------------------------------------------------------------------ |
+| 1   | Responsive is a **firm** requirement, not polish                                     |
+| 2   | `Drawing.userId` is unique; saving is create-or-replace (`PUT /api/drawing`)         |
+| 3   | Confirms private drawings; only admin routes list other users' drawings             |
+| 4   | Admin moderation is in scope: `DELETE /api/admin/drawings/:id`                       |
+| 5   | The sonification mapping of `project-overview.md` §14 stands as a free choice        |
+
 ## Technologies
 
 Flexible. Backend: **Node.js preferred**, Go accepted. Frontend: **Vue.js preferred**, React and

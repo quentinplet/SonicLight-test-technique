@@ -87,8 +87,9 @@ is not housekeeping.
 Review generated code periodically, and always on these five, which are this project's actual
 risks:
 
-- **Ownership isolation** — every drawing read or write takes `userId` in the signature; the
-  filter is inside the query (`findFirst({ id, userId })`), never a comparison afterwards.
+- **Ownership isolation** — every drawing read or write takes `userId` in the signature, and
+  user routes accept no drawing id: `userId` (unique) is the key of the query, never a
+  comparison afterwards.
   Admin access is a separate named function, never an optional `userId?`
 - **XSS** — the JWT lives in `localStorage`, so this is risk number one. No `v-html` anywhere,
   no user content rendered as HTML, frontend dependency list frozen
