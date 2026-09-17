@@ -1,0 +1,5 @@
+// Build-only config: same options, without the tests beside the sources.
+{
+  "extends": "./tsconfig.json",
+  "exclude": ["src/**/*.test.ts"]
+}
