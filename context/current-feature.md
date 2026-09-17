@@ -9,7 +9,7 @@ Authentification — inscription, connexion, identité, gardes (branche `feature
 
 ## Status
 
-In Progress — démarré le 17 septembre 2026.
+Done — 17 septembre 2026, fusionné dans `main` en `--no-ff`. Prochain lot à définir.
 
 ## Goals
 
@@ -116,3 +116,41 @@ Pièges qui mordent encore :
   la console du navigateur distingue les deux.
 - **`tsx -e` compile en CommonJS** : pas de top-level await dans un one-liner, alors que les
   fichiers du projet (ESM) l'acceptent.
+
+### 17/09 — Authentification ✅
+
+Inscription, connexion et `/api/auth/me` côté API ; `requireAuth` / `requireAdmin` ; session
+restaurée au rechargement ; écrans login / register, en-tête, gardes de route. 31 tests
+backend contre une vraie base, CI avec Postgres. Branche `feature/auth`, commits `4d8b104` →
+`7f336a4`.
+
+Écarts au plan, et pourquoi :
+
+- **Erreurs métier `AppError`** (400, 401, 403, 404, 409), dans `src/errors/app-error.ts`, qui
+  **portent leur statut HTTP**. Plus simple qu'une table de correspondance ; la règle « un
+  service ne connaît pas HTTP » a été assouplie et documentée. Plus aucune réponse d'erreur
+  construite à la main, `notFoundHandler` compris.
+- **Tests dans `backend/tests/`**, arborescence miroir de `src/`, au lieu d'à côté du code.
+  Base `soniclight_test` distincte (`npm run test:db`), fichiers exécutés en série.
+- **Pas de `JWT_EXPIRES_IN`** : durée de vie fixe de 7 jours, constante dans `jwt.ts`.
+- **Deux schémas Zod** : `RegisterSchema` (règles de format, un message clair par champ via
+  `abort: true`) et `LoginSchema` (champs remplis seulement : hors format = 401, pas 400).
+- **Pas d'`id` dans les réponses** : `{ userName, role }` suffit, le jeton désigne l'utilisateur.
+- **`http.ts` organisé comme un client axios** (`buildHeaders` avant, `handleErrorResponse`
+  après), qui importe directement store et router. Une erreur réseau devient une `ApiError`
+  `network.unreachable` : une seule sorte d'erreur pour les vues.
+- **Mode clair uniquement**, thème sur mesure ; violet assombri à `#6d4aff` pour le contraste AA.
+- **Interface en anglais** pour l'instant.
+
+Pièges qui mordent encore :
+
+- **Un 401 ne doit rediriger que si la requête portait un jeton.** Un login raté est aussi un
+  401 ; rediriger dessus viderait le formulaire de son message d'erreur.
+- **`prisma migrate dev` refuse un shell non interactif** dès qu'il a un avertissement à faire
+  confirmer : `migrate diff` + `migrate deploy` (procédure dans `CLAUDE.md`).
+- **Deux commits simultanés échouent en silence** : l'extension Git de VS Code verrouille
+  l'index. Relancer, puis vérifier le contenu de chaque commit.
+- **Le `?redirect=` d'une page de login est une redirection ouverte** si on ne le limite pas aux
+  chemins internes.
+- **Couleurs de trait trop claires sur fond blanc** (jaune 1,9:1, vert, cyan, orange) : à
+  assombrir à 3:1 minimum au lot dessin.
