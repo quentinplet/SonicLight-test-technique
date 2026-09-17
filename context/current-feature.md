@@ -9,7 +9,7 @@ Fondations — squelette, base de données, schéma
 
 ## Status
 
-Not Started
+Done — 17 septembre 2026. Prochain lot à définir.
 
 ## Goals
 
@@ -59,7 +59,7 @@ de métier.
 
 **Definition of done** : `docker compose up -d db`, puis `npm run dev` dans `backend/` et
 dans `frontend/`, et la page d'accueil affiche la réponse de `/api/health` — en cross-origin,
-sans erreur CORS. `npx tsc --noEmit` et `npx vue-tsc --noEmit` passent, et le workflow CI
+sans erreur CORS. `npx tsc --noEmit` et `npm run type-check` passent, et le workflow CI
 est vert sur GitHub. Le tout tient en 5 à 6 commits.
 
 ## History
@@ -68,4 +68,31 @@ est vert sur GitHub. Le tout tient en 5 à 6 commits.
      Consigner les décisions et les pièges qui mordent encore — pas les étapes de
      vérification, qui sont les mêmes à chaque fois (typecheck, build, tests). -->
 
-_(rien encore — premier lot en attente de démarrage)_
+### 17/09 — Fondations ✅
+
+Express 5 + TS (ESM) avec `/api/health`, env validé au boot, erreurs `{ code, message }` ;
+Postgres 16 en compose ; schéma Prisma + migration `init` ; seed ; front qui appelle l'API
+en cross-origin ; CI verte. Commits `204ba96` → `51a497a`.
+
+Écarts au plan, et pourquoi :
+
+- **Prisma 7, pas 6.** Adaptateur `@prisma/adapter-pg` + `pg` obligatoire ; URL et seed dans
+  `prisma.config.ts` (`.env` chargé par `process.loadEnvFile()`, pas `dotenv`) ; client
+  généré dans `src/generated/` (non commité), `importFileExtension = "js"` pour tourner
+  sous `tsx` comme sous `node`. `migrate dev` ne régénère plus le client.
+- **Postgres sur le port hôte 5433**, pour coexister avec un Postgres local déjà sur 5432.
+- **`userName` unique, ni email ni `displayName`.** Aucune fonctionnalité n'a besoin d'un
+  email ; un seul champ sert d'identifiant et de nom d'auteur. Overview §8/§10 mis à jour.
+- **Seed avancé** (prévu au P1) : `demo` / `admin`, bcrypt coût 10, pour tester l'auth dès
+  qu'elle existe. Pas de dessins.
+- **Pas de `.dockerignore`** : pas encore de Dockerfile — il arrive avec lui.
+- **Pas de tests front** : Vitest non installé dans `frontend/`.
+
+Pièges qui mordent encore :
+
+- **`npx vue-tsc --noEmit` ne vérifie rien** (tsconfig racine « solution » à `files: []`).
+  Toujours `npm run type-check`. Corrigé dans toutes les docs.
+- **« Failed to fetch » = API éteinte ou origine refusée** — même erreur opaque côté page ;
+  la console du navigateur distingue les deux.
+- **`tsx -e` compile en CommonJS** : pas de top-level await dans un one-liner, alors que les
+  fichiers du projet (ESM) l'acceptent.

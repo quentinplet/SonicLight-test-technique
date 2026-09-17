@@ -4,10 +4,9 @@ A drawing-to-sound web app: users sign in, draw on a canvas, save their drawings
 vector strokes, and replay them visually and audibly. Vue 3 SPA + Express API,
 PostgreSQL, TypeScript end to end. Auth is a JWT in `localStorage`, sent as a Bearer header.
 
-> **Status: prescriptive.** This file describes the _target_ setup, not an existing one —
-> the repository is being built from scratch. Every command below is the intended
-> command; replace this note with `Status: descriptive` and correct anything that
-> drifted once the skeleton is in place and the commands have actually been run.
+> **Status: descriptive.** Commands below have been run against the repository as it
+> stands (foundations lot, 17 September 2026). Anything not built yet is marked _(not yet)_;
+> the Layout still lists target folders that later lots create.
 
 ## Context Files
 
@@ -23,13 +22,13 @@ Read the following to get the full context of the project:
 
 ```text
 frontend/  Vue 3 SPA (Vite, <script setup>, TypeScript, Pinia, Vue Router)
-           Tailwind 4 + DaisyUI 5, custom theme in src/style.css — no JS component library
+           Tailwind 4 + DaisyUI 5, custom theme in src/style.css — no JS component library (not yet)
            src/views/ src/components/ src/stores/ src/api/ src/composables/ src/types/
 backend/   Express 5 API — TypeScript, single package
            prisma/schema.prisma, prisma/migrations/, prisma/seed.ts
            src/routes/ src/controllers/ src/services/ src/middleware/ src/schemas/ src/lib/
 context/   Project context files read by Claude Code (see above)
-docker-compose.yml   PostgreSQL 16 + the API. No client container — see Gotchas
+docker-compose.yml   PostgreSQL 16 (the API service comes with its Dockerfile). No client container
 .github/workflows/   ci.yml — typecheck, test and build both packages on push
 ```
 
@@ -43,11 +42,16 @@ their own `package.json` and are installed and run separately. There is no root
 
 ```bash
 npm run dev            # vite — dev server on http://localhost:5173
-npm run build          # vue-tsc -b && vite build (full type check + production build)
+npm run build          # run-p type-check build-only (full type check + production build)
+npm run build-only     # vite build alone
 npm run preview        # serve the production build locally
-npm test               # vitest
-npx vue-tsc --noEmit   # typecheck alone, without a build
+npm run type-check     # vue-tsc --build — typecheck alone
 ```
+
+**Never `npx vue-tsc --noEmit` at the package root**: `tsconfig.json` is a solution file
+with `"files": []` that only references `tsconfig.app.json` / `tsconfig.node.json`, so it
+checks nothing and always passes. Use `npm run type-check`. No frontend tests yet — Vitest
+is not installed in `frontend/` _(not yet)_.
 
 The client reads `VITE_API_URL` from `frontend/.env` (`http://localhost:3000` locally) and
 calls the API cross-origin, the same way it will once deployed. There is no proxy — see
@@ -56,12 +60,16 @@ Gotchas.
 ### Backend (`/backend`)
 
 ```bash
-npm run dev            # tsx watch src/index.ts — API on http://localhost:3000
-npm run build          # tsc — emits to dist/
+npm run dev            # tsx watch --env-file=.env src/index.ts — API on http://localhost:3000
+npm run build          # tsc -p tsconfig.build.json — emits src/ only to dist/
 npm start              # node dist/index.js (production)
 npm test               # vitest
-npx tsc --noEmit       # typecheck alone
+npx tsc --noEmit       # typecheck alone — covers src/, prisma/seed.ts, prisma.config.ts
 ```
+
+The frontend and the API run in two terminals. With the API down, the home page shows
+"Failed to fetch" — the same opaque error as a CORS rejection; the browser console tells
+them apart (`ERR_CONNECTION_REFUSED` vs `blocked by CORS policy`).
 
 ### Database
 
@@ -70,7 +78,6 @@ Not 5432, so it can coexist with a local Postgres already bound there:
 
 ```bash
 docker compose up -d db          # start the database alone
-docker compose up -d             # start the database and the API
 docker compose down -v           # stop and wipe the volume (destroys all data)
 ```
 
@@ -85,13 +92,17 @@ npx prisma migrate deploy              # apply pending migrations (CI / producti
 npx prisma migrate status              # check applied vs pending
 npx prisma generate                    # regenerate the client — migrate dev no longer does it (Prisma 7)
 npx prisma studio                      # browse the data
-npm run seed                           # tsx prisma/seed.ts — demo users + drawings
+npm run seed                           # prisma db seed → tsx prisma/seed.ts (set in prisma.config.ts)
 ```
 
-Seeding is idempotent (each step guarded by an existence check) and creates one admin
-and two regular users with a handful of drawings, enough to exercise the admin view.
-**It refuses to run when `NODE_ENV === "production"`** — these accounts have passwords
-committed to the repository.
+Prisma 7: the connection URL and the seed command live in `prisma.config.ts`, which loads
+`.env` with `process.loadEnvFile()`. The client is generated into `src/generated/prisma`
+(git-ignored) and imported from there, with the `@prisma/adapter-pg` driver adapter.
+
+Seeding is idempotent (upsert on `userName`) and creates two accounts: `demo` / `demo1234`
+(USER) and `admin` / `admin1234` (ADMIN). No drawings yet _(not yet)_.
+**It refuses to run when `NODE_ENV === "production"`** — these passwords are committed to a
+public repository.
 
 ## Gotchas
 

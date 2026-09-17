@@ -250,7 +250,7 @@ Ce que je vais faire  : capture des traits dans un composable useDrawing()
 Fichiers touchés      : frontend/src/composables/useDrawing.ts (nouveau)
 Décision structurante : coordonnées normalisées [0,1], pas de pixels
 Alternative écartée   : stocker en pixels + facteur d'échelle (casse au resize)
-Vérification          : npx vue-tsc --noEmit
+Vérification          : npm run type-check
 ```
 
 Une étape triviale (ajouter un champ, corriger un import, écrire un test évident) n'a pas
@@ -308,7 +308,7 @@ démontre l'inverse du critère « capacité à prioriser ».
 cd backend && npx tsc --noEmit && npm test
 
 # Frontend
-cd frontend && npx vue-tsc --noEmit && npm run build
+cd frontend && npm run type-check && npm run build
 ```
 
 Ne pas annoncer une tâche terminée si l'un des quatre échoue. Un test qui échouait déjà
@@ -1457,7 +1457,7 @@ Un workflow, `.github/workflows/ci.yml`, déclenché sur chaque `push` et chaque
 ```yaml
 jobs:
   server:   # npm ci → npx prisma generate → npx tsc --noEmit → npm test
-  client:   # npm ci → npx vue-tsc --noEmit → npm run build
+  client:   # npm ci → npm run type-check → npm run build
 ```
 
 | Point d'attention                                | Pourquoi                                                                                     |
@@ -1620,7 +1620,7 @@ Git est un critère d'évaluation. L'historique cible, dans l'ordre :
 | 2   | Aucun fichier que Quentin ne puisse relire d'une traite. Pas de génération en masse.        |
 | 3   | Un commit par étape cohérente qui compile. Jamais de `wip`, jamais de dump final.           |
 | 4   | Pas de nouvelle dépendance sans validation. La liste du [§5](#5-architecture-système) est figée. |
-| 5   | `tsc --noEmit`, `vue-tsc --noEmit`, `npm test`, `npm run build` passent avant de rendre la main. |
+| 5   | `tsc --noEmit`, `npm run type-check`, `npm test`, `npm run build` passent avant de rendre la main. |
 | 6   | Aucune ligne de P1 avant la fin du P0, aucune ligne de P2 avant la fin du P1.               |
 
 ### Architecture

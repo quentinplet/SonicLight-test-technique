@@ -350,7 +350,7 @@ managed Postgres. Two origins in production, which is why development is cross-o
   README so a reviewer does not read latency as a defect
 
 CI is one workflow, `.github/workflows/ci.yml`, on every push and pull request: `npm ci` →
-`prisma generate` → `tsc --noEmit` → `npm test` for the server, `npm ci` → `vue-tsc --noEmit`
+`prisma generate` → `tsc --noEmit` → `npm test` for the server, `npm ci` → `npm run type-check`
 → `npm run build` for the client.
 
 - `npx prisma generate` **before** the server typecheck, or `tsc` fails on missing types with
@@ -398,6 +398,6 @@ it is the question worth being able to answer.
   criterion: one commit per coherent, compiling step. Never `wip`, never a single dump at the
   end. A `git log` whose commits all share one timestamp contradicts the brief in a way no
   code quality can offset
-- Before handing back: `npx tsc --noEmit` and `npm test` in `backend/`, `npx vue-tsc --noEmit`
+- Before handing back: `npx tsc --noEmit` and `npm test` in `backend/`, `npm run type-check`
   and `npm run build` in `frontend/`. All four pass, or the task is not done
 - A test that was already failing before a task started is reported, not silently fixed

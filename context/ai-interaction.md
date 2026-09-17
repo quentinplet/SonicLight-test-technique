@@ -26,7 +26,7 @@ The same loop for every feature and every fix:
 2. **Branch** — one branch per package
 3. **Implement** — build one piece, stop, let it be read, commit. Never dump a whole package
    in one go: code nobody has read is code nobody can defend
-4. **Verify** — `npx tsc --noEmit` + `npm test` in `backend/`, `npx vue-tsc --noEmit` +
+4. **Verify** — `npx tsc --noEmit` + `npm test` in `backend/`, `npm run type-check` +
    `npm run build` in `frontend/`, and a real check in the browser
 5. **Iterate** — adjust on feedback
 6. **Commit** — only once the build passes and the piece works
