@@ -1,9 +1,9 @@
-// Build-only config: same options, sources only — no tests, no seed.
+// Build-only config: same options, sources only — no tests, no test helpers, no seed.
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "rootDir": "src"
   },
   "include": ["src"],
-  "exclude": ["src/**/*.test.ts"]
+  "exclude": ["src/**/*.test.ts", "src/test"]
 }

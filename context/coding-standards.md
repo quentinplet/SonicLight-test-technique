@@ -99,9 +99,10 @@ finished and committed.
 - Layering is one-directional: **Route → Controller → Service → Prisma**
 - Only a service imports `prisma`. A controller that imports it bypasses the layer where
   ownership rules live — that is a bug, not a shortcut
-- A service never touches `req`, `res`, or an HTTP status code. It returns a value, `null`,
-  or throws a domain error that the central `errorHandler` translates. A service that knows
-  about HTTP cannot be unit-tested, and the ownership tests are the tests that matter here
+- A service never touches `req` or `res`. It returns a value, `null`, or throws an
+  `AppError` subclass that the central `errorHandler` turns into a response. A service that
+  calls `res.status()` cannot be tested outside Express, and the ownership tests are the
+  tests that matter here
 - A controller holds no business logic. Past ten lines, logic is in the wrong place
 - Every mutating endpoint follows the same pipeline, in order — skipping a step is how data
   leaks between accounts:
@@ -213,9 +214,15 @@ secret. A `401` on any call clears the store and redirects.
 
 ## Error Handling
 
-- One central `errorHandler` middleware, registered last. Domain errors
-  (`NotFoundError`, `ForbiddenError`, `ValidationError`) map to statuses there, in one place
-- Services throw domain errors; controllers return statuses. Neither does the other's job
+- Expected errors are `AppError` subclasses in `src/errors/app-error.ts`
+  (`BadRequestError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`, `ConflictError`). **Each carries
+  its own HTTP status**, plus a stable `code` and a `message`. A deliberate simplification:
+  the status sits next to the error it belongs to, and `errorHandler` just copies it — no
+  mapping table to keep in sync. The trade-off is that a service indirectly picks a status
+- One central `errorHandler` middleware, registered last: an `AppError` becomes
+  `{ code, message }` with its status; anything else is logged and becomes a `500`
+- Services and middlewares throw (or `next()`) an `AppError`; they never build an error
+  response by hand
 - One error shape on the wire: `{ code: "drawing.notFound", message: "…" }`. The `code` is
   stable and machine-readable, the `message` is for the developer. The client branches on
   `code`, never on text — that is what would make adding translations non-breaking later

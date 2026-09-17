@@ -437,7 +437,7 @@ backend/src/
 | -------------- | ---------------------------------------------------------------- | --------------------- | ------------------------------------ |
 | **Route**      | Chemin, méthode, middlewares appliqués                           | controllers, middleware | services, Prisma                   |
 | **Controller** | HTTP : parse la requête, appelle le service, choisit le statut   | services, schémas Zod | Prisma, règles métier                |
-| **Service**    | Règles métier, accès aux données, propriété des ressources       | Prisma, types         | `req`, `res`, codes HTTP             |
+| **Service**    | Règles métier, accès aux données, propriété des ressources       | Prisma, types, `AppError` | `req`, `res`                     |
 | **Schéma Zod** | Contrat d'entrée, validation, type inféré                        | rien                  | Prisma, HTTP                         |
 | **Middleware** | Auth, rôle, erreurs                                              | lib/jwt               | services métier                      |
 
@@ -455,8 +455,10 @@ export async function getMine(req: Request, res: Response) {
 }
 ```
 
-**2. Le service ne connaît pas HTTP.** Il retourne une valeur, `null`, ou lève une erreur
-métier (`NotFoundError`, `ForbiddenError`) que l'`errorHandler` traduit en réponse. Un
+**2. Le service ne manipule ni `req` ni `res`.** Il retourne une valeur, `null`, ou lève une
+`AppError` (`NotFoundError`, `ConflictError`…) que l'`errorHandler` transforme en réponse.
+Chaque erreur porte son statut HTTP : simplification assumée, le statut est lu à côté de
+l'erreur qu'il décrit, sans table de correspondance à maintenir. Un
 service qui manipule `res.status()` n'est plus testable hors d'un contexte Express — et
 c'est précisément ce qu'on veut tester.
 
@@ -1645,7 +1647,7 @@ Git est un critère d'évaluation. L'historique cible, dans l'ordre :
 | --- | --------------------------------------------------------------------------------------------- |
 | 7   | Couches à sens unique : Route → Controller → Service → Prisma.                                |
 | 8   | Seul un service importe `prisma`. Un controller qui l'importe est un bug.                     |
-| 9   | Un service ne connaît ni `req`, ni `res`, ni les codes HTTP.                                  |
+| 9   | Un service ne connaît ni `req` ni `res` ; il lève une `AppError`, qui porte son statut.       |
 | 10  | Pas de couche repository par-dessus Prisma.                                                   |
 | 11  | On abstrait au troisième cas réel, pas au premier.                                            |
 | 12  | Une fonction de rendu des traits, partagée par l'édition, la lecture et la vignette.          |
