@@ -7,6 +7,22 @@ on:
 jobs:
   server:
     runs-on: ubuntu-latest
+    # Integration tests run against a real Postgres, on the same host port as docker compose,
+    # so the test database URL is identical locally and in CI.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: soniclight
+          POSTGRES_PASSWORD: soniclight
+          POSTGRES_DB: soniclight_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U soniclight"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
     defaults:
       run:
         working-directory: backend
@@ -23,6 +39,7 @@ jobs:
       # Needs no database: prisma.config.ts tolerates an absent DATABASE_URL.
       - run: npx prisma generate
       - run: npx tsc --noEmit
+      - run: npm run test:db
       - run: npm test
       - run: npm run build
 

@@ -99,9 +99,10 @@ finished and committed.
 - Layering is one-directional: **Route → Controller → Service → Prisma**
 - Only a service imports `prisma`. A controller that imports it bypasses the layer where
   ownership rules live — that is a bug, not a shortcut
-- A service never touches `req`, `res`, or an HTTP status code. It returns a value, `null`,
-  or throws a domain error that the central `errorHandler` translates. A service that knows
-  about HTTP cannot be unit-tested, and the ownership tests are the tests that matter here
+- A service never touches `req` or `res`. It returns a value, `null`, or throws an
+  `AppError` subclass that the central `errorHandler` turns into a response. A service that
+  calls `res.status()` cannot be tested outside Express, and the ownership tests are the
+  tests that matter here
 - A controller holds no business logic. Past ten lines, logic is in the wrong place
 - Every mutating endpoint follows the same pipeline, in order — skipping a step is how data
   leaks between accounts:
@@ -213,9 +214,15 @@ secret. A `401` on any call clears the store and redirects.
 
 ## Error Handling
 
-- One central `errorHandler` middleware, registered last. Domain errors
-  (`NotFoundError`, `ForbiddenError`, `ValidationError`) map to statuses there, in one place
-- Services throw domain errors; controllers return statuses. Neither does the other's job
+- Expected errors are `AppError` subclasses in `src/errors/app-error.ts`
+  (`BadRequestError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`, `ConflictError`). **Each carries
+  its own HTTP status**, plus a stable `code` and a `message`. A deliberate simplification:
+  the status sits next to the error it belongs to, and `errorHandler` just copies it — no
+  mapping table to keep in sync. The trade-off is that a service indirectly picks a status
+- One central `errorHandler` middleware, registered last: an `AppError` becomes
+  `{ code, message }` with its status; anything else is logged and becomes a `500`
+- Services and middlewares throw (or `next()`) an `AppError`; they never build an error
+  response by hand
 - One error shape on the wire: `{ code: "drawing.notFound", message: "…" }`. The `code` is
   stable and machine-readable, the `message` is for the developer. The client branches on
   `code`, never on text — that is what would make adding translations non-breaking later
@@ -237,7 +244,9 @@ secret. A `401` on any call clears the store and redirects.
 - API routes are kebab-case and plural (`/api/drawings`, `/api/admin/drawings`)
 - Prisma models are PascalCase singular (`Drawing`), tables are lowercase plural via `@@map`
   (`drawings`)
-- Tests sit beside what they test: `drawing.service.test.ts`
+- Tests live in `backend/tests/`, mirroring `src/`: the test of `src/services/drawing.service.ts`
+  is `tests/services/drawing.service.test.ts`. Shared test code goes in `tests/helpers/`.
+  Outside `src/`, so the build never has to exclude them
 
 ## File Organization
 
@@ -293,14 +302,16 @@ components. The split is the decision, not the tool:
   would make the gallery visually incoherent and the hue → timbre mapping arbitrary
 - Colour never carries meaning alone: every icon-only button has an `aria-label`, and every
   palette swatch is named
-- Dark by default: stroke colours read better, and it is the convention for creative tools
+- **Light mode only**, no dark variant (`themes: false`, one custom theme). Text and accent meet
+  WCAG AA on white; light stroke colours (yellow, green, cyan) must be darkened to at least
+  3:1 when the drawing palette is built
 - **The one constraint that holds the design together: nothing on screen is coloured except the
   drawing.** The whole interface is greyscale plus a single accent; the only saturated colours
   in the app are the stroke colours. Three corollaries — nothing floats over the canvas,
   monospace is reserved for technical and meta text (counters, event names, timestamps), and
   the replay is the product's only animation
-- **Style every native form control or drop it.** A bare `input[type=range]` renders a white
-  track on a dark theme and is the one element that betrays the design. `accent-color`, or
+- **Style every native form control or drop it.** A bare `input[type=range]` renders the browser's
+  default track and is the one element that betrays the design. `accent-color`, or
   DaisyUI's `range range-primary`
 
 ## UX rules that outweigh the tooling

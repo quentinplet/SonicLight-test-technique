@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+/* Only the custom theme below: no shipped DaisyUI theme, and no dark variant. */
+@plugin "daisyui" {
+  themes: false;
+}
+
+/*
+ * The one place colours are defined. The rule: nothing on screen is coloured except the
+ * drawing — the interface is greyscale plus a single accent. Error is the one exception,
+ * because an error has to be seen. Contrast ratios are WCAG AA against white or better.
+ */
+@plugin "daisyui/theme" {
+  name: "soniclight";
+  default: true;
+  color-scheme: light;
+
+  --color-base-100: #ffffff; /* cards, modal, canvas surroundings */
+  --color-base-200: #f4f4f5; /* page background */
+  --color-base-300: #e4e4e7; /* borders */
+  --color-base-content: #18181b; /* text — 17.7:1 on base-100 */
+
+  --color-primary: #6d4aff; /* the single accent — 5.2:1 with white text */
+  --color-primary-content: #ffffff;
+
+  /* Secondary, accent and neutral stay in the greyscale: one accent only. */
+  --color-secondary: #3f3f46;
+  --color-secondary-content: #ffffff;
+  --color-accent: #6d4aff;
+  --color-accent-content: #ffffff;
+  --color-neutral: #27272a;
+  --color-neutral-content: #ffffff;
+
+  --color-info: #3f3f46;
+  --color-info-content: #ffffff;
+  --color-success: #3f3f46;
+  --color-success-content: #ffffff;
+  --color-warning: #3f3f46;
+  --color-warning-content: #ffffff;
+  --color-error: #b91c1c; /* 6.5:1 either way */
+  --color-error-content: #ffffff;
+
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}

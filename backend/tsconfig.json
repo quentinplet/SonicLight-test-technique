@@ -16,6 +16,6 @@
     "outDir": "dist",
     "sourceMap": true
   },
-  // Typecheck covers the seed and the Prisma config too; only src/ is built (tsconfig.build.json).
-  "include": ["src", "prisma/seed.ts", "prisma.config.ts"]
+  // Typecheck covers tests, the seed and the configs too; only src/ is built (tsconfig.build.json).
+  "include": ["src", "tests", "prisma/seed.ts", "prisma.config.ts", "vitest.config.ts"]
 }
