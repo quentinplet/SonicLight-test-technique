@@ -5,62 +5,74 @@
 
 ## Feature
 
-Fondations — squelette, base de données, schéma
+Authentification — inscription, connexion, identité, gardes (branche `feature/auth`)
 
 ## Status
 
-Done — 17 septembre 2026. Prochain lot à définir.
+In Progress — démarré le 17 septembre 2026.
 
 ## Goals
 
-- Dépôt Git initialisé (`.gitignore`, `README.md` squelette) et **premier commit dans
-  l'heure qui suit le démarrage**, pas en fin de parcours.
-- `backend/` : Express 5 + TypeScript, `tsx watch` en développement, `GET /api/health`
-  répond `200`.
-- `docker-compose.yml` : PostgreSQL 16, `healthcheck` (`pg_isready`), volume nommé.
-  `docker compose up -d db` suffit à démarrer la base.
-- Prisma : `schema.prisma` conforme au §10 de l'overview (`User`, `Drawing`, enum `Role`),
-  première migration générée et appliquée, client généré.
-- `src/lib/env.ts` : validation Zod des variables d'environnement **au boot**. Une clé
-  manquante fait échouer le démarrage avec un message explicite.
-- `src/middleware/errorHandler.ts` : forme d'erreur unique `{ code, message }` (§11).
-- `frontend/` : Vite + Vue 3 + TypeScript + Vue Router + Pinia, `VITE_API_URL` câblé,
-  une page qui appelle `/api/health` **en cross-origin** et affiche le résultat — la chaîne
-  complète est prouvée de bout en bout, CORS compris.
-- `.github/workflows/ci.yml` : typecheck, tests et build sur les deux packages à chaque
-  push. Le workflow doit être vert avant la fin de ce lot.
-- `CLAUDE.md` repasse de `Status: prescriptive` à `Status: descriptive`, chaque commande
-  corrigée après avoir été **réellement exécutée**.
+**Backend**
 
-Commits attendus : les n° 1 à 4 et 7 du plan (§17 de l'overview).
+- `POST /api/auth/register` : `{ userName, password }` validé par Zod, mot de passe haché
+  (bcrypt coût 10), rôle toujours `USER` — aucun champ du corps ne peut fixer le rôle.
+  `409` si le `userName` est pris. Retourne `{ token, user }`.
+- `POST /api/auth/login` : `401` avec **le même message** que le compte existe ou non
+  (pas d'énumération des comptes). Retourne `{ token, user }`.
+- `GET /api/auth/me` : l'utilisateur courant, relu **en base** — seule source fiable de
+  l'identité et du rôle côté client.
+- `lib/jwt.ts` : signature et vérification HS256, `JWT_SECRET` et `JWT_EXPIRES_IN` validés
+  au boot dans `env.ts`.
+- `requireAuth` (en-tête `Authorization: Bearer`, sinon `401`) et `requireAdmin` (après
+  `requireAuth`, sinon `403`).
+- DTO de sortie construit explicitement : `{ id, userName, role }` — `passwordHash` ne sort
+  jamais du service.
+- Tests : jeton falsifié (rôle passé à `ADMIN` sans resignature) rejeté ; `requireAdmin`
+  refuse un `USER` ; mot de passe et identifiant inconnus donnent la même réponse.
+
+**Frontend**
+
+- `api/http.ts` injecte le jeton — seul endroit qui lit `localStorage`, toujours dans un
+  `try/catch`. Un `401` vide la session.
+- Store Pinia `auth` (le seul du projet) : `user`, `login`, `register`, `logout`
+  (`removeItem`, aucun appel serveur), `restore` au démarrage via `/api/auth/me`.
+- Vues `/login` et `/register`, gardes de route (invité / authentifié / admin) — confort
+  d'interface, la sécurité est côté serveur.
+- Responsive dès ces écrans (réponse IRCAM n°1).
 
 ## Notes
 
-**Hors périmètre de ce lot** — authentification, canvas, dessins, interface
-d'administration. Ce lot ne produit aucune fonctionnalité visible : il produit un socle
-qui démarre. C'est volontaire, et c'est ce qui permet aux lots suivants de ne parler que
-de métier.
+**Hors périmètre** — dessin, canvas, routes `/api/drawing`, interface admin (au-delà d'une
+garde de route prête à servir), sonification.
 
-**Pièges attendus** (déjà documentés, à ne pas redécouvrir) :
+**Décisions prises avant de coder** :
 
-- `depends_on` seul n'attend pas que Postgres accepte les connexions — il faut
-  `condition: service_healthy` adossé au `healthcheck`, sinon l'API plante au premier
-  démarrage.
-- `prisma migrate dev`, jamais `prisma db push`.
-- `.dockerignore` dans les deux packages, sinon `node_modules` part dans le contexte de
-  build.
-- Express 5 propage nativement les rejets de promesse vers le middleware d'erreur —
-  **le vérifier** plutôt que le supposer.
-- Pas de proxy Vite : le premier appel `/api/health` doit passer en cross-origin, donc
-  CORS doit être configuré dès ce lot. C'est le but — découvrir CORS ici, pas au
-  déploiement.
-- En CI, `npx prisma generate` avant `tsc --noEmit` côté serveur, sinon l'échec porte sur
-  des types absents sans jamais nommer la cause.
+- **`userName`** : 3 à 30 caractères, lettres, chiffres, `_` et `-`, **converti en
+  minuscules** à l'inscription et au login — « Demo » et « demo » sont le même compte, deux
+  auteurs visuellement identiques ne peuvent pas coexister dans la vue admin.
+- **Mot de passe** : 8 à **72** caractères — bcrypt ignore silencieusement tout ce qui dépasse
+  72 octets ; au-delà, deux mots de passe différents seraient acceptés comme identiques.
+- **Tailwind 4 + DaisyUI 5** installés dans ce lot, commit dédié avant les écrans : les vues
+  d'auth sont écrites une fois, responsive d'emblée.
+- **Tests contre une vraie base**, dans une base `soniclight_test` distincte (les tests ne
+  vident jamais la base de dev ni le seed), et un service Postgres dans le job `server` de
+  la CI. C'est l'infrastructure qu'exigeront les tests d'isolation des dessins.
+- Dépendances : `jsonwebtoken` (liste figée) + `@types/jsonwebtoken` (types, dev).
 
-**Definition of done** : `docker compose up -d db`, puis `npm run dev` dans `backend/` et
-dans `frontend/`, et la page d'accueil affiche la réponse de `/api/health` — en cross-origin,
-sans erreur CORS. `npx tsc --noEmit` et `npm run type-check` passent, et le workflow CI
-est vert sur GitHub. Le tout tient en 5 à 6 commits.
+**Pièges attendus** :
+
+- Pas de `POST /api/auth/logout` : un jeton sans état ne se révoque pas côté serveur.
+- Le payload du JWT ne prouve rien côté client : le rôle vient de `/api/auth/me`.
+- Le rôle de `req.user` vient du jeton **vérifié**, jamais du corps de la requête.
+- Un `userName` unique en base : la course entre deux inscriptions simultanées se règle
+  sur l'erreur d'unicité Prisma (`P2002`), pas sur un `findUnique` préalable seul.
+- `localStorage` lève en navigation privée : jamais d'accès nu.
+
+**Definition of done** : avec la base seedée, `demo` / `demo1234` se connecte, recharge la
+page sans perdre sa session, et n'accède pas à `/admin` ; `admin` / `admin1234` y accède ;
+un nouveau compte s'inscrit et se connecte. Les gardes serveur sont testées. `tsc`, tests,
+`type-check`, build et CI verts ; branche fusionnée dans `main` en `--no-ff`.
 
 ## History
 
