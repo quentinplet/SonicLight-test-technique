@@ -5,62 +5,41 @@
 
 ## Feature
 
-Administration — consulter et modérer les dessins de tous (branche `feature/admin`)
+Retours d'interface — toasts, états de chargement, page 404 (branche `feature/toasts`)
 
 ## Status
 
-Done — 18 septembre 2026, fusionné dans `main` en `--no-ff`. **Les quatre exigences fermes de l'énoncé sont satisfaites.** Prochains chantiers : README, déploiement, sonification.
+Done — 18 septembre 2026, testé dans le navigateur. À fusionner dans `main` en `--no-ff`.
+Prochains chantiers : README, déploiement, sonification.
 
 ## Goals
 
-**Backend**
-
-- `GET /api/admin/drawings` : tous les dessins avec leur auteur, **sans le `data`** —
-  `{ id, title, userName, strokeCount, updatedAt }`, triés du plus récent au plus ancien.
-- `GET /api/admin/drawings/:id` : un dessin, `data` compris, relu par `DrawingDataSchema`.
-- `DELETE /api/admin/drawings/:id` : modération (réponse IRCAM n°4). 404 si l'id n'existe pas.
-- Services **séparés et explicitement nommés** : `listAllForAdmin`, `getByIdForAdmin`,
-  `removeForAdmin` — jamais un `userId?` optionnel sur les fonctions utilisateur, qui
-  rendrait un oubli silencieux.
-- Toutes les routes derrière `requireAuth` **puis** `requireAdmin`.
-- Tests : un `USER` reçoit **403 sur les trois routes**, un invité 401 ; la liste ne contient
-  jamais de `data` ; un admin voit les dessins de tous ; la suppression admin atteint le
-  dessin d'un autre (contrairement à la route utilisateur).
-
-**Frontend**
-
-- `AdminView` : grille de cartes, une par dessin — vignette rendue par `renderStrokes`,
-  titre, auteur, date, nombre de traits.
-- Ouverture d'un dessin (vue agrandie) et suppression avec confirmation.
-- État vide travaillé si aucun dessin n'existe.
-- Le lien « Admin » de l'en-tête existe déjà, affiché seulement si `isAdmin`.
+- **Toast de confirmation** sur l'issue d'une action : enregistrement d'un dessin,
+  suppression côté admin, connexion et inscription. L'échec de ces mêmes actions part en
+  toast rouge.
+- Fermeture **manuelle** (bouton ✕) en plus de la disparition automatique à trois secondes.
+- **Spinners** sur les attentes qui n'en avaient pas : chargement du dessin, liste admin,
+  suppression en cours.
+- **Page 404** pour toute URL inconnue, avec une sortie adaptée à la session.
 
 ## Notes
 
-**Hors périmètre** — modification d'un dessin par l'admin (l'IRCAM parle de consulter et de
-supprimer), gestion des comptes, pagination, recherche, export, rejeu animé, sonification.
+**Hors périmètre** — file d'attente bornée, priorités ou catégories de toasts, annulation
+d'une suppression, page d'erreur 500, rejeu animé, sonification.
 
 **Décisions prises avant de coder** :
 
-- **La liste ne renvoie pas le `data`.** Vingt dessins complets, c'est plusieurs mégaoctets
-  pour afficher vingt titres. Conséquence assumée : les vignettes demandent un second appel
-  par dessin — acceptable à cette échelle, et la limite est nommée plutôt que masquée.
-- **L'id du dessin n'apparaît que côté admin.** Les routes utilisateur restent au singulier
-  et sans id : c'est la seule surface où un identifiant transite, et elle est derrière
-  `requireAdmin`.
-- **Le seed devra créer des dessins** pour que la vue admin ne soit pas vide au clonage.
+- **La liste de toasts vit au scope module**, pas dans un composant ni dans Pinia : un toast
+  doit survivre à la navigation qui le déclenche (connexion puis redirection). La règle
+  « un seul store » tient.
+- **Deux mécanismes, deux rôles** : les `alert` en ligne gardent les erreurs attachées à un
+  écran (chargement en échec, identifiants refusés), le toast prend l'issue d'une action.
+- **Le succès est vert** — exception assumée à « rien n'est coloré sauf le dessin », bornée
+  aux notifications et au rouge des suppressions.
 
-**Pièges attendus** :
-
-- `requireAdmin` s'applique **après** `requireAuth` : sans jeton c'est 401, avec un jeton
-  `USER` c'est 403 — deux cas distincts, tous deux testés.
-- Le rôle vient du jeton **vérifié**, jamais d'un champ du client.
-- Les vignettes rendent du canvas : dimensionner le backing store avec `devicePixelRatio`,
-  et réserver la hauteur finale pour que la grille ne saute pas quand les données arrivent.
-
-**Definition of done** : `admin` voit les dessins de `demo` et des autres, en ouvre un, en
-supprime un ; `demo` reçoit un 403 sur les routes admin et ne voit pas le lien. Tests verts,
-`tsc`, `type-check`, build et CI verts avant fusion en `--no-ff`.
+**Definition of done** : les quatre toasts apparaissent et se ferment à la main comme au
+bout de trois secondes ; Clear est actif sur un dessin rechargé ; `/nimportequoi` affiche le
+404 et sa sortie mène au bon écran. `type-check` et build verts avant fusion en `--no-ff`.
 
 ## History
 
@@ -207,3 +186,38 @@ Pièges qui mordent encore :
   changent coup sur coup : rechargement forcé avant de conclure à un bug.
 - **Sur une suppression, « déjà absent » n'est pas un échec** : un 404 se traite comme un
   succès.
+
+### 18/09 — Retours d'interface ✅
+
+Toasts de succès et d'erreur sur l'enregistrement, la suppression admin et l'authentification ;
+spinners de chargement ; page 404. Branche `feature/toasts`, commits `4fee97f` → `5b81de3`.
+
+Écarts au plan, et pourquoi :
+
+- **Le succès est vert** (`#15803d`, 5,0:1 sur blanc), alors que la règle disait « rien n'est
+  coloré sauf le dessin ». L'exception est assumée et **bornée** : les notifications et le
+  rouge des suppressions, rien d'autre. Overview §15 mis à jour en conséquence.
+- **Undo réactivé en même temps que Clear** : même garde, même défaut. Un dessin rechargé
+  n'avait « rien changé depuis la sauvegarde », donc les deux boutons restaient éteints —
+  et le seul moyen d'effacer son dessin (Clear puis Save d'un canvas vide) devenait
+  injoignable.
+- **Pas de `<Transition>` sur les toasts** : le rejeu reste la seule animation du produit.
+- **Page 404 sans `meta`** : une URL inconnue est un 404 pour tout le monde. La passer
+  derrière `requiresAuth` ferait croire qu'elle existe derrière une session, et ne
+  protégerait rien — la table des routes est dans le bundle.
+
+Pièges qui mordent encore :
+
+- **Une région `aria-live` insérée en même temps que son message n'est pas annoncée** : le
+  conteneur reste dans le DOM en permanence, donc en `pointer-events-none` tant qu'il est
+  vide, sinon il intercepte les clics.
+- **`load()` incrémente la révision**, et la vue aligne `savedRevision` dessus : après un
+  chargement, « a-t-il changé depuis la sauvegarde ? » répond non alors que le canvas est
+  plein. C'est la mauvaise question pour Undo et Clear.
+- **Le 404 d'une SPA dépend de l'hébergeur** : sans repli sur `index.html`, une URL inconnue
+  n'atteint jamais le routeur. Natif chez Vercel et Netlify, à câbler sur GitHub Pages.
+- **`btn-ghost` sur un fond coloré** pose un voile gris qui jure : sur vert ou rouge, seul un
+  changement d'opacité tient.
+- **Le formateur de l'éditeur réécrit tout le fichier** (guillemets, points-virgules) dès
+  qu'il est ouvert : les diffs mélangent le fond et la forme, et découper un commit par lot
+  devient impossible. Un `.prettierrc` commité réglerait le sujet une fois pour toutes.

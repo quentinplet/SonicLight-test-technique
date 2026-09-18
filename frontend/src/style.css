@@ -7,8 +7,9 @@
 
 /*
  * The one place colours are defined. The rule: nothing on screen is coloured except the
- * drawing — the interface is greyscale plus a single accent. Error is the one exception,
- * because an error has to be seen. Contrast ratios are WCAG AA against white or better.
+ * drawing — the interface is greyscale plus a single accent. Success and error are the two
+ * exceptions, and only as notifications: the outcome of an action has to be seen without
+ * being read. Contrast ratios are WCAG AA against white or better.
  */
 @plugin "daisyui/theme" {
   name: "soniclight";
@@ -33,7 +34,7 @@
 
   --color-info: #3f3f46;
   --color-info-content: #ffffff;
-  --color-success: #3f3f46;
+  --color-success: #15803d; /* 5.0:1 with white text */
   --color-success-content: #ffffff;
   --color-warning: #3f3f46;
   --color-warning-content: #ffffff;

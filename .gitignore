@@ -22,3 +22,7 @@ npm-debug.log*
 
 # Test output
 coverage/
+
+.claude/
+# Local interview notes — never committed
+interview-prep.md
