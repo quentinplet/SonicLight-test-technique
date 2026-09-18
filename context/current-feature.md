@@ -9,7 +9,7 @@ Administration — consulter et modérer les dessins de tous (branche `feature/a
 
 ## Status
 
-In Progress — démarré le 18 septembre 2026.
+Done — 18 septembre 2026, fusionné dans `main` en `--no-ff`. **Les quatre exigences fermes de l'énoncé sont satisfaites.** Prochains chantiers : README, déploiement, sonification.
 
 ## Goals
 
@@ -173,3 +173,37 @@ Pièges qui mordent encore :
   gratuit grâce aux coordonnées normalisées.
 - **Une classe Tailwind construite à l'exécution n'existe pas** dans le CSS produit : les
   couleurs de trait passent par une variable CSS en ligne.
+
+### 18/09 — Administration ✅
+
+`GET/DELETE /api/admin/drawings(/:id)` derrière `requireAuth` + `requireAdmin`, services
+séparés et explicitement nommés, dessins de démonstration générés, vue admin en grille avec
+ouverture et suppression. 64 tests backend. Branche `feature/admin`, commits `7d92cf1` →
+`32513ed`.
+
+Écarts au plan, et pourquoi :
+
+- **Suppression derrière une modale de confirmation dédiée**, atteinte depuis l'icône d'une
+  carte comme depuis le dessin ouvert, et nommant ce qui va disparaître. Les boutons de
+  suppression sont le seul rouge de l'application : l'exception assumée à « rien n'est
+  coloré sauf le dessin ».
+- **`strokeCount` retiré** de la liste et de l'interface : conséquence utile, la requête
+  n'a plus besoin de charger la colonne `jsonb` du tout.
+- **Un admin atterrit sur `/admin`** après connexion ; l'écran de dessin reste accessible.
+- **Le compte `admin` du seed n'a pas de dessin** : la démonstration sépare mieux les rôles,
+  et ça fait tester le canvas vide.
+- **`DELETE /api/drawing` côté utilisateur reste non exposée** (décision du lot précédent).
+
+Pièges qui mordent encore :
+
+- **Le rôle vient du jeton vérifié** : promouvoir un compte en base ne suffit pas, un jeton
+  émis avant dit encore `USER`. C'est ce qui a fait échouer le premier test admin, et c'est
+  la limite assumée du JWT sans état.
+- **Une réponse `204` n'a pas de corps** : `res.json()` y échoue, la suppression paraissait
+  échouer alors qu'elle avait réussi, et le `404` du second essai n'était que la conséquence.
+- **`clamp()` masque une erreur de géométrie** : la spirale sortait aplatie parce qu'un rayon
+  rond ne peut pas dépasser `0,5 / aspectRatio` de la largeur.
+- **Le rechargement à chaud de Vite peut garder un module périmé** quand script et template
+  changent coup sur coup : rechargement forcé avant de conclure à un bug.
+- **Sur une suppression, « déjà absent » n'est pas un échec** : un 404 se traite comme un
+  succès.
