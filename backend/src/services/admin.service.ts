@@ -13,7 +13,6 @@ export interface DrawingSummary {
   id: string;
   title: string;
   userName: string;
-  strokeCount: number;
   updatedAt: Date;
 }
 
@@ -28,16 +27,10 @@ export interface DrawingWithAuthor {
 export async function listAllForAdmin(): Promise<DrawingSummary[]> {
   const drawings = await prisma.drawing.findMany({
     orderBy: { updatedAt: "desc" },
-    include: { user: { select: { userName: true } } },
+    select: { id: true, title: true, updatedAt: true, user: { select: { userName: true } } },
   });
 
-  return drawings.map((drawing) => ({
-    id: drawing.id,
-    title: drawing.title,
-    userName: drawing.user.userName,
-    strokeCount: DrawingDataSchema.parse(drawing.data).strokes.length,
-    updatedAt: drawing.updatedAt,
-  }));
+  return drawings.map(({ user, ...drawing }) => ({ ...drawing, userName: user.userName }));
 }
 
 export async function getByIdForAdmin(id: string): Promise<DrawingWithAuthor> {

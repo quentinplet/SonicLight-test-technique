@@ -67,7 +67,7 @@ describe("as an admin", () => {
 
     const [summary, ...rest] = await res.json();
     expect(rest).toHaveLength(0);
-    expect(summary).toMatchObject({ title: "Sunrise", userName: "alice", strokeCount: 1 });
+    expect(summary).toMatchObject({ title: "Sunrise", userName: "alice" });
     expect(summary).not.toHaveProperty("data");
   });
 
