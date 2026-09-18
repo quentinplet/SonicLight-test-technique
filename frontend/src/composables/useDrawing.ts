@@ -15,6 +15,31 @@ export interface Tool {
   width: number
 }
 
+/**
+ * Closed palette, named for screen readers. Darkened for the light theme: the original
+ * yellow, green and cyan sat under 3:1 on white, the WCAG minimum for a graphical element.
+ * A free colour picker would also make the hue → timbre mapping of sonification arbitrary.
+ */
+export const PALETTE = [
+  { name: 'Ink', hex: '#18181b' },
+  { name: 'Red', hex: '#e11d48' },
+  { name: 'Orange', hex: '#c2410c' },
+  { name: 'Yellow', hex: '#a16207' },
+  { name: 'Green', hex: '#15803d' },
+  { name: 'Cyan', hex: '#0e7490' },
+  { name: 'Violet', hex: '#7c3aed' },
+] as const
+
+/**
+ * Widths as a fraction of the canvas width, so they hold at any size.
+ * The glyph is the only visual cue a native <option> can carry: it holds text, never markup.
+ */
+export const WIDTHS = [
+  { name: 'Thin', glyph: '•', value: 0.002 },
+  { name: 'Medium', glyph: '●', value: 0.005 },
+  { name: 'Thick', glyph: '⬤', value: 0.012 },
+] as const
+
 export function useDrawing(canvas: Ref<HTMLCanvasElement | null>, tool: Ref<Tool>) {
   const strokes = ref<Stroke[]>([])
   const current = ref<Stroke | null>(null)
