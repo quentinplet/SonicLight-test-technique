@@ -3,7 +3,9 @@ import { PALETTE, WIDTHS, type Tool } from '@/composables/useDrawing'
 
 const tool = defineModel<Tool>({ required: true })
 
-defineProps<{ isEmpty: boolean; strokesChanged: boolean; unsaved: boolean; saving: boolean }>()
+// Undo and clear only need something on the canvas — including a drawing loaded from the
+// server. Saving is the only button that asks what changed since the last save.
+defineProps<{ isEmpty: boolean; unsaved: boolean; saving: boolean }>()
 const emit = defineEmits<{ undo: []; clear: []; save: [] }>()
 </script>
 
@@ -38,7 +40,7 @@ const emit = defineEmits<{ undo: []; clear: []; save: [] }>()
       <button
         class="btn btn-sm min-w-24 cursor-pointer border-base-300 bg-base-100 hover:bg-base-300"
         type="button"
-        :disabled="isEmpty || !strokesChanged"
+        :disabled="isEmpty"
         @click="emit('undo')"
       >
         Undo
@@ -46,7 +48,7 @@ const emit = defineEmits<{ undo: []; clear: []; save: [] }>()
       <button
         class="btn btn-sm min-w-24 cursor-pointer border-base-300 bg-base-100 hover:bg-base-300"
         type="button"
-        :disabled="isEmpty || !strokesChanged"
+        :disabled="isEmpty"
         @click="emit('clear')"
       >
         Clear

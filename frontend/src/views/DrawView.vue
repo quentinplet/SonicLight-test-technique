@@ -100,7 +100,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       <DrawingToolbar
         v-model="tool"
         :is-empty="drawing.isEmpty.value"
-        :strokes-changed="strokesChanged"
         :unsaved="unsaved"
         :saving="saving"
         @undo="drawing.undo"
