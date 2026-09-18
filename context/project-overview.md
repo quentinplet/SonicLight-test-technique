@@ -1242,6 +1242,10 @@ de bout en bout :
 
 > **Rien n'est coloré à l'écran, sauf le dessin.** Toute l'interface est en niveaux de gris,
 > plus un accent unique. Les seules couleurs saturées de l'application sont celles des traits.
+>
+> **L'exception : les notifications.** Un toast de succès est vert, un toast d'erreur est
+> rouge — l'issue d'une action doit se voir sans se lire. L'exception est bornée aux toasts
+> et au rouge des boutons de suppression ; elle ne s'étend ni au chrome ni aux états.
 
 Cette règle est perceptible par un relecteur, se justifie en une phrase, et tranche
 automatiquement les cent micro-décisions qu'on n'a pas le temps d'arbitrer une par une. Trois
@@ -1350,8 +1354,9 @@ Un seul fichier, `frontend/src/style.css`, sans fichier de configuration JavaScr
   --color-base-content: #18181b; /* 17,7:1 sur blanc */
   --color-primary:   #6d4aff;   /* l'unique accent — 5,2:1 avec du texte blanc */
   --color-primary-content: #ffffff;
-  --color-error:     #b91c1c;   /* seule autre couleur : une erreur doit se voir */
-  /* secondary, accent, neutral, info, success, warning : niveaux de gris */
+  --color-success:   #15803d;   /* toast de succès — 5,0:1 avec du texte blanc */
+  --color-error:     #b91c1c;   /* une erreur doit se voir */
+  /* secondary, accent, neutral, info, warning : niveaux de gris */
 }
 ```
 
