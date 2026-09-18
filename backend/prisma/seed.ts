@@ -30,7 +30,7 @@ const DEMO_USERS: DemoUser[] = [
     userName: "alex",
     password: "alex1234",
     role: "USER",
-    drawing: { title: "Three waves", data: waves(["#e11d48", "#0e7490", "#15803d"]) },
+    drawing: { title: "Three waves", data: waves(["#e11d48", "#a16207", "#15803d"]) },
   },
   {
     userName: "sam",
@@ -38,7 +38,7 @@ const DEMO_USERS: DemoUser[] = [
     role: "USER",
     drawing: {
       title: "Burst",
-      data: burst(["#e11d48", "#c2410c", "#a16207", "#15803d", "#0e7490", "#7c3aed"]),
+      data: burst(["#18181b", "#e11d48", "#a16207", "#15803d", "#7c3aed"]),
     },
   },
   // No drawing: the admin moderates other people's work, which makes the demo read better
