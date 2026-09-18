@@ -4,9 +4,13 @@ import * as adminApi from "@/api/admin";
 import { errorMessage } from "@/api/errors";
 import { ApiError } from "@/api/http";
 import DrawingPreview from "@/components/DrawingPreview.vue";
+import { useToast } from "@/composables/useToast";
+
+const { notify } = useToast();
 
 const drawings = ref<adminApi.DrawingWithAuthor[]>([]);
 const loading = ref(true);
+// Inline, and only for the initial load: an action's outcome goes to a toast instead.
 const error = ref<string | null>(null);
 
 const opened = ref<adminApi.DrawingWithAuthor | null>(null);
@@ -15,6 +19,7 @@ const dialog = ref<HTMLDialogElement | null>(null);
 // Deleting always goes through its own dialog, from the card icon as from the opened drawing.
 const doomed = ref<adminApi.DrawingWithAuthor | null>(null);
 const confirmDialog = ref<HTMLDialogElement | null>(null);
+const deleting = ref(false);
 
 // The list carries no data, so each drawing is fetched for its preview. Fine at this scale;
 // with hundreds of drawings, the server would return a thumbnail or a reduced stroke set.
@@ -43,20 +48,25 @@ function askDeletion(drawing: adminApi.DrawingWithAuthor): void {
   confirmDialog.value?.showModal();
 }
 
+// Gone from the server: drop it from the list and say so, whichever path got us here.
+function forget(drawing: adminApi.DrawingWithAuthor): void {
+  drawings.value = drawings.value.filter((other) => other.id !== drawing.id);
+  notify(`“${drawing.title}” by ${drawing.userName} was deleted successfully.`);
+}
+
 async function remove(): Promise<void> {
   const drawing = doomed.value;
   if (!drawing) return;
+  deleting.value = true;
   try {
     await adminApi.deleteDrawing(drawing.id);
-    drawings.value = drawings.value.filter((other) => other.id !== drawing.id);
+    forget(drawing);
   } catch (err) {
     // 404: someone deleted it first, or this list is stale. Either way it is gone — not an error.
-    if (err instanceof ApiError && err.status === 404) {
-      drawings.value = drawings.value.filter((other) => other.id !== drawing.id);
-    } else {
-      error.value = errorMessage(err);
-    }
+    if (err instanceof ApiError && err.status === 404) forget(drawing);
+    else notify(errorMessage(err), "error");
   } finally {
+    deleting.value = false;
     confirmDialog.value?.close();
     dialog.value?.close();
   }
@@ -72,7 +82,15 @@ onMounted(load);
     <div v-if="error" role="alert" class="alert alert-error alert-soft mt-4">
       {{ error }}
     </div>
-    <p v-else-if="loading" class="mt-4 text-base-content/70">Loading…</p>
+    <!-- Roughly a card's height, so the grid does not jump when the drawings land. -->
+    <div
+      v-else-if="loading"
+      class="mt-4 flex min-h-64 items-center justify-center gap-3 text-base-content/70"
+      role="status"
+    >
+      <span class="loading loading-spinner loading-lg" aria-hidden="true" />
+      Loading drawings…
+    </div>
 
     <div
       v-else-if="drawings.length === 0"
@@ -118,7 +136,11 @@ onMounted(load);
             stroke-width="1.8"
             aria-hidden="true"
           >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"
+            />
           </svg>
         </button>
       </li>
@@ -131,7 +153,10 @@ onMounted(load);
           {{ opened.userName }} · saved
           {{ new Date(opened.updatedAt).toLocaleString() }}
         </p>
-        <DrawingPreview class="mt-3 rounded-box border border-base-300" :data="opened.data" />
+        <DrawingPreview
+          class="mt-3 rounded-box border border-base-300"
+          :data="opened.data"
+        />
 
         <div class="modal-action">
           <button
@@ -157,12 +182,22 @@ onMounted(load);
       <div v-if="doomed" class="modal-box max-w-md">
         <h2 class="text-lg font-semibold">Delete this drawing?</h2>
         <p class="mt-2 text-sm text-base-content/70">
-          “{{ doomed.title }}” by {{ doomed.userName }} will be removed for good. This cannot be
-          undone.
+          “{{ doomed.title }}” by {{ doomed.userName }} will be removed for
+          good. This cannot be undone.
         </p>
 
         <div class="modal-action">
-          <button class="btn btn-sm btn-error cursor-pointer" type="button" @click="remove">
+          <button
+            class="btn btn-sm btn-error cursor-pointer"
+            type="button"
+            :disabled="deleting"
+            @click="remove"
+          >
+            <span
+              v-if="deleting"
+              class="loading loading-spinner loading-xs"
+              aria-hidden="true"
+            />
             Delete
           </button>
           <form method="dialog">
@@ -174,7 +209,9 @@ onMounted(load);
           </form>
         </div>
       </div>
-      <form method="dialog" class="modal-backdrop"><button>Cancel</button></form>
+      <form method="dialog" class="modal-backdrop">
+        <button>Cancel</button>
+      </form>
     </dialog>
   </main>
 </template>

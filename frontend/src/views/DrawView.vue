@@ -1,80 +1,96 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import * as drawingApi from '@/api/drawing'
-import { errorMessage } from '@/api/errors'
-import { ApiError } from '@/api/http'
-import DrawingToolbar from '@/components/DrawingToolbar.vue'
-import EditableTitle from '@/components/EditableTitle.vue'
-import { countPoints } from '@/composables/renderStrokes'
-import { PALETTE, useDrawing, WIDTHS, type Tool } from '@/composables/useDrawing'
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import * as drawingApi from "@/api/drawing";
+import { errorMessage } from "@/api/errors";
+import { ApiError } from "@/api/http";
+import DrawingToolbar from "@/components/DrawingToolbar.vue";
+import EditableTitle from "@/components/EditableTitle.vue";
+import { countPoints } from "@/composables/renderStrokes";
+import {
+  PALETTE,
+  useDrawing,
+  WIDTHS,
+  type Tool,
+} from "@/composables/useDrawing";
+import { useToast } from "@/composables/useToast";
 
-const canvas = ref<HTMLCanvasElement | null>(null)
-const tool = ref<Tool>({ color: PALETTE[0].hex, width: WIDTHS[1].value })
+const { notify } = useToast();
 
-const drawing = useDrawing(canvas, tool)
+const canvas = ref<HTMLCanvasElement | null>(null);
+const tool = ref<Tool>({ color: PALETTE[0].hex, width: WIDTHS[1].value });
 
-const title = ref('')
-const savedTitle = ref('')
-const savedAt = ref<string | null>(null)
-const savedRevision = ref(0)
+const drawing = useDrawing(canvas, tool);
 
-// Nothing to undo or clear while the strokes have not moved since the last save…
-const strokesChanged = computed(() => drawing.revision.value !== savedRevision.value)
-// …but a renamed drawing is worth saving on its own.
-const unsaved = computed(() => strokesChanged.value || title.value.trim() !== savedTitle.value)
-const saving = ref(false)
-const error = ref<string | null>(null)
+const title = ref("");
+const savedTitle = ref("");
+const savedAt = ref<string | null>(null);
+const savedRevision = ref(0);
+
+const strokesChanged = computed(
+  () => drawing.revision.value !== savedRevision.value,
+);
+// A renamed drawing is worth saving on its own, strokes untouched.
+const unsaved = computed(
+  () => strokesChanged.value || title.value.trim() !== savedTitle.value,
+);
+const saving = ref(false);
+const loading = ref(true);
+// Inline, and only for the initial load: an action's outcome goes to a toast instead.
+const error = ref<string | null>(null);
 
 // One screen: it opens on the drawing already saved, and saving replaces it.
 async function loadSaved(): Promise<void> {
   try {
-    const saved = await drawingApi.getDrawing()
-    title.value = saved.title
-    savedTitle.value = saved.title
-    savedAt.value = saved.updatedAt
-    drawing.load(saved.data.strokes)
-    savedRevision.value = drawing.revision.value
+    const saved = await drawingApi.getDrawing();
+    title.value = saved.title;
+    savedTitle.value = saved.title;
+    savedAt.value = saved.updatedAt;
+    drawing.load(saved.data.strokes);
+    savedRevision.value = drawing.revision.value;
   } catch (err) {
     // 404 means "nothing drawn yet": a blank canvas, not a failure.
-    if (!(err instanceof ApiError) || err.status !== 404) error.value = errorMessage(err)
+    if (!(err instanceof ApiError) || err.status !== 404)
+      error.value = errorMessage(err);
+  } finally {
+    loading.value = false;
   }
 }
 
 async function save(): Promise<void> {
   // An empty canvas can be saved: with no delete button, that is how a drawing is wiped.
-  saving.value = true
-  error.value = null
+  saving.value = true;
   try {
     // PUT: it creates the drawing or replaces the previous one, whichever applies.
     // An empty title leaves the saved one untouched.
     const saved = await drawingApi.saveDrawing({
       title: title.value.trim() || undefined,
       data: drawing.data.value,
-    })
-    title.value = saved.title
-    savedTitle.value = saved.title
-    savedAt.value = saved.updatedAt
-    savedRevision.value = drawing.revision.value
+    });
+    title.value = saved.title;
+    savedTitle.value = saved.title;
+    savedAt.value = saved.updatedAt;
+    savedRevision.value = drawing.revision.value;
+    notify("Drawing saved successfully !", "success");
   } catch (err) {
-    error.value = errorMessage(err)
+    notify(errorMessage(err), "error");
   } finally {
-    saving.value = false
+    saving.value = false;
   }
 }
 
 // Three lines, and the difference between a demo and a tool.
 function onKeydown(event: KeyboardEvent): void {
-  if ((event.metaKey || event.ctrlKey) && event.key === 'z') {
-    event.preventDefault()
-    drawing.undo()
+  if ((event.metaKey || event.ctrlKey) && event.key === "z") {
+    event.preventDefault();
+    drawing.undo();
   }
 }
 
 onMounted(() => {
-  window.addEventListener('keydown', onKeydown)
-  void loadSaved()
-})
-onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
+  window.addEventListener("keydown", onKeydown);
+  void loadSaved();
+});
+onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
 </script>
 
 <template>
@@ -107,12 +123,27 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         @save="save"
       />
 
-      <div v-if="error" role="alert" class="alert alert-error alert-soft mt-3">{{ error }}</div>
+      <div v-if="error" role="alert" class="alert alert-error alert-soft mt-3">
+        {{ error }}
+      </div>
 
+      <!-- Same line, same height either way: the meta line must not jump when data lands. -->
       <p class="mt-2 font-mono text-xs text-base-content/70">
-        {{ drawing.data.value.strokes.length }} strokes · {{ countPoints(drawing.data.value) }} points
-        <span v-if="savedAt"> · saved {{ new Date(savedAt).toLocaleString() }}</span>
-        <span v-else> · not saved yet</span>
+        <template v-if="loading">
+          <span
+            class="loading loading-spinner loading-xs mr-1 align-middle"
+            aria-hidden="true"
+          />
+          Loading your drawing…
+        </template>
+        <template v-else>
+          {{ drawing.data.value.strokes.length }} strokes ·
+          {{ countPoints(drawing.data.value) }} points
+          <span v-if="savedAt">
+            · saved {{ new Date(savedAt).toLocaleString() }}</span
+          >
+          <span v-else> · not saved yet</span>
+        </template>
       </p>
     </div>
   </main>

@@ -4,8 +4,10 @@ import { RouterLink, useRouter } from 'vue-router'
 import type { Credentials } from '@/api/auth'
 import { errorMessage } from '@/api/errors'
 import CredentialsForm from '@/components/CredentialsForm.vue'
+import { useToast } from '@/composables/useToast'
 import { useAuthStore } from '@/stores/auth'
 
+const { notify } = useToast()
 const auth = useAuthStore()
 const router = useRouter()
 
@@ -18,6 +20,8 @@ async function onSubmit(credentials: Credentials): Promise<void> {
   try {
     // Registration signs the user in: straight to the app.
     await auth.register(credentials)
+    // The name as the server answered it: it trims and lowercases what was typed.
+    notify(`Welcome, ${auth.user?.userName ?? credentials.userName}`)
     await router.replace('/')
   } catch (err) {
     error.value = errorMessage(err)
