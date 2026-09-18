@@ -4,6 +4,9 @@ import type { DrawingData } from "../types/drawing.js";
 
 const HEX_COLOUR = /^#[0-9a-fA-F]{6}$/;
 
+/** The shape of the drawing surface, shared by the client: every drawing uses it. */
+export const ASPECT_RATIO = 1.5;
+
 const PointSchema = z.object({
   x: z.number().min(0).max(1),
   y: z.number().min(0).max(1),
