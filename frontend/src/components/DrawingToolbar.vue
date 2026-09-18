@@ -5,8 +5,8 @@ const tool = defineModel<Tool>({ required: true });
 
 // Undo and clear only need something on the canvas — including a drawing loaded from the
 // server. Saving is the only button that asks what changed since the last save.
-defineProps<{ isEmpty: boolean; unsaved: boolean; saving: boolean; playing: boolean }>();
-const emit = defineEmits<{ undo: []; clear: []; save: []; listen: [] }>();
+defineProps<{ isEmpty: boolean; unsaved: boolean; saving: boolean }>();
+const emit = defineEmits<{ undo: []; clear: []; save: [] }>();
 </script>
 
 <template>
@@ -40,15 +40,6 @@ const emit = defineEmits<{ undo: []; clear: []; save: []; listen: [] }>();
     </label>
 
     <div class="ml-auto flex items-center gap-2">
-      <button
-        class="btn btn-sm min-w-24 cursor-pointer border-base-300 bg-base-100 hover:bg-base-300"
-        type="button"
-        :disabled="isEmpty"
-        :aria-pressed="playing"
-        @click="emit('listen')"
-      >
-        {{ playing ? "Stop" : "Listen" }}
-      </button>
       <!-- base-100, not the default transparent button: the page itself is base-200. -->
       <button
         class="btn btn-sm min-w-24 cursor-pointer border-base-300 bg-base-100 hover:bg-base-300"

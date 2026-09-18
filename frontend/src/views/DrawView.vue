@@ -93,8 +93,28 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
       fit on screen: nobody should scroll to reach the palette.
     -->
     <div class="mx-auto w-full" style="max-width: calc((100dvh - 15rem) * 1.5)">
-      <!-- Click the title to rename. Left blank, the server keeps the one already saved. -->
-      <EditableTitle v-model="title" placeholder="Untitled drawing" />
+      <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+        <!-- Click the title to rename. Left blank, the server keeps the one already saved. -->
+        <EditableTitle v-model="title" placeholder="Untitled drawing" class="self-end" />
+        <button
+          class="btn btn-primary h-11 cursor-pointer gap-2 px-6"
+          type="button"
+          :disabled="drawing.isEmpty.value"
+          :aria-pressed="audio.playing.value"
+          @click="audio.toggle(() => drawing.data.value)"
+        >
+          <svg class="size-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <rect v-if="audio.playing.value" x="7" y="7" width="10" height="10" rx="1.5" />
+            <path
+              v-else
+              d="M8 5.5v13a1 1 0 0 0 1.53.85l10-6.5a1 1 0 0 0 0-1.7l-10-6.5A1 1 0 0 0 8 5.5z"
+            />
+          </svg>
+          {{ audio.playing.value ? "Stop" : "Play Sound" }}
+        </button>
+
+        <span aria-hidden="true" />
+      </div>
       <!-- touch-none: without touch-action, drawing with a finger scrolls the page instead. -->
       <canvas
         ref="canvas"
@@ -111,11 +131,9 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
         :is-empty="drawing.isEmpty.value"
         :unsaved="unsaved"
         :saving="saving"
-        :playing="audio.playing.value"
         @undo="drawing.undo"
         @clear="drawing.clear"
         @save="save"
-        @listen="audio.toggle(() => drawing.data.value)"
       />
 
       <div v-if="error" role="alert" class="alert alert-error alert-soft mt-3">

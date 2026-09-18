@@ -26,12 +26,12 @@ function stopEditing(): void {
 </script>
 
 <template>
-  <div class="flex justify-center">
+  <div class="flex">
     <input
       v-if="editing"
       ref="input"
       v-model="title"
-      class="input input-sm input-ghost w-auto text-center text-xl font-semibold"
+      class="input input-sm input-ghost w-auto px-0 text-xl font-semibold"
       type="text"
       maxlength="80"
       :size="size"
@@ -45,7 +45,7 @@ function stopEditing(): void {
     <!-- A button, not a div: clickable and reachable with the keyboard for free. -->
     <button
       v-else
-      class="max-w-full cursor-text truncate px-2 text-xl font-semibold hover:opacity-70"
+      class="max-w-full cursor-text truncate pr-2 text-xl font-semibold hover:opacity-70"
       type="button"
       :aria-label="`Rename drawing, currently ${title || props.placeholder}`"
       @click="edit"
