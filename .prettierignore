@@ -1,0 +1,8 @@
+# Generated or built, never hand-edited.
+dist/
+coverage/
+backend/src/generated/
+backend/prisma/migrations/
+
+# Prose is wrapped by hand, and the tables in context/ would be reflowed for nothing.
+*.md
