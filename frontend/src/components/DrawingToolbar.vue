@@ -3,8 +3,8 @@ import { PALETTE, WIDTHS, type Tool } from '@/composables/useDrawing'
 
 const tool = defineModel<Tool>({ required: true })
 
-defineProps<{ isEmpty: boolean }>()
-const emit = defineEmits<{ undo: []; clear: [] }>()
+defineProps<{ isEmpty: boolean; strokesChanged: boolean; unsaved: boolean; saving: boolean }>()
+const emit = defineEmits<{ undo: []; clear: []; save: [] }>()
 </script>
 
 <template>
@@ -36,20 +36,24 @@ const emit = defineEmits<{ undo: []; clear: [] }>()
     <div class="ml-auto flex items-center gap-2">
       <!-- base-100, not the default transparent button: the page itself is base-200. -->
       <button
-        class="btn btn-sm cursor-pointer border-base-300 bg-base-100 hover:bg-base-300"
+        class="btn btn-sm min-w-24 cursor-pointer border-base-300 bg-base-100 hover:bg-base-300"
         type="button"
-        :disabled="isEmpty"
+        :disabled="isEmpty || !strokesChanged"
         @click="emit('undo')"
       >
         Undo
       </button>
       <button
-        class="btn btn-sm cursor-pointer border-base-300 bg-base-100 hover:bg-base-300"
+        class="btn btn-sm min-w-24 cursor-pointer border-base-300 bg-base-100 hover:bg-base-300"
         type="button"
-        :disabled="isEmpty"
+        :disabled="isEmpty || !strokesChanged"
         @click="emit('clear')"
       >
         Clear
+      </button>
+      <button class="btn btn-sm btn-primary min-w-24 cursor-pointer" type="button" :disabled="saving || !unsaved" @click="emit('save')">
+        <span v-if="saving" class="loading loading-spinner loading-xs" aria-hidden="true" />
+        Save
       </button>
     </div>
   </div>

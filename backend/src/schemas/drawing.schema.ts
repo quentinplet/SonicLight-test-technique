@@ -23,7 +23,8 @@ export const DrawingDataSchema: z.ZodType<DrawingData> = z.object({
   version: z.literal(1),
   aspectRatio: z.number().positive().max(10),
   background: z.string().regex(HEX_COLOUR, "Background must be a hex value like #ffffff"),
-  strokes: z.array(StrokeSchema).min(1).max(1_000),
+  // No lower bound: saving an empty canvas is how a user wipes what they had saved.
+  strokes: z.array(StrokeSchema).max(1_000),
 });
 
 export const SaveDrawingSchema = z.object({

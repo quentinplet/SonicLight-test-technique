@@ -44,8 +44,8 @@ describe("DrawingDataSchema", () => {
     expect(DrawingDataSchema.safeParse({ ...valid, strokes }).success).toBe(false);
   });
 
-  it("rejects a drawing with no stroke at all", () => {
-    expect(DrawingDataSchema.safeParse({ ...valid, strokes: [] }).success).toBe(false);
+  it("accepts a drawing with no stroke: that is how a saved drawing is wiped", () => {
+    expect(DrawingDataSchema.safeParse({ ...valid, strokes: [] }).success).toBe(true);
   });
 });
 

@@ -29,20 +29,22 @@ export async function getDrawing(userId: string): Promise<DrawingDto> {
   };
 }
 
-/** Creates the drawing, or replaces the existing one: userId is unique. */
+/**
+ * Creates the drawing, or replaces the existing one: userId is unique.
+ * Without a title, an existing drawing keeps the one it had, and a first save takes the
+ * owner's user name. Trimmed here too: the service does not rely on its caller.
+ */
 export async function saveDrawing(
   userId: string,
   input: SaveDrawingInput,
 ): Promise<DrawingDto> {
-  // Trimmed here too: the service does not rely on its caller having done it.
-  const title = input.title?.trim() || (await ownerName(userId));
-  const values = { title, data: input.data };
+  const title = input.title?.trim();
 
   // upsert = update if exists, else create. The unique key is userId, so there is only one drawing per user.
   const drawing = await prisma.drawing.upsert({
     where: { userId },
-    update: values,
-    create: { ...values, userId },
+    update: title ? { title, data: input.data } : { data: input.data },
+    create: { title: title || (await ownerName(userId)), data: input.data, userId },
   });
   return {
     title: drawing.title,

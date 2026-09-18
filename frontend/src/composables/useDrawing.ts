@@ -43,6 +43,8 @@ export const WIDTHS = [
 export function useDrawing(canvas: Ref<HTMLCanvasElement | null>, tool: Ref<Tool>) {
   const strokes = ref<Stroke[]>([])
   const current = ref<Stroke | null>(null)
+  // Bumped by every change, so a view can tell whether the canvas moved since a save.
+  const revision = ref(0)
 
   const data = computed<DrawingData>(() => ({
     version: 1,
@@ -103,17 +105,28 @@ export function useDrawing(canvas: Ref<HTMLCanvasElement | null>, tool: Ref<Tool
     if (!current.value) return
     strokes.value.push(current.value)
     current.value = null
+    revision.value++
+    draw()
+  }
+
+  /** Puts a saved drawing back on the canvas, so the editor opens on it. */
+  function load(saved: Stroke[]): void {
+    strokes.value = saved
+    current.value = null
+    revision.value++
     draw()
   }
 
   function undo(): void {
     strokes.value.pop()
+    revision.value++
     draw()
   }
 
   function clear(): void {
     strokes.value = []
     current.value = null
+    revision.value++
     draw()
   }
 
@@ -124,7 +137,7 @@ export function useDrawing(canvas: Ref<HTMLCanvasElement | null>, tool: Ref<Tool
   onBeforeUnmount(() => window.removeEventListener('resize', resize))
   watch(canvas, resize)
 
-  return { data, isEmpty, onPointerDown, onPointerMove, onPointerUp, undo, clear }
+  return { data, isEmpty, revision, load, onPointerDown, onPointerMove, onPointerUp, undo, clear }
 }
 
 function clamp(value: number): number {

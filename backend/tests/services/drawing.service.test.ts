@@ -53,9 +53,16 @@ describe("saveDrawing", () => {
     expect(second.createdAt).toEqual(first.createdAt);
   });
 
-  it("falls back to the owner's user name when no title is given", async () => {
+  it("falls back to the owner's user name on a first save without a title", async () => {
     expect((await saveDrawing(alice, { data: drawingData() })).title).toBe("alice");
-    expect((await saveDrawing(alice, { title: "   ", data: drawingData() })).title).toBe("alice");
+  });
+
+  it("keeps the previous title when saving without one", async () => {
+    await saveDrawing(alice, { title: "Sunrise", data: drawingData() });
+
+    expect((await saveDrawing(alice, { data: drawingData("#15803d") })).title).toBe("Sunrise");
+    expect((await saveDrawing(alice, { title: "   ", data: drawingData() })).title).toBe("Sunrise");
+    expect((await getDrawing(alice)).title).toBe("Sunrise");
   });
 
   it("stores the geometry as sent, in normalised coordinates", async () => {

@@ -23,9 +23,12 @@ In Progress — démarré le 18 septembre 2026.
   applicative contre un `jsonb` de 200 Mo.
 - `services/drawing.service.ts` : `getMine(userId)`, `saveMine(userId, input)` (upsert sur
   `userId`), `removeMine(userId)`. Aucune route utilisateur n'accepte d'id de dessin.
-- **Titre facultatif** : `title` optionnel dans le schéma ; vide ou absent, le service reprend
-  le `userName` du propriétaire. Le repli vit côté serveur, à un seul endroit.
-- Routes : `GET`, `PUT`, `DELETE /api/drawing`, toutes derrière `requireAuth`.
+- **Titre facultatif** : `title` optionnel dans le schéma. Vide sur un dessin existant, le
+  titre déjà enregistré est conservé ; vide au premier enregistrement, le `userName` du
+  propriétaire est repris. Le repli vit côté serveur, à un seul endroit.
+- Routes : `GET`, `PUT`, `DELETE /api/drawing`, toutes derrière `requireAuth`. **`DELETE`
+  n'a volontairement aucun bouton dans l'interface pour l'instant** : la route reste écrite
+  et testée (elle porte un test d'isolation), l'exposer sera un bouton à ajouter.
 - Tests : isolation (le dessin d'un autre est invisible), remplacement (deux `PUT` = une
   ligne), bornes du schéma, `data` relu par `DrawingDataSchema` en sortie.
 
@@ -33,21 +36,26 @@ In Progress — démarré le 18 septembre 2026.
 
 - `composables/useDrawing.ts` : capture `pointerdown/move/up`, `setPointerCapture`,
   normalisation à la capture, filtre de distance (~0,002), pile d'annulation, effacer tout.
-- `composables/renderStrokes.ts` : **une seule** fonction de rendu, partagée par l'édition,
-  le rejeu et (plus tard) la vignette admin — `renderStrokes(ctx, data, box, upTo)`.
+- `composables/renderStrokes.ts` : **une seule** fonction de rendu, partagée par l'édition et
+  (plus tard) la vignette admin — `renderStrokes(ctx, data, box)`.
 - `DrawView` : canvas **ratio fixe 3:2**, responsive, `touch-action: none`, backing store à
   `devicePixelRatio`, barre d'outils **sous** le canvas (palette fermée de 6 couleurs,
   3 épaisseurs, annuler, effacer), **champ titre facultatif** à côté du bouton « Save » —
   pas de modale : avec un seul dessin par utilisateur, un champ suffit.
-- `MyDrawingView` (`/drawing`) : rejeu trait par trait **au chargement**, suppression.
+- **Un seul écran** (`/`) : il s'ouvre sur le dessin déjà enregistré, on le modifie et on
+  l'enregistre (remplacement). Pas de page de consultation séparée : avec
+  un dessin par utilisateur, deux écrans pour la même donnée n'apportaient rien. Titre
+  modifiable en cliquant dessus ; laissé vide, le serveur garde le titre enregistré.
+  Pas de suppression côté utilisateur (seulement `Clear`, qui vide le canvas sans toucher à
+  l'enregistrement). **Pas de rejeu animé** : bonus P1, repoussé pour rester simple.
 - Palette assombrie pour le fond clair, toutes ≥ 4,7:1 sur blanc :
   rouge `#e11d48`, orange `#c2410c`, jaune `#a16207`, vert `#15803d`, cyan `#0e7490`,
   violet `#7c3aed`.
 
 ## Notes
 
-**Hors périmètre** — interface d'administration (lot suivant), sonification (P2),
-édition d'un dessin existant, calques, formes, export.
+**Hors périmètre** — interface d'administration (lot suivant), rejeu animé trait par trait
+(P1), sonification (P2), édition d'un dessin existant, calques, formes, export.
 
 **Décisions prises avant de coder** :
 
@@ -73,8 +81,8 @@ In Progress — démarré le 18 septembre 2026.
 - Aucun pixel ne franchit la frontière réseau : normalisation à la capture, dénormalisation
   au rendu.
 
-**Definition of done** : `demo` dessine, enregistre, retrouve son dessin après rechargement,
-le rejeu se lance à l'ouverture, un second enregistrement remplace le premier, la suppression
+**Definition of done** : `demo` dessine, enregistre, **retrouve son dessin sur le canvas au
+rechargement**, le modifie, un second enregistrement remplace le premier, la suppression
 fonctionne. Tests d'isolation verts. `tsc`, tests, `type-check`, build et CI verts avant
 fusion en `--no-ff`.
 

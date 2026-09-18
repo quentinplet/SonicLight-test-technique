@@ -9,16 +9,10 @@ export interface Box {
 }
 
 /**
- * The one render function: editor, replay and (later) admin thumbnail all call it.
- * `upTo` is how many points to paint in total, which is what animates a replay.
- * Coordinates are denormalised here, and only here.
+ * The one render function: the editor and the saved-drawing page both call it, and so will
+ * the admin thumbnail. Coordinates are denormalised here, and only here.
  */
-export function renderStrokes(
-  ctx: CanvasRenderingContext2D,
-  data: DrawingData,
-  box: Box,
-  upTo: number = Number.POSITIVE_INFINITY,
-): void {
+export function renderStrokes(ctx: CanvasRenderingContext2D, data: DrawingData, box: Box): void {
   ctx.fillStyle = data.background
   ctx.fillRect(box.x, box.y, box.width, box.height)
 
@@ -26,27 +20,22 @@ export function renderStrokes(
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
 
-  let painted = 0
   for (const stroke of data.strokes) {
-    if (painted >= upTo) return
-
-    const points = stroke.points.slice(0, Math.max(1, upTo - painted))
-    painted += stroke.points.length
-
     ctx.strokeStyle = stroke.color
     // Width is a fraction of the canvas width, so it scales with the box.
     ctx.lineWidth = Math.max(1, stroke.width * box.width)
     ctx.beginPath()
-    for (const point of points) {
+    for (const point of stroke.points) {
       ctx.lineTo(box.x + point.x * box.width, box.y + point.y * box.height)
     }
     // A single point still deserves a dot: lineTo twice on the same spot draws nothing.
-    if (points.length === 1) ctx.lineTo(box.x + points[0]!.x * box.width + 0.01, box.y + points[0]!.y * box.height)
+    const first = stroke.points[0]!
+    if (stroke.points.length === 1) ctx.lineTo(box.x + first.x * box.width + 0.01, box.y + first.y * box.height)
     ctx.stroke()
   }
 }
 
-/** Total number of points, the ceiling a replay counts up to. */
+/** Total number of points — shown next to the canvas while drawing. */
 export function countPoints(data: DrawingData): number {
   return data.strokes.reduce((total, stroke) => total + stroke.points.length, 0)
 }
