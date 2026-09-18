@@ -2,6 +2,7 @@ import cors from "cors";
 import express, { type Express } from "express";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { authRouter } from "./routes/auth.routes.js";
+import { drawingRouter } from "./routes/drawing.routes.js";
 import { healthRouter } from "./routes/health.routes.js";
 
 // Building the app is separate from listening, so tests can mount it on an ephemeral port.
@@ -14,6 +15,7 @@ export function createApp(clientOrigins: string[]): Express {
 
   app.use("/api/health", healthRouter);
   app.use("/api/auth", authRouter);
+  app.use("/api/drawing", drawingRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
