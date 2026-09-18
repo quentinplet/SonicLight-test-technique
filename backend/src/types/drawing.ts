@@ -1,0 +1,30 @@
+/**
+ * The drawing format. Canonical copy — duplicated byte for byte in
+ * frontend/src/types/drawing.ts. A change here is a change there, in the same commit.
+ *
+ * A drawing is geometry, not an image: that is what lets one drawing render in the editor,
+ * in a replay and in a thumbnail, and what will make sonification nearly free.
+ */
+
+/** A point in NORMALISED coordinates, [0, 1] relative to the canvas box. Never pixels. */
+export interface Point {
+  x: number;
+  y: number;
+}
+
+export interface Stroke {
+  /** Hex colour, e.g. "#e11d48". */
+  color: string;
+  /** Normalised thickness: a fraction of the canvas WIDTH — thickness is a scalar. */
+  width: number;
+  points: Point[];
+}
+
+export interface DrawingData {
+  /** Format version, so old drawings stay readable when the format changes. */
+  version: 1;
+  /** Width / height of the canvas it was drawn on, so a replay keeps its proportions. */
+  aspectRatio: number;
+  background: string;
+  strokes: Stroke[];
+}
