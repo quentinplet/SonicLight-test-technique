@@ -3,6 +3,7 @@ import { useAuthStore } from '@/stores/auth'
 import AdminView from '@/views/AdminView.vue'
 import DrawView from '@/views/DrawView.vue'
 import LoginView from '@/views/LoginView.vue'
+import NotFoundView from '@/views/NotFoundView.vue'
 import RegisterView from '@/views/RegisterView.vue'
 
 declare module 'vue-router' {
@@ -23,6 +24,9 @@ const router = createRouter({
     { path: '/login', name: 'login', component: LoginView, meta: { guestOnly: true } },
     { path: '/register', name: 'register', component: RegisterView, meta: { guestOnly: true } },
     { path: '/admin', name: 'admin', component: AdminView, meta: { requiresAdmin: true } },
+    // Last, and with no meta: an unknown URL is a 404 for everyone, signed in or not.
+    // Sending a visitor to /login instead would pretend the page exists behind a session.
+    { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundView },
   ],
 })
 
