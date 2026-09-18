@@ -1,5 +1,5 @@
 import type { AudioEngine } from "@/audio/interfaces/engine";
-import type { Note, Timbre } from "@/audio/sonify";
+import type { Note } from "@/audio/sonify";
 
 /** Seconds of tail: stopping an oscillator dead produces an audible click. */
 const RELEASE = 0.12;
@@ -12,13 +12,6 @@ const DELAY_FEEDBACK = 0.6;
 const DELAY_MIX = 0.3;
 const REVERB_SECONDS = 1.6;
 const REVERB_MIX = 0.7;
-
-const WAVES: Record<Timbre, OscillatorType> = {
-  pure: "sine",
-  soft: "triangle",
-  hollow: "square",
-  bright: "sawtooth",
-};
 
 /** The first implementation of the port: the raw Web Audio API, no library. */
 export class WebAudioEngine implements AudioEngine {
@@ -75,7 +68,9 @@ export class WebAudioEngine implements AudioEngine {
     if (!context || !input) return;
 
     const oscillator = context.createOscillator();
-    oscillator.type = WAVES[note.timbre];
+    // The stroke's own shape, as harmonics. createPeriodicWave band-limits it, which a
+    // looped buffer would not: a hand-drawn corner would alias in the top octave.
+    oscillator.setPeriodicWave(context.createPeriodicWave(note.wave.real, note.wave.imag));
     oscillator.frequency.value = note.frequency;
 
     const envelope = context.createGain();

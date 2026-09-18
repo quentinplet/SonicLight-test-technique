@@ -1,10 +1,8 @@
 import { onBeforeUnmount, ref, type Ref } from "vue";
 import type { AudioEngine } from "@/audio/interfaces/engine";
-import { DURATION, sonify, STEPS } from "@/audio/sonify";
+import { DURATION, sonify } from "@/audio/sonify";
 import { WebAudioEngine } from "@/audio/webAudio";
 import type { DrawingData } from "@/types/drawing";
-
-const STEP_SECONDS = DURATION / STEPS;
 
 export function useSonification(engine: AudioEngine = new WebAudioEngine()): {
   playing: Ref<boolean>;
@@ -27,9 +25,7 @@ export function useSonification(engine: AudioEngine = new WebAudioEngine()): {
    */
   function pass(source: () => DrawingData): void {
     startedAt = engine.now() + 0.05;
-    sonify(source()).forEach((onsets, step) => {
-      for (const note of onsets) engine.play(note, startedAt + step * STEP_SECONDS);
-    });
+    for (const note of sonify(source())) engine.play(note, startedAt + note.at);
     loop = window.setTimeout(() => pass(source), DURATION * 1000);
   }
 

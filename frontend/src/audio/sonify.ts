@@ -1,62 +1,46 @@
+import { harmonicsFrom, type Harmonics } from "@/audio/wavetable";
 import type { DrawingData } from "@/types/drawing";
 
 /** One pass over the drawing, in seconds. */
 export const DURATION = 8;
-/** The x axis is cut into this many steps. */
-export const STEPS = 64;
-/** Onsets per step: a dense drawing would otherwise clip the output. */
-const MAX_VOICES = 4;
-const NOTE_SECONDS = 0.25;
+/** A vertical stroke spans no x at all, so every voice lasts at least this. */
+const MIN_SECONDS = 0.5;
 
 /** Minor pentatonic: no adjacent semitones, so any combination stays consonant. */
 const SCALE = [0, 3, 5, 7, 10];
 const ROOT = 110; // A2
 const OCTAVES = 4;
 
-/** Named as a sound, not as a waveform: a sample-based engine has no oscillator to name. */
-export type Timbre = "pure" | "soft" | "hollow" | "bright";
-
-/** One colour, one voice — which is why the palette is closed. */
-const TIMBRES: Record<string, Timbre> = {
-  "#18181b": "pure", // ink
-  "#e11d48": "bright", // red
-  "#a16207": "hollow", // yellow
-  "#15803d": "soft", // green
-  "#7c3aed": "pure", // violet
-};
-
+/**
+ * A stroke played as one voice. Its shape is its timbre, so no colour table is left: the
+ * drawing itself is the waveform.
+ */
 export interface Note {
-  frequency: number;
+  /** Seconds from the start of the pass. */
+  at: number;
   duration: number;
+  frequency: number;
   gain: number;
-  timbre: Timbre;
+  wave: Harmonics;
 }
 
-/** Notes starting at each step, indexed by step. */
-export type Score = Note[][];
-
 /** Geometry to music, and nothing else: no audio API is reachable from here. */
-export function sonify(data: DrawingData): Score {
-  const score: Score = Array.from({ length: STEPS }, () => []);
+export function sonify(data: DrawingData): Note[] {
+  return data.strokes.map((stroke) => {
+    const first = stroke.points[0]!;
+    const last = stroke.points[stroke.points.length - 1]!;
+    const middle =
+      stroke.points.reduce((total, point) => total + point.y, 0) / stroke.points.length;
 
-  for (const stroke of data.strokes) {
-    const timbre = TIMBRES[stroke.color] ?? "pure";
-    const gain = gainFrom(stroke.width);
-    let previous = -1;
-
-    for (const point of stroke.points) {
-      const step = Math.min(STEPS - 1, Math.floor(point.x * STEPS));
-      // A stroke crosses a step with many points and plays it once.
-      if (step === previous) continue;
-      previous = step;
-
-      const onsets = score[step]!;
-      if (onsets.length >= MAX_VOICES) continue;
-      onsets.push({ frequency: frequencyOf(point.y), duration: NOTE_SECONDS, gain, timbre });
-    }
-  }
-
-  return score;
+    return {
+      at: Math.min(first.x, last.x) * DURATION,
+      duration: Math.max(MIN_SECONDS, Math.abs(last.x - first.x) * DURATION),
+      // Pitch comes from where the stroke sits, its shape having become the timbre.
+      frequency: frequencyOf(middle),
+      gain: gainFrom(stroke.width),
+      wave: harmonicsFrom(stroke),
+    };
+  });
 }
 
 /** Inverted — up is high — and quantised onto the scale. */
