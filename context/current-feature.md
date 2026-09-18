@@ -5,82 +5,86 @@
 
 ## Feature
 
-Authentification — inscription, connexion, identité, gardes (branche `feature/auth`)
+Dessin — canvas, capture vectorielle, enregistrement, rejeu (branche `feature/drawing`)
 
 ## Status
 
-Done — 17 septembre 2026, fusionné dans `main` en `--no-ff`. Prochain lot à définir.
+Done — 18 septembre 2026, fusionné dans `main` en `--no-ff`. Prochain lot : l'administration.
 
 ## Goals
 
-**Backend**
+**Format et backend**
 
-- `POST /api/auth/register` : `{ userName, password }` validé par Zod, mot de passe haché
-  (bcrypt coût 10), rôle toujours `USER` — aucun champ du corps ne peut fixer le rôle.
-  `409` si le `userName` est pris. Retourne `{ token, user }`.
-- `POST /api/auth/login` : `401` avec **le même message** que le compte existe ou non
-  (pas d'énumération des comptes). Retourne `{ token, user }`.
-- `GET /api/auth/me` : l'utilisateur courant, relu **en base** — seule source fiable de
-  l'identité et du rôle côté client.
-- `lib/jwt.ts` : signature et vérification HS256 (algorithme épinglé), `JWT_SECRET` validé
-  au boot dans `env.ts` (32 caractères minimum). Durée de vie fixe de 7 jours, constante
-  dans le code : aucune raison de la rendre configurable.
-- `requireAuth` (en-tête `Authorization: Bearer`, sinon `401`) et `requireAdmin` (après
-  `requireAuth`, sinon `403`).
-- DTO de sortie construit explicitement : `{ id, userName, role }` — `passwordHash` ne sort
-  jamais du service.
-- Tests : jeton falsifié (rôle passé à `ADMIN` sans resignature) rejeté ; `requireAdmin`
-  refuse un `USER` ; mot de passe et identifiant inconnus donnent la même réponse.
+- `types/drawing.ts` (copie canonique serveur, dupliquée côté client) : `Point`, `Stroke`,
+  `DrawingData` — coordonnées normalisées `[0,1]`, `width` normalisée sur la largeur,
+  `aspectRatio`, `version: 1`.
+- `schemas/drawing.schema.ts` : `DrawingDataSchema` avec ses bornes dures
+  (≤ 1 000 traits, ≤ 5 000 points, couleurs hex, `version` littérale) — la seule protection
+  applicative contre un `jsonb` de 200 Mo.
+- `services/drawing.service.ts` : `getMine(userId)`, `saveMine(userId, input)` (upsert sur
+  `userId`), `removeMine(userId)`. Aucune route utilisateur n'accepte d'id de dessin.
+- **Titre facultatif** : `title` optionnel dans le schéma. Vide sur un dessin existant, le
+  titre déjà enregistré est conservé ; vide au premier enregistrement, le `userName` du
+  propriétaire est repris. Le repli vit côté serveur, à un seul endroit.
+- Routes : `GET`, `PUT`, `DELETE /api/drawing`, toutes derrière `requireAuth`. **`DELETE`
+  n'a volontairement aucun bouton dans l'interface pour l'instant** : la route reste écrite
+  et testée (elle porte un test d'isolation), l'exposer sera un bouton à ajouter.
+- Tests : isolation (le dessin d'un autre est invisible), remplacement (deux `PUT` = une
+  ligne), bornes du schéma, `data` relu par `DrawingDataSchema` en sortie.
 
 **Frontend**
 
-- `api/http.ts` injecte le jeton — seul endroit qui lit `localStorage`, toujours dans un
-  `try/catch`. Un `401` vide la session.
-- Store Pinia `auth` (le seul du projet) : `user`, `login`, `register`, `logout`
-  (`removeItem`, aucun appel serveur), `restore` au démarrage via `/api/auth/me`.
-- Vues `/login` et `/register`, gardes de route (invité / authentifié / admin) — confort
-  d'interface, la sécurité est côté serveur.
-- Responsive dès ces écrans (réponse IRCAM n°1).
+- `composables/useDrawing.ts` : capture `pointerdown/move/up`, `setPointerCapture`,
+  normalisation à la capture, filtre de distance (~0,002), pile d'annulation, effacer tout.
+- `composables/renderStrokes.ts` : **une seule** fonction de rendu, partagée par l'édition et
+  (plus tard) la vignette admin — `renderStrokes(ctx, data, box)`.
+- `DrawView` : canvas **ratio fixe 3:2**, responsive, `touch-action: none`, backing store à
+  `devicePixelRatio`, barre d'outils **sous** le canvas (palette fermée de 6 couleurs,
+  3 épaisseurs, annuler, effacer), **champ titre facultatif** à côté du bouton « Save » —
+  pas de modale : avec un seul dessin par utilisateur, un champ suffit.
+- **Un seul écran** (`/`) : il s'ouvre sur le dessin déjà enregistré, on le modifie et on
+  l'enregistre (remplacement). Pas de page de consultation séparée : avec
+  un dessin par utilisateur, deux écrans pour la même donnée n'apportaient rien. Titre
+  modifiable en cliquant dessus ; laissé vide, le serveur garde le titre enregistré.
+  Pas de suppression côté utilisateur (seulement `Clear`, qui vide le canvas sans toucher à
+  l'enregistrement). **Pas de rejeu animé** : bonus P1, repoussé pour rester simple.
+- Palette assombrie pour le fond clair, toutes ≥ 4,7:1 sur blanc :
+  rouge `#e11d48`, orange `#c2410c`, jaune `#a16207`, vert `#15803d`, cyan `#0e7490`,
+  violet `#7c3aed`.
 
 ## Notes
 
-**Hors périmètre** — dessin, canvas, routes `/api/drawing`, interface admin (au-delà d'une
-garde de route prête à servir), sonification.
+**Hors périmètre** — interface d'administration (lot suivant), rejeu animé trait par trait
+(P1), sonification (P2), édition d'un dessin existant, calques, formes, export.
 
 **Décisions prises avant de coder** :
 
-- **`userName`** : 3 à 30 caractères, lettres, chiffres, `_` et `-`, **converti en
-  minuscules** à l'inscription et au login — « Demo » et « demo » sont le même compte, deux
-  auteurs visuellement identiques ne peuvent pas coexister dans la vue admin.
-- **Mot de passe** : 8 à **72** caractères — bcrypt ignore silencieusement tout ce qui dépasse
-  72 octets ; au-delà, deux mots de passe différents seraient acceptés comme identiques.
-- **Tailwind 4 + DaisyUI 5** installés dans ce lot, commit dédié avant les écrans : les vues
-  d'auth sont écrites une fois, responsive d'emblée.
-- **Tests contre une vraie base**, dans une base `soniclight_test` distincte (les tests ne
-  vident jamais la base de dev ni le seed), et un service Postgres dans le job `server` de
-  la CI. C'est l'infrastructure qu'exigeront les tests d'isolation des dessins.
-- Dépendances : `jsonwebtoken` (liste figée) + `@types/jsonwebtoken` (types, dev).
-- **Interface en anglais**, pour l'instant (l'i18n reste hors périmètre). Le front réagit au
-  `code` d'erreur avec ses propres textes (`auth.invalidCredentials`, `auth.userNameTaken`…),
-  et n'affiche tel quel le `message` de l'API que pour `request.invalidBody` : les messages
-  des schémas Zod sont écrits pour être lus. Le formulaire ne vérifie que `required` : les règles de format ne vivent que côté serveur.
-- **Deux schémas Zod** : `RegisterSchema` applique les règles de format, un message clair par
-  champ (`abort: true`) ; `LoginSchema` vérifie seulement que les champs sont remplis — un
-  identifiant hors format est un 401, pas un 400.
+- **Canvas en ratio fixe 3:2**, desktop comme mobile : tous les dessins ont le même
+  `aspectRatio`, donc le rejeu et les futures vignettes n'ont jamais à letterboxer. Le champ
+  `aspectRatio` reste dans le format : il coûte un nombre et rend le format indépendant de
+  ce choix d'interface.
+- **Un dessin par utilisateur** (réponse IRCAM) : `PUT /api/drawing` crée ou remplace, aucun
+  id de dessin ne transite côté utilisateur.
+- **Palette fermée de 6 couleurs**, assombries pour rester lisibles sur fond clair.
+- **Pas de modale `<dialog>` pour l'enregistrement** : le titre est un champ de la barre
+  d'outils, facultatif. Le gain d'accessibilité de `<dialog>` (piège à focus, `Échap`) n'a
+  d'intérêt que s'il y a une vraie modale à afficher.
 
 **Pièges attendus** :
 
-- Pas de `POST /api/auth/logout` : un jeton sans état ne se révoque pas côté serveur.
-- Le payload du JWT ne prouve rien côté client : le rôle vient de `/api/auth/me`.
-- Le rôle de `req.user` vient du jeton **vérifié**, jamais du corps de la requête.
-- Un `userName` unique en base : la course entre deux inscriptions simultanées se règle
-  sur l'erreur d'unicité Prisma (`P2002`), pas sur un `findUnique` préalable seul.
-- `localStorage` lève en navigation privée : jamais d'accès nu.
+- Backing store à `devicePixelRatio` (`canvas.width = cssWidth * dpr`, puis `ctx.scale`),
+  sinon le trait est flou sur écran haute densité.
+- `touch-action: none` en CSS, sinon dessiner au doigt fait défiler la page.
+- `pointer*` uniquement, jamais `mouse*` ni `touch*` ; `setPointerCapture` sur `pointerdown`.
+- Redimensionner le canvas **efface** son contenu : il faut redessiner depuis les traits.
+- `drawing.data` arrive en `Prisma.JsonValue` : `DrawingDataSchema.parse()`, jamais `as`.
+- Aucun pixel ne franchit la frontière réseau : normalisation à la capture, dénormalisation
+  au rendu.
 
-**Definition of done** : avec la base seedée, `demo` / `demo1234` se connecte, recharge la
-page sans perdre sa session, et n'accède pas à `/admin` ; `admin` / `admin1234` y accède ;
-un nouveau compte s'inscrit et se connecte. Les gardes serveur sont testées. `tsc`, tests,
-`type-check`, build et CI verts ; branche fusionnée dans `main` en `--no-ff`.
+**Definition of done** : `demo` dessine, enregistre, **retrouve son dessin sur le canvas au
+rechargement**, le modifie, un second enregistrement remplace le premier, la suppression
+fonctionne. Tests d'isolation verts. `tsc`, tests, `type-check`, build et CI verts avant
+fusion en `--no-ff`.
 
 ## History
 
@@ -154,3 +158,42 @@ Pièges qui mordent encore :
   chemins internes.
 - **Couleurs de trait trop claires sur fond blanc** (jaune 1,9:1, vert, cyan, orange) : à
   assombrir à 3:1 minimum au lot dessin.
+
+### 18/09 — Dessin ✅
+
+Format vectoriel validé par Zod, API `GET/PUT/DELETE /api/drawing`, canvas au pointeur en
+coordonnées normalisées, palette et épaisseurs, enregistrement et réouverture sur un écran
+unique. 54 tests backend. Branche `feature/drawing`, commits `a918b43` → `1a41891`.
+
+Écarts au plan, et pourquoi :
+
+- **Un seul écran au lieu de deux.** `MyDrawingView` (lecture seule) faisait doublon avec
+  l'éditeur dès lors qu'un utilisateur n'a qu'un dessin. `/` s'ouvre désormais sur le dessin
+  enregistré : « retrouver son dessin » au sens fort, et la modification devient possible —
+  ce que l'IRCAM décrit (« il peut écraser son ancien dessin »).
+- **Pas de rejeu animé** (bonus P1) : `renderStrokes` a perdu son paramètre `upTo`, trois
+  lignes à remettre le jour où le rejeu arrive.
+- **Titre modifiable en cliquant dessus**, champ dimensionné sur le texte, plus de champ
+  permanent dans la barre d'outils. Vide sur un dessin existant → l'ancien titre est
+  conservé (branche `update` de l'upsert sans `title`) ; vide au premier enregistrement →
+  le `userName`.
+- **Dessin vide autorisé** (`strokes` sans minimum) : sans bouton de suppression côté
+  utilisateur, enregistrer un canvas vide est la façon d'effacer ce qui était enregistré.
+- **`DELETE /api/drawing` écrite et testée, mais pas exposée** : décision d'interface, pas
+  de périmètre — la route porte un test d'isolation utile.
+- **Undo/Clear/Save désactivés tant que rien n'a bougé** depuis le dernier enregistrement,
+  via un compteur de révisions dans le composable. Save réagit aussi au titre.
+- **Palette assombrie** : les teintes vives d'origine passaient sous 3:1 sur blanc.
+
+Pièges qui mordent encore :
+
+- **`app.use(router)` déclenche la première navigation** : la session doit être restaurée
+  avant, sinon la garde lit un état périmé et redirige vers `/login` au rechargement.
+- **Une panne réseau ne doit pas effacer le jeton** : seul un 401 du serveur invalide une
+  session.
+- **`interface` ne suffit pas pour une colonne `Json`** : Prisma exige la signature d'index
+  implicite d'un alias `type`.
+- **Redimensionner un canvas l'efface** : tout redessiner depuis les traits, ce qui est
+  gratuit grâce aux coordonnées normalisées.
+- **Une classe Tailwind construite à l'exécution n'existe pas** dans le CSS produit : les
+  couleurs de trait passent par une variable CSS en ligne.

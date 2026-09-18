@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import * as authApi from '@/api/auth'
+import { ApiError } from '@/api/http'
 
 const TOKEN_KEY = 'soniclight.token'
 
@@ -38,8 +39,10 @@ export const useAuthStore = defineStore('auth', () => {
     if (!token.value) return
     try {
       user.value = await authApi.getMe()
-    } catch {
-      logout()
+    } catch (err) {
+      // Only the server can invalidate a token (http.ts logs out on a 401). A network
+      // failure must not: the app starts signed out, and the token is tried again later.
+      if (!(err instanceof ApiError) || err.status !== 401) user.value = null
     }
   }
 
