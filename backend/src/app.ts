@@ -1,6 +1,7 @@
 import cors from "cors";
 import express, { type Express } from "express";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
+import { adminRouter } from "./routes/admin.routes.js";
 import { authRouter } from "./routes/auth.routes.js";
 import { drawingRouter } from "./routes/drawing.routes.js";
 import { healthRouter } from "./routes/health.routes.js";
@@ -16,6 +17,7 @@ export function createApp(clientOrigins: string[]): Express {
   app.use("/api/health", healthRouter);
   app.use("/api/auth", authRouter);
   app.use("/api/drawing", drawingRouter);
+  app.use("/api/admin", adminRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

@@ -34,3 +34,6 @@ export const SaveDrawingSchema = z.object({
 });
 
 export type SaveDrawingInput = z.infer<typeof SaveDrawingSchema>;
+
+/** Route parameter of the admin routes — the only surface where a drawing id travels. */
+export const DrawingIdSchema = z.object({ id: z.uuid() });
