@@ -36,6 +36,19 @@ export function renderStrokes(ctx: CanvasRenderingContext2D, data: DrawingData, 
   }
 }
 
+/** The playhead, drawn over the strokes at x ∈ [0, 1]. */
+export function renderPlayhead(ctx: CanvasRenderingContext2D, box: Box, x: number): void {
+  ctx.save();
+  ctx.strokeStyle = "#18181b";
+  ctx.globalAlpha = 0.45;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(box.x + x * box.width, box.y);
+  ctx.lineTo(box.x + x * box.width, box.y + box.height);
+  ctx.stroke();
+  ctx.restore();
+}
+
 /** Total number of points — shown next to the canvas while drawing. */
 export function countPoints(data: DrawingData): number {
   return data.strokes.reduce((total, stroke) => total + stroke.points.length, 0);

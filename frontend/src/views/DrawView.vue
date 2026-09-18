@@ -5,8 +5,9 @@ import { errorMessage } from "@/api/errors";
 import { ApiError } from "@/api/http";
 import DrawingToolbar from "@/components/DrawingToolbar.vue";
 import EditableTitle from "@/components/EditableTitle.vue";
-import { countPoints } from "@/composables/renderStrokes";
+import { countPoints } from "@/canvas/renderStrokes";
 import { PALETTE, useDrawing, WIDTHS, type Tool } from "@/composables/useDrawing";
+import { useSonification } from "@/composables/useSonification";
 import { useToast } from "@/composables/useToast";
 
 const { notify } = useToast();
@@ -14,7 +15,9 @@ const { notify } = useToast();
 const canvas = ref<HTMLCanvasElement | null>(null);
 const tool = ref<Tool>({ color: PALETTE[0].hex, width: WIDTHS[1].value });
 
-const drawing = useDrawing(canvas, tool);
+// The audio owns the playhead, the canvas only draws it.
+const audio = useSonification();
+const drawing = useDrawing(canvas, tool, audio.head);
 
 const title = ref("");
 const savedTitle = ref("");
@@ -108,9 +111,11 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
         :is-empty="drawing.isEmpty.value"
         :unsaved="unsaved"
         :saving="saving"
+        :playing="audio.playing.value"
         @undo="drawing.undo"
         @clear="drawing.clear"
         @save="save"
+        @listen="audio.toggle(() => drawing.data.value)"
       />
 
       <div v-if="error" role="alert" class="alert alert-error alert-soft mt-3">

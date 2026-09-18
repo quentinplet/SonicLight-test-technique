@@ -1,5 +1,5 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch, type Ref } from "vue";
-import { renderStrokes } from "@/composables/renderStrokes";
+import { renderPlayhead, renderStrokes } from "@/canvas/renderStrokes";
 import type { DrawingData, Point, Stroke } from "@/types/drawing";
 
 /** Fixed shape, so every drawing shares one aspect ratio. */
@@ -16,17 +16,15 @@ export interface Tool {
 }
 
 /**
- * Closed palette, named for screen readers. Darkened for the light theme: the original
- * yellow, green and cyan sat under 3:1 on white, the WCAG minimum for a graphical element.
- * A free colour picker would also make the hue → timbre mapping of sonification arbitrary.
+ * Closed palette, named for screen readers, darkened to clear 3:1 on white. It is also the
+ * instrument list: one colour, one timbre (audio/sonify.ts), so a new colour has to sound
+ * like something.
  */
 export const PALETTE = [
   { name: "Ink", hex: "#18181b" },
   { name: "Red", hex: "#e11d48" },
-  { name: "Orange", hex: "#c2410c" },
   { name: "Yellow", hex: "#a16207" },
   { name: "Green", hex: "#15803d" },
-  { name: "Cyan", hex: "#0e7490" },
   { name: "Violet", hex: "#7c3aed" },
 ] as const;
 
@@ -40,7 +38,12 @@ export const WIDTHS = [
   { name: "Thick", glyph: "⬤", value: 0.012 },
 ] as const;
 
-export function useDrawing(canvas: Ref<HTMLCanvasElement | null>, tool: Ref<Tool>) {
+export function useDrawing(
+  canvas: Ref<HTMLCanvasElement | null>,
+  tool: Ref<Tool>,
+  /** Playhead position in [0, 1] while a drawing is being listened to, null otherwise. */
+  playhead?: Ref<number | null>,
+) {
   const strokes = ref<Stroke[]>([]);
   const current = ref<Stroke | null>(null);
   // Bumped by every change, so a view can tell whether the canvas moved since a save.
@@ -60,7 +63,9 @@ export function useDrawing(canvas: Ref<HTMLCanvasElement | null>, tool: Ref<Tool
     const ctx = element?.getContext("2d");
     if (!element || !ctx) return;
     const width = element.width / devicePixelRatio;
-    renderStrokes(ctx, data.value, { x: 0, y: 0, width, height: width / ASPECT_RATIO });
+    const box = { x: 0, y: 0, width, height: width / ASPECT_RATIO };
+    renderStrokes(ctx, data.value, box);
+    if (playhead?.value != null) renderPlayhead(ctx, box, playhead.value);
   }
 
   /** Resizing a canvas clears it, so every resize repaints from the strokes. */
@@ -140,6 +145,7 @@ export function useDrawing(canvas: Ref<HTMLCanvasElement | null>, tool: Ref<Tool
   });
   onBeforeUnmount(() => window.removeEventListener("resize", resize));
   watch(canvas, resize);
+  if (playhead) watch(playhead, draw);
 
   return { data, isEmpty, revision, load, onPointerDown, onPointerMove, onPointerUp, undo, clear };
 }

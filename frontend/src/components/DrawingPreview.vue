@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { renderStrokes } from "@/composables/renderStrokes";
+import { renderStrokes } from "@/canvas/renderStrokes";
 import { ASPECT_RATIO } from "@/composables/useDrawing";
 import type { DrawingData } from "@/types/drawing";
 
