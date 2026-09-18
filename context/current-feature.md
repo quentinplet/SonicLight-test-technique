@@ -9,7 +9,7 @@ Dessin — canvas, capture vectorielle, enregistrement, rejeu (branche `feature/
 
 ## Status
 
-In Progress — démarré le 18 septembre 2026.
+Done — 18 septembre 2026, fusionné dans `main` en `--no-ff`. Prochain lot : l'administration.
 
 ## Goals
 
@@ -158,3 +158,42 @@ Pièges qui mordent encore :
   chemins internes.
 - **Couleurs de trait trop claires sur fond blanc** (jaune 1,9:1, vert, cyan, orange) : à
   assombrir à 3:1 minimum au lot dessin.
+
+### 18/09 — Dessin ✅
+
+Format vectoriel validé par Zod, API `GET/PUT/DELETE /api/drawing`, canvas au pointeur en
+coordonnées normalisées, palette et épaisseurs, enregistrement et réouverture sur un écran
+unique. 54 tests backend. Branche `feature/drawing`, commits `a918b43` → `1a41891`.
+
+Écarts au plan, et pourquoi :
+
+- **Un seul écran au lieu de deux.** `MyDrawingView` (lecture seule) faisait doublon avec
+  l'éditeur dès lors qu'un utilisateur n'a qu'un dessin. `/` s'ouvre désormais sur le dessin
+  enregistré : « retrouver son dessin » au sens fort, et la modification devient possible —
+  ce que l'IRCAM décrit (« il peut écraser son ancien dessin »).
+- **Pas de rejeu animé** (bonus P1) : `renderStrokes` a perdu son paramètre `upTo`, trois
+  lignes à remettre le jour où le rejeu arrive.
+- **Titre modifiable en cliquant dessus**, champ dimensionné sur le texte, plus de champ
+  permanent dans la barre d'outils. Vide sur un dessin existant → l'ancien titre est
+  conservé (branche `update` de l'upsert sans `title`) ; vide au premier enregistrement →
+  le `userName`.
+- **Dessin vide autorisé** (`strokes` sans minimum) : sans bouton de suppression côté
+  utilisateur, enregistrer un canvas vide est la façon d'effacer ce qui était enregistré.
+- **`DELETE /api/drawing` écrite et testée, mais pas exposée** : décision d'interface, pas
+  de périmètre — la route porte un test d'isolation utile.
+- **Undo/Clear/Save désactivés tant que rien n'a bougé** depuis le dernier enregistrement,
+  via un compteur de révisions dans le composable. Save réagit aussi au titre.
+- **Palette assombrie** : les teintes vives d'origine passaient sous 3:1 sur blanc.
+
+Pièges qui mordent encore :
+
+- **`app.use(router)` déclenche la première navigation** : la session doit être restaurée
+  avant, sinon la garde lit un état périmé et redirige vers `/login` au rechargement.
+- **Une panne réseau ne doit pas effacer le jeton** : seul un 401 du serveur invalide une
+  session.
+- **`interface` ne suffit pas pour une colonne `Json`** : Prisma exige la signature d'index
+  implicite d'un alias `type`.
+- **Redimensionner un canvas l'efface** : tout redessiner depuis les traits, ce qui est
+  gratuit grâce aux coordonnées normalisées.
+- **Une classe Tailwind construite à l'exécution n'existe pas** dans le CSS produit : les
+  couleurs de trait passent par une variable CSS en ligne.
