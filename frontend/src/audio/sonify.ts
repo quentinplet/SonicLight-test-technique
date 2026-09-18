@@ -10,8 +10,8 @@ const NOTE_SECONDS = 0.25;
 
 /** Minor pentatonic: no adjacent semitones, so any combination stays consonant. */
 const SCALE = [0, 3, 5, 7, 10];
-const ROOT = 220; // A3
-const OCTAVES = 3;
+const ROOT = 110; // A2
+const OCTAVES = 4;
 
 /** Named as a sound, not as a waveform: a sample-based engine has no oscillator to name. */
 export type Timbre = "pure" | "soft" | "hollow" | "bright";
