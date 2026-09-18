@@ -11,8 +11,7 @@ declare global {
   }
 }
 
-const unauthorized = () =>
-  new UnauthorizedError("auth.unauthorized", "Missing or invalid token.");
+const unauthorized = () => new UnauthorizedError("auth.unauthorized", "Missing or invalid token.");
 
 export const requireAuth: RequestHandler = (req, _res, next) => {
   const [scheme, token] = req.headers.authorization?.split(" ") ?? [];

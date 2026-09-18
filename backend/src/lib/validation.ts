@@ -18,6 +18,7 @@ export function parseBody<T>(schema: z.ZodType<T>, body: unknown): T {
 /** Same, for route parameters: an id that is not a UUID never reaches a service. */
 export function parseParams<T>(schema: z.ZodType<T>, params: unknown): T {
   const result = schema.safeParse(params);
-  if (!result.success) throw new BadRequestError("request.invalidParams", "Invalid route parameter.");
+  if (!result.success)
+    throw new BadRequestError("request.invalidParams", "Invalid route parameter.");
   return result.data;
 }

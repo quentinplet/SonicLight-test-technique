@@ -13,10 +13,7 @@ export class ApiError extends Error {
   }
 }
 
-export async function request<T>(
-  path: string,
-  init: RequestInit = {},
-): Promise<T> {
+export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const auth = useAuthStore();
 
   const res = await fetch(`${API_URL}${path}`, {
@@ -32,11 +29,7 @@ export async function request<T>(
     // Expired token or deleted account: end the session. A failed login sends no token.
     if (res.status === 401 && auth.token) auth.logout();
     const body = await res.json().catch(() => null);
-    throw new ApiError(
-      res.status,
-      body?.code ?? "http.error",
-      body?.message ?? res.statusText,
-    );
+    throw new ApiError(res.status, body?.code ?? "http.error", body?.message ?? res.statusText);
   }
   // 204 No Content has no body to parse: DELETE returns no content.
   if (res.status === 204) return undefined as T;

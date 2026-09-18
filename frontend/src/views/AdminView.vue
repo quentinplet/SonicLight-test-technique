@@ -27,9 +27,7 @@ async function load(): Promise<void> {
   loading.value = true;
   try {
     const summaries = await adminApi.listDrawings();
-    drawings.value = await Promise.all(
-      summaries.map((summary) => adminApi.getDrawing(summary.id)),
-    );
+    drawings.value = await Promise.all(summaries.map((summary) => adminApi.getDrawing(summary.id)));
   } catch (err) {
     error.value = errorMessage(err);
   } finally {
@@ -153,10 +151,7 @@ onMounted(load);
           {{ opened.userName }} · saved
           {{ new Date(opened.updatedAt).toLocaleString() }}
         </p>
-        <DrawingPreview
-          class="mt-3 rounded-box border border-base-300"
-          :data="opened.data"
-        />
+        <DrawingPreview class="mt-3 rounded-box border border-base-300" :data="opened.data" />
 
         <div class="modal-action">
           <button
@@ -167,9 +162,7 @@ onMounted(load);
             Delete
           </button>
           <form method="dialog">
-            <button
-              class="btn btn-sm cursor-pointer border-base-300 bg-base-100 hover:bg-base-300"
-            >
+            <button class="btn btn-sm cursor-pointer border-base-300 bg-base-100 hover:bg-base-300">
               Close
             </button>
           </form>
@@ -182,8 +175,8 @@ onMounted(load);
       <div v-if="doomed" class="modal-box max-w-md">
         <h2 class="text-lg font-semibold">Delete this drawing?</h2>
         <p class="mt-2 text-sm text-base-content/70">
-          “{{ doomed.title }}” by {{ doomed.userName }} will be removed for
-          good. This cannot be undone.
+          “{{ doomed.title }}” by {{ doomed.userName }} will be removed for good. This cannot be
+          undone.
         </p>
 
         <div class="modal-action">
@@ -193,17 +186,11 @@ onMounted(load);
             :disabled="deleting"
             @click="remove"
           >
-            <span
-              v-if="deleting"
-              class="loading loading-spinner loading-xs"
-              aria-hidden="true"
-            />
+            <span v-if="deleting" class="loading loading-spinner loading-xs" aria-hidden="true" />
             Delete
           </button>
           <form method="dialog">
-            <button
-              class="btn btn-sm cursor-pointer border-base-300 bg-base-100 hover:bg-base-300"
-            >
+            <button class="btn btn-sm cursor-pointer border-base-300 bg-base-100 hover:bg-base-300">
               Cancel
             </button>
           </form>

@@ -36,7 +36,10 @@ const DEMO_USERS: DemoUser[] = [
     userName: "sam",
     password: "sam12345",
     role: "USER",
-    drawing: { title: "Burst", data: burst(["#e11d48", "#c2410c", "#a16207", "#15803d", "#0e7490", "#7c3aed"]) },
+    drawing: {
+      title: "Burst",
+      data: burst(["#e11d48", "#c2410c", "#a16207", "#15803d", "#0e7490", "#7c3aed"]),
+    },
   },
   // No drawing: the admin moderates other people's work, which makes the demo read better
   // and exercises the empty canvas when signing in as an admin.

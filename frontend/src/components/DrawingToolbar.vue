@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { PALETTE, WIDTHS, type Tool } from '@/composables/useDrawing'
+import { PALETTE, WIDTHS, type Tool } from "@/composables/useDrawing";
 
-const tool = defineModel<Tool>({ required: true })
+const tool = defineModel<Tool>({ required: true });
 
 // Undo and clear only need something on the canvas — including a drawing loaded from the
 // server. Saving is the only button that asks what changed since the last save.
-defineProps<{ isEmpty: boolean; unsaved: boolean; saving: boolean }>()
-const emit = defineEmits<{ undo: []; clear: []; save: [] }>()
+defineProps<{ isEmpty: boolean; unsaved: boolean; saving: boolean }>();
+const emit = defineEmits<{ undo: []; clear: []; save: [] }>();
 </script>
 
 <template>
@@ -28,7 +28,11 @@ const emit = defineEmits<{ undo: []; clear: []; save: [] }>()
 
     <label class="flex items-center gap-2 text-sm">
       <span class="sr-only sm:not-sr-only">Width</span>
-      <select v-model="tool.width" class="select select-sm w-28 cursor-pointer border-base-300 bg-base-100" aria-label="Stroke width">
+      <select
+        v-model="tool.width"
+        class="select select-sm w-28 cursor-pointer border-base-300 bg-base-100"
+        aria-label="Stroke width"
+      >
         <option v-for="width in WIDTHS" :key="width.value" :value="width.value">
           {{ width.glyph }}&nbsp; {{ width.name }}
         </option>
@@ -53,7 +57,12 @@ const emit = defineEmits<{ undo: []; clear: []; save: [] }>()
       >
         Clear
       </button>
-      <button class="btn btn-sm btn-primary min-w-24 cursor-pointer" type="button" :disabled="saving || !unsaved" @click="emit('save')">
+      <button
+        class="btn btn-sm btn-primary min-w-24 cursor-pointer"
+        type="button"
+        :disabled="saving || !unsaved"
+        @click="emit('save')"
+      >
         <span v-if="saving" class="loading loading-spinner loading-xs" aria-hidden="true" />
         Save
       </button>

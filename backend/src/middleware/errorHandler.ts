@@ -1,9 +1,5 @@
 import type { ErrorRequestHandler, RequestHandler } from "express";
-import {
-  AppError,
-  BadRequestError,
-  NotFoundError,
-} from "../errors/app-error.js";
+import { AppError, BadRequestError, NotFoundError } from "../errors/app-error.js";
 
 /** The one error shape on the wire. `code` is stable; `message` is for the developer. */
 export interface ApiError {
@@ -23,27 +19,20 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 
   // Expected errors carry their own status and code: nothing to log, nothing to hide.
   if (error instanceof AppError) {
-    res
-      .status(error.status)
-      .json({ code: error.code, message: error.message } satisfies ApiError);
+    res.status(error.status).json({ code: error.code, message: error.message } satisfies ApiError);
     return;
   }
 
   // Anything else is a bug: log the details, reveal none of them.
   console.error(error);
-  res
-    .status(500)
-    .json({
-      code: "internal",
-      message: "Internal server error.",
-    } satisfies ApiError);
+  res.status(500).json({
+    code: "internal",
+    message: "Internal server error.",
+  } satisfies ApiError);
 };
 
 function isBodyParseError(err: unknown): boolean {
   return (
-    typeof err === "object" &&
-    err !== null &&
-    "type" in err &&
-    err.type === "entity.parse.failed"
+    typeof err === "object" && err !== null && "type" in err && err.type === "entity.parse.failed"
   );
 }

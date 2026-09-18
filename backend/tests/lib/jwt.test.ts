@@ -20,7 +20,9 @@ describe("jwt", () => {
   });
 
   it("rejects a token signed with another secret", () => {
-    const token = jwt.sign({ role: "ADMIN" }, "another-secret-of-at-least-32-characters", { subject: user.id });
+    const token = jwt.sign({ role: "ADMIN" }, "another-secret-of-at-least-32-characters", {
+      subject: user.id,
+    });
     expect(verifyToken(token)).toBeNull();
   });
 

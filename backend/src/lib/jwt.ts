@@ -31,7 +31,9 @@ export function signToken(user: AuthUser): string {
 export function verifyToken(token: string): AuthUser | null {
   try {
     // Pinning the algorithm refuses "alg: none" and any algorithm swap.
-    const payload = PayloadSchema.safeParse(jwt.verify(token, env.JWT_SECRET, { algorithms: ["HS256"] }));
+    const payload = PayloadSchema.safeParse(
+      jwt.verify(token, env.JWT_SECRET, { algorithms: ["HS256"] }),
+    );
     return payload.success ? { id: payload.data.sub, role: payload.data.role } : null;
   } catch {
     return null;

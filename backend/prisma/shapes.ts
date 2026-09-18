@@ -42,7 +42,9 @@ export function waves(colors: string[]): DrawingData {
     for (let step = 0; step <= 120; step++) {
       const x = step / 120;
       const amplitude = 0.06 + index * 0.03;
-      points.push(point(x - 0.5, Math.sin(x * Math.PI * 2 + index) * amplitude + (index - 1) * 0.13));
+      points.push(
+        point(x - 0.5, Math.sin(x * Math.PI * 2 + index) * amplitude + (index - 1) * 0.13),
+      );
     }
     return { color, width: 0.006, points };
   });

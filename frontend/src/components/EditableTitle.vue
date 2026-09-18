@@ -1,25 +1,27 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, ref } from "vue";
 
-const title = defineModel<string>({ required: true })
-const props = defineProps<{ placeholder: string }>()
+const title = defineModel<string>({ required: true });
+const props = defineProps<{ placeholder: string }>();
 
-const editing = ref(false)
-const input = ref<HTMLInputElement | null>(null)
+const editing = ref(false);
+const input = ref<HTMLInputElement | null>(null);
 
 // `size` is in characters: the field fits its text instead of the canvas width.
-const size = computed(() => Math.min(40, Math.max(12, (title.value || props.placeholder).length + 1)))
+const size = computed(() =>
+  Math.min(40, Math.max(12, (title.value || props.placeholder).length + 1)),
+);
 
 async function edit(): Promise<void> {
-  editing.value = true
-  await nextTick()
-  input.value?.select()
+  editing.value = true;
+  await nextTick();
+  input.value?.select();
 }
 
 // Leaving it blank is meaningful: the server then keeps the title already saved.
 function stopEditing(): void {
-  editing.value = false
-  title.value = title.value.trim()
+  editing.value = false;
+  title.value = title.value.trim();
 }
 </script>
 

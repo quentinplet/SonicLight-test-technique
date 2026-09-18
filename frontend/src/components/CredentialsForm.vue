@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
-import type { Credentials } from '@/api/auth'
+import { reactive } from "vue";
+import type { Credentials } from "@/api/auth";
 
 const props = defineProps<{
-  mode: 'login' | 'register'
-  pending: boolean
-  error: string | null
-}>()
+  mode: "login" | "register";
+  pending: boolean;
+  error: string | null;
+}>();
 
-const emit = defineEmits<{ submit: [credentials: Credentials] }>()
+const emit = defineEmits<{ submit: [credentials: Credentials] }>();
 
-const form = reactive<Credentials>({ userName: '', password: '' })
+const form = reactive<Credentials>({ userName: "", password: "" });
 
 // Format rules live on the server only: its validation messages are shown as is.
-const isRegister = props.mode === 'register'
+const isRegister = props.mode === "register";
 </script>
 
 <template>
@@ -45,7 +45,7 @@ const isRegister = props.mode === 'register'
 
     <button class="btn btn-primary w-full" type="submit" :disabled="pending">
       <span v-if="pending" class="loading loading-spinner loading-sm" aria-hidden="true" />
-      {{ isRegister ? 'Create account' : 'Log in' }}
+      {{ isRegister ? "Create account" : "Log in" }}
     </button>
   </form>
 </template>

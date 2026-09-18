@@ -9,7 +9,16 @@ export function drawingData(color = "#e11d48"): DrawingData {
     version: 1,
     aspectRatio: 1.5,
     background: "#ffffff",
-    strokes: [{ color, width: 0.004, points: [{ x: 0.1, y: 0.1 }, { x: 0.9, y: 0.9 }] }],
+    strokes: [
+      {
+        color,
+        width: 0.004,
+        points: [
+          { x: 0.1, y: 0.1 },
+          { x: 0.9, y: 0.9 },
+        ],
+      },
+    ],
   };
 }
 

@@ -46,8 +46,12 @@ describe("login", () => {
   it("gives the same error for a wrong password and an unknown user name", async () => {
     await register(credentials);
     // Each login is awaited as soon as it starts: a rejection is never left unhandled.
-    const wrongPassword = await login({ ...credentials, password: "wrong-password" }).catch((e: unknown) => e);
-    const unknownUser = await login({ ...credentials, userName: "nobody" }).catch((e: unknown) => e);
+    const wrongPassword = await login({ ...credentials, password: "wrong-password" }).catch(
+      (e: unknown) => e,
+    );
+    const unknownUser = await login({ ...credentials, userName: "nobody" }).catch(
+      (e: unknown) => e,
+    );
 
     expect(wrongPassword).toBeInstanceOf(UnauthorizedError);
     expect(unknownUser).toEqual(wrongPassword);

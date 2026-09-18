@@ -17,9 +17,7 @@ const exit = computed(() => {
 <template>
   <main class="flex flex-1 items-center justify-center px-4 py-10">
     <!-- Same dashed frame as the admin empty state: a missing page is an empty state too. -->
-    <div
-      class="w-full max-w-md rounded-box border border-dashed border-base-300 p-10 text-center"
-    >
+    <div class="w-full max-w-md rounded-box border border-dashed border-base-300 p-10 text-center">
       <p class="font-mono text-sm text-base-content/70">404</p>
       <h1 class="mt-2 text-2xl font-semibold">Page not found</h1>
       <!-- Wherever they are sent, they are sent somewhere: a dead end needs one way out. -->

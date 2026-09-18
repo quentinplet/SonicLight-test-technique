@@ -6,7 +6,16 @@ const valid: DrawingData = {
   version: 1,
   aspectRatio: 1.5,
   background: "#ffffff",
-  strokes: [{ color: "#e11d48", width: 0.004, points: [{ x: 0, y: 0 }, { x: 1, y: 1 }] }],
+  strokes: [
+    {
+      color: "#e11d48",
+      width: 0.004,
+      points: [
+        { x: 0, y: 0 },
+        { x: 1, y: 1 },
+      ],
+    },
+  ],
 };
 
 function withStroke(stroke: Partial<DrawingData["strokes"][number]>) {
@@ -19,8 +28,12 @@ describe("DrawingDataSchema", () => {
   });
 
   it("rejects coordinates outside [0, 1] — pixels must never reach the server", () => {
-    expect(DrawingDataSchema.safeParse(withStroke({ points: [{ x: 640, y: 480 }] })).success).toBe(false);
-    expect(DrawingDataSchema.safeParse(withStroke({ points: [{ x: -0.1, y: 0.5 }] })).success).toBe(false);
+    expect(DrawingDataSchema.safeParse(withStroke({ points: [{ x: 640, y: 480 }] })).success).toBe(
+      false,
+    );
+    expect(DrawingDataSchema.safeParse(withStroke({ points: [{ x: -0.1, y: 0.5 }] })).success).toBe(
+      false,
+    );
   });
 
   it("rejects an unknown format version", () => {
@@ -39,7 +52,9 @@ describe("DrawingDataSchema", () => {
 
   it("caps the payload: 5 000 points per stroke, 1 000 strokes", () => {
     const point = { x: 0.5, y: 0.5 };
-    expect(DrawingDataSchema.safeParse(withStroke({ points: Array(5_001).fill(point) })).success).toBe(false);
+    expect(
+      DrawingDataSchema.safeParse(withStroke({ points: Array(5_001).fill(point) })).success,
+    ).toBe(false);
     const strokes = Array(1_001).fill(valid.strokes[0]);
     expect(DrawingDataSchema.safeParse({ ...valid, strokes }).success).toBe(false);
   });

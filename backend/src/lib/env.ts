@@ -14,7 +14,9 @@ const EnvSchema = z.object({
     .pipe(
       z.array(
         // A browser sends the bare origin: "https://x.dev/" would never match "https://x.dev".
-        z.url().refine((url) => new URL(url).origin === url, "must be a bare origin, no trailing slash"),
+        z
+          .url()
+          .refine((url) => new URL(url).origin === url, "must be a bare origin, no trailing slash"),
       ),
     ),
 });

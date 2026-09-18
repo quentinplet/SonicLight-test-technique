@@ -6,12 +6,7 @@ import { ApiError } from "@/api/http";
 import DrawingToolbar from "@/components/DrawingToolbar.vue";
 import EditableTitle from "@/components/EditableTitle.vue";
 import { countPoints } from "@/composables/renderStrokes";
-import {
-  PALETTE,
-  useDrawing,
-  WIDTHS,
-  type Tool,
-} from "@/composables/useDrawing";
+import { PALETTE, useDrawing, WIDTHS, type Tool } from "@/composables/useDrawing";
 import { useToast } from "@/composables/useToast";
 
 const { notify } = useToast();
@@ -26,13 +21,9 @@ const savedTitle = ref("");
 const savedAt = ref<string | null>(null);
 const savedRevision = ref(0);
 
-const strokesChanged = computed(
-  () => drawing.revision.value !== savedRevision.value,
-);
+const strokesChanged = computed(() => drawing.revision.value !== savedRevision.value);
 // A renamed drawing is worth saving on its own, strokes untouched.
-const unsaved = computed(
-  () => strokesChanged.value || title.value.trim() !== savedTitle.value,
-);
+const unsaved = computed(() => strokesChanged.value || title.value.trim() !== savedTitle.value);
 const saving = ref(false);
 const loading = ref(true);
 // Inline, and only for the initial load: an action's outcome goes to a toast instead.
@@ -49,8 +40,7 @@ async function loadSaved(): Promise<void> {
     savedRevision.value = drawing.revision.value;
   } catch (err) {
     // 404 means "nothing drawn yet": a blank canvas, not a failure.
-    if (!(err instanceof ApiError) || err.status !== 404)
-      error.value = errorMessage(err);
+    if (!(err instanceof ApiError) || err.status !== 404) error.value = errorMessage(err);
   } finally {
     loading.value = false;
   }
@@ -130,18 +120,13 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
       <!-- Same line, same height either way: the meta line must not jump when data lands. -->
       <p class="mt-2 font-mono text-xs text-base-content/70">
         <template v-if="loading">
-          <span
-            class="loading loading-spinner loading-xs mr-1 align-middle"
-            aria-hidden="true"
-          />
+          <span class="loading loading-spinner loading-xs mr-1 align-middle" aria-hidden="true" />
           Loading your drawing…
         </template>
         <template v-else>
           {{ drawing.data.value.strokes.length }} strokes ·
           {{ countPoints(drawing.data.value) }} points
-          <span v-if="savedAt">
-            · saved {{ new Date(savedAt).toLocaleString() }}</span
-          >
+          <span v-if="savedAt"> · saved {{ new Date(savedAt).toLocaleString() }}</span>
           <span v-else> · not saved yet</span>
         </template>
       </p>

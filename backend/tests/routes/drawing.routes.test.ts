@@ -62,7 +62,10 @@ describe("drawing routes", () => {
   });
 
   it("refuses a drawing in pixel coordinates", async () => {
-    const data = { ...drawingData(), strokes: [{ color: "#e11d48", width: 2, points: [{ x: 640, y: 480 }] }] };
+    const data = {
+      ...drawingData(),
+      strokes: [{ color: "#e11d48", width: 2, points: [{ x: 640, y: 480 }] }],
+    };
 
     const res = await call("PUT", aliceToken, { data });
     expect(res.status).toBe(400);

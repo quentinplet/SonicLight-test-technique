@@ -1,41 +1,42 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
-import type { Credentials } from '@/api/auth'
-import { errorMessage } from '@/api/errors'
-import CredentialsForm from '@/components/CredentialsForm.vue'
-import { useToast } from '@/composables/useToast'
-import { useAuthStore } from '@/stores/auth'
+import { ref } from "vue";
+import { RouterLink, useRoute, useRouter } from "vue-router";
+import type { Credentials } from "@/api/auth";
+import { errorMessage } from "@/api/errors";
+import CredentialsForm from "@/components/CredentialsForm.vue";
+import { useToast } from "@/composables/useToast";
+import { useAuthStore } from "@/stores/auth";
 
-const { notify } = useToast()
-const auth = useAuthStore()
-const route = useRoute()
-const router = useRouter()
+const { notify } = useToast();
+const auth = useAuthStore();
+const route = useRoute();
+const router = useRouter();
 
-const pending = ref(false)
-const error = ref<string | null>(null)
+const pending = ref(false);
+const error = ref<string | null>(null);
 
 // Only an in-app path: a crafted ?redirect=https://… must not send the user off-site.
 // Without one, an admin lands on what concerns them: the drawings of everybody.
 function redirectTarget(): string {
-  const target = route.query.redirect
-  if (typeof target === 'string' && target.startsWith('/') && !target.startsWith('//')) return target
-  return auth.isAdmin ? '/admin' : '/'
+  const target = route.query.redirect;
+  if (typeof target === "string" && target.startsWith("/") && !target.startsWith("//"))
+    return target;
+  return auth.isAdmin ? "/admin" : "/";
 }
 
 async function onSubmit(credentials: Credentials): Promise<void> {
-  pending.value = true
-  error.value = null
+  pending.value = true;
+  error.value = null;
   try {
-    await auth.login(credentials)
+    await auth.login(credentials);
     // The name as the server answered it: it trims and lowercases what was typed.
     // The toast outlives this view, so it is still there after the redirect.
-    notify(`Welcome back, ${auth.user?.userName ?? credentials.userName}`)
-    await router.replace(redirectTarget())
+    notify(`Welcome back, ${auth.user?.userName ?? credentials.userName}`);
+    await router.replace(redirectTarget());
   } catch (err) {
-    error.value = errorMessage(err)
+    error.value = errorMessage(err);
   } finally {
-    pending.value = false
+    pending.value = false;
   }
 }
 </script>

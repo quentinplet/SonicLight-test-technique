@@ -1,9 +1,6 @@
 import { NotFoundError } from "../errors/app-error.js";
 import { prisma } from "../lib/prisma.js";
-import {
-  DrawingDataSchema,
-  type SaveDrawingInput,
-} from "../schemas/drawing.schema.js";
+import { DrawingDataSchema, type SaveDrawingInput } from "../schemas/drawing.schema.js";
 import type { DrawingData } from "../types/drawing.js";
 
 /** A drawing as it leaves this service. The id stays inside: the token names the owner. */
@@ -34,10 +31,7 @@ export async function getDrawing(userId: string): Promise<DrawingDto> {
  * Without a title, an existing drawing keeps the one it had, and a first save takes the
  * owner's user name. Trimmed here too: the service does not rely on its caller.
  */
-export async function saveDrawing(
-  userId: string,
-  input: SaveDrawingInput,
-): Promise<DrawingDto> {
+export async function saveDrawing(userId: string, input: SaveDrawingInput): Promise<DrawingDto> {
   const title = input.title?.trim();
 
   // upsert = update if exists, else create. The unique key is userId, so there is only one drawing per user.
@@ -56,8 +50,7 @@ export async function saveDrawing(
 
 export async function removeDrawing(userId: string): Promise<void> {
   const deleted = await prisma.drawing.deleteMany({ where: { userId } });
-  if (deleted.count === 0)
-    throw new NotFoundError("drawing.notFound", "No drawing yet.");
+  if (deleted.count === 0) throw new NotFoundError("drawing.notFound", "No drawing yet.");
 }
 
 async function ownerName(userId: string): Promise<string> {

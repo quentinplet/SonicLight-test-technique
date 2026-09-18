@@ -23,7 +23,9 @@ beforeAll(async () => {
 afterAll(() => server.close());
 
 function get(path: string, authorization?: string): Promise<Response> {
-  return fetch(`${server.url}${path}`, { headers: authorization ? { Authorization: authorization } : {} });
+  return fetch(`${server.url}${path}`, {
+    headers: authorization ? { Authorization: authorization } : {},
+  });
 }
 
 const userToken = signToken({ id: randomUUID(), role: "USER" });
