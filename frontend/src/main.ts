@@ -9,9 +9,10 @@ import { useAuthStore } from './stores/auth'
 const app = createApp(App)
 
 app.use(createPinia())
-app.use(router)
 
-// Resolve the session before the first render, so route guards never see a stale "signed out".
+// Before app.use(router): installing the router starts the first navigation right away, and
+// its guard would see a stale "signed out" and redirect to /login on every reload.
 await useAuthStore().restore()
 
+app.use(router)
 app.mount('#app')
