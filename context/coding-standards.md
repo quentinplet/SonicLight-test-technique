@@ -91,7 +91,13 @@ finished and committed.
   linear map makes every drawing sound like a siren; five degrees per octave with no adjacent
   semitones keeps any combination consonant. This is an aesthetic decision, stated as one
 - Simultaneous voices are hard-capped. A dense drawing would otherwise clip the output
-- The mapping lives in `useSonification`, in one place — never inlined into a view
+- The mapping lives in `audio/sonify.ts`, in one place — never inlined into a view, and free
+  of any audio API: it turns geometry into notes, nothing else
+- **What makes the sound sits behind `audio/engine.ts`.** The transport (`useSonification`)
+  depends on that interface, never on an implementation, so replacing the raw Web Audio pass
+  with Tone.js, samples, an AudioWorklet, RNBO or Faust is a new file next to `webAudio.ts` —
+  not an edit to the mapping, the transport or a view. Open to extension, closed to
+  modification, on the one axis where this project will actually be extended
 
 ## Express API
 
@@ -256,7 +262,10 @@ secret. A `401` on any call clears the store and redirects.
 frontend/src/
 ├── views/        one per route — DrawView, MyDrawingView, AdminView, AdminDrawingView, LoginView
 ├── components/   shared presentational pieces — DrawingCard, ColorPicker, ToolBar
-├── composables/  useDrawing, useCanvasReplay, useSonification
+├── composables/  useDrawing, useToast, useSonification — Vue-facing logic
+├── canvas/       renderStrokes — denormalise and paint, shared by editor and thumbnail
+├── audio/        sonify, webAudio, interfaces/engine — the sonification, free of Vue: the
+│                 mapping is the durable part, the engine behind the interface the swappable one
 ├── stores/       auth.ts — the only store
 ├── api/          auth.ts, drawings.ts — the only place fetch is called
 ├── types/        drawing.ts (duplicate of the server copy)

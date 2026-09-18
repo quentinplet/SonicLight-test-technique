@@ -24,6 +24,8 @@ Read the following to get the full context of the project:
 frontend/  Vue 3 SPA (Vite, <script setup>, TypeScript, Pinia, Vue Router)
            Tailwind 4 + DaisyUI 5, custom theme in src/style.css — no JS component library (not yet)
            src/views/ src/components/ src/stores/ src/api/ src/composables/ src/types/
+           src/canvas/ — stroke rendering · src/audio/ — sonification (sonify, webAudio,
+           interfaces/engine — the port every engine implements)
 backend/   Express 5 API — TypeScript, single package
            prisma/schema.prisma, prisma/migrations/, prisma/seed.ts
            src/routes/ src/controllers/ src/services/ src/middleware/ src/schemas/ src/lib/
