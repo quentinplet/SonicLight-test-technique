@@ -14,9 +14,11 @@ const pending = ref(false)
 const error = ref<string | null>(null)
 
 // Only an in-app path: a crafted ?redirect=https://… must not send the user off-site.
+// Without one, an admin lands on what concerns them: the drawings of everybody.
 function redirectTarget(): string {
   const target = route.query.redirect
-  return typeof target === 'string' && target.startsWith('/') && !target.startsWith('//') ? target : '/'
+  if (typeof target === 'string' && target.startsWith('/') && !target.startsWith('//')) return target
+  return auth.isAdmin ? '/admin' : '/'
 }
 
 async function onSubmit(credentials: Credentials): Promise<void> {

@@ -100,8 +100,11 @@ Prisma 7: the connection URL and the seed command live in `prisma.config.ts`, wh
 `.env` with `process.loadEnvFile()`. The client is generated into `src/generated/prisma`
 (git-ignored) and imported from there, with the `@prisma/adapter-pg` driver adapter.
 
-Seeding is idempotent (upsert on `userName`) and creates two accounts: `demo` / `demo1234`
-(USER) and `admin` / `admin1234` (ADMIN). No drawings yet _(not yet)_.
+Seeding is idempotent (upsert on `userName`, then on `userId` for the drawing) and creates
+four accounts: `demo` / `demo1234`, `alex` / `alex1234` and `sam` / `sam12345` (USER, each
+with one generated drawing), plus `admin` / `admin1234` (ADMIN, no drawing — the admin view
+then shows three drawings by three authors). Shapes are generated in `prisma/shapes.ts`:
+formulas read better than transcribed points, and they show the format is geometry.
 **It refuses to run when `NODE_ENV === "production"`** — these passwords are committed to a
 public repository.
 

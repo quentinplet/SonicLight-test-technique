@@ -5,86 +5,62 @@
 
 ## Feature
 
-Dessin — canvas, capture vectorielle, enregistrement, rejeu (branche `feature/drawing`)
+Administration — consulter et modérer les dessins de tous (branche `feature/admin`)
 
 ## Status
 
-Done — 18 septembre 2026, fusionné dans `main` en `--no-ff`. Prochain lot : l'administration.
+Done — 18 septembre 2026, fusionné dans `main` en `--no-ff`. **Les quatre exigences fermes de l'énoncé sont satisfaites.** Prochains chantiers : README, déploiement, sonification.
 
 ## Goals
 
-**Format et backend**
+**Backend**
 
-- `types/drawing.ts` (copie canonique serveur, dupliquée côté client) : `Point`, `Stroke`,
-  `DrawingData` — coordonnées normalisées `[0,1]`, `width` normalisée sur la largeur,
-  `aspectRatio`, `version: 1`.
-- `schemas/drawing.schema.ts` : `DrawingDataSchema` avec ses bornes dures
-  (≤ 1 000 traits, ≤ 5 000 points, couleurs hex, `version` littérale) — la seule protection
-  applicative contre un `jsonb` de 200 Mo.
-- `services/drawing.service.ts` : `getMine(userId)`, `saveMine(userId, input)` (upsert sur
-  `userId`), `removeMine(userId)`. Aucune route utilisateur n'accepte d'id de dessin.
-- **Titre facultatif** : `title` optionnel dans le schéma. Vide sur un dessin existant, le
-  titre déjà enregistré est conservé ; vide au premier enregistrement, le `userName` du
-  propriétaire est repris. Le repli vit côté serveur, à un seul endroit.
-- Routes : `GET`, `PUT`, `DELETE /api/drawing`, toutes derrière `requireAuth`. **`DELETE`
-  n'a volontairement aucun bouton dans l'interface pour l'instant** : la route reste écrite
-  et testée (elle porte un test d'isolation), l'exposer sera un bouton à ajouter.
-- Tests : isolation (le dessin d'un autre est invisible), remplacement (deux `PUT` = une
-  ligne), bornes du schéma, `data` relu par `DrawingDataSchema` en sortie.
+- `GET /api/admin/drawings` : tous les dessins avec leur auteur, **sans le `data`** —
+  `{ id, title, userName, strokeCount, updatedAt }`, triés du plus récent au plus ancien.
+- `GET /api/admin/drawings/:id` : un dessin, `data` compris, relu par `DrawingDataSchema`.
+- `DELETE /api/admin/drawings/:id` : modération (réponse IRCAM n°4). 404 si l'id n'existe pas.
+- Services **séparés et explicitement nommés** : `listAllForAdmin`, `getByIdForAdmin`,
+  `removeForAdmin` — jamais un `userId?` optionnel sur les fonctions utilisateur, qui
+  rendrait un oubli silencieux.
+- Toutes les routes derrière `requireAuth` **puis** `requireAdmin`.
+- Tests : un `USER` reçoit **403 sur les trois routes**, un invité 401 ; la liste ne contient
+  jamais de `data` ; un admin voit les dessins de tous ; la suppression admin atteint le
+  dessin d'un autre (contrairement à la route utilisateur).
 
 **Frontend**
 
-- `composables/useDrawing.ts` : capture `pointerdown/move/up`, `setPointerCapture`,
-  normalisation à la capture, filtre de distance (~0,002), pile d'annulation, effacer tout.
-- `composables/renderStrokes.ts` : **une seule** fonction de rendu, partagée par l'édition et
-  (plus tard) la vignette admin — `renderStrokes(ctx, data, box)`.
-- `DrawView` : canvas **ratio fixe 3:2**, responsive, `touch-action: none`, backing store à
-  `devicePixelRatio`, barre d'outils **sous** le canvas (palette fermée de 6 couleurs,
-  3 épaisseurs, annuler, effacer), **champ titre facultatif** à côté du bouton « Save » —
-  pas de modale : avec un seul dessin par utilisateur, un champ suffit.
-- **Un seul écran** (`/`) : il s'ouvre sur le dessin déjà enregistré, on le modifie et on
-  l'enregistre (remplacement). Pas de page de consultation séparée : avec
-  un dessin par utilisateur, deux écrans pour la même donnée n'apportaient rien. Titre
-  modifiable en cliquant dessus ; laissé vide, le serveur garde le titre enregistré.
-  Pas de suppression côté utilisateur (seulement `Clear`, qui vide le canvas sans toucher à
-  l'enregistrement). **Pas de rejeu animé** : bonus P1, repoussé pour rester simple.
-- Palette assombrie pour le fond clair, toutes ≥ 4,7:1 sur blanc :
-  rouge `#e11d48`, orange `#c2410c`, jaune `#a16207`, vert `#15803d`, cyan `#0e7490`,
-  violet `#7c3aed`.
+- `AdminView` : grille de cartes, une par dessin — vignette rendue par `renderStrokes`,
+  titre, auteur, date, nombre de traits.
+- Ouverture d'un dessin (vue agrandie) et suppression avec confirmation.
+- État vide travaillé si aucun dessin n'existe.
+- Le lien « Admin » de l'en-tête existe déjà, affiché seulement si `isAdmin`.
 
 ## Notes
 
-**Hors périmètre** — interface d'administration (lot suivant), rejeu animé trait par trait
-(P1), sonification (P2), édition d'un dessin existant, calques, formes, export.
+**Hors périmètre** — modification d'un dessin par l'admin (l'IRCAM parle de consulter et de
+supprimer), gestion des comptes, pagination, recherche, export, rejeu animé, sonification.
 
 **Décisions prises avant de coder** :
 
-- **Canvas en ratio fixe 3:2**, desktop comme mobile : tous les dessins ont le même
-  `aspectRatio`, donc le rejeu et les futures vignettes n'ont jamais à letterboxer. Le champ
-  `aspectRatio` reste dans le format : il coûte un nombre et rend le format indépendant de
-  ce choix d'interface.
-- **Un dessin par utilisateur** (réponse IRCAM) : `PUT /api/drawing` crée ou remplace, aucun
-  id de dessin ne transite côté utilisateur.
-- **Palette fermée de 6 couleurs**, assombries pour rester lisibles sur fond clair.
-- **Pas de modale `<dialog>` pour l'enregistrement** : le titre est un champ de la barre
-  d'outils, facultatif. Le gain d'accessibilité de `<dialog>` (piège à focus, `Échap`) n'a
-  d'intérêt que s'il y a une vraie modale à afficher.
+- **La liste ne renvoie pas le `data`.** Vingt dessins complets, c'est plusieurs mégaoctets
+  pour afficher vingt titres. Conséquence assumée : les vignettes demandent un second appel
+  par dessin — acceptable à cette échelle, et la limite est nommée plutôt que masquée.
+- **L'id du dessin n'apparaît que côté admin.** Les routes utilisateur restent au singulier
+  et sans id : c'est la seule surface où un identifiant transite, et elle est derrière
+  `requireAdmin`.
+- **Le seed devra créer des dessins** pour que la vue admin ne soit pas vide au clonage.
 
 **Pièges attendus** :
 
-- Backing store à `devicePixelRatio` (`canvas.width = cssWidth * dpr`, puis `ctx.scale`),
-  sinon le trait est flou sur écran haute densité.
-- `touch-action: none` en CSS, sinon dessiner au doigt fait défiler la page.
-- `pointer*` uniquement, jamais `mouse*` ni `touch*` ; `setPointerCapture` sur `pointerdown`.
-- Redimensionner le canvas **efface** son contenu : il faut redessiner depuis les traits.
-- `drawing.data` arrive en `Prisma.JsonValue` : `DrawingDataSchema.parse()`, jamais `as`.
-- Aucun pixel ne franchit la frontière réseau : normalisation à la capture, dénormalisation
-  au rendu.
+- `requireAdmin` s'applique **après** `requireAuth` : sans jeton c'est 401, avec un jeton
+  `USER` c'est 403 — deux cas distincts, tous deux testés.
+- Le rôle vient du jeton **vérifié**, jamais d'un champ du client.
+- Les vignettes rendent du canvas : dimensionner le backing store avec `devicePixelRatio`,
+  et réserver la hauteur finale pour que la grille ne saute pas quand les données arrivent.
 
-**Definition of done** : `demo` dessine, enregistre, **retrouve son dessin sur le canvas au
-rechargement**, le modifie, un second enregistrement remplace le premier, la suppression
-fonctionne. Tests d'isolation verts. `tsc`, tests, `type-check`, build et CI verts avant
-fusion en `--no-ff`.
+**Definition of done** : `admin` voit les dessins de `demo` et des autres, en ouvre un, en
+supprime un ; `demo` reçoit un 403 sur les routes admin et ne voit pas le lien. Tests verts,
+`tsc`, `type-check`, build et CI verts avant fusion en `--no-ff`.
 
 ## History
 
@@ -197,3 +173,37 @@ Pièges qui mordent encore :
   gratuit grâce aux coordonnées normalisées.
 - **Une classe Tailwind construite à l'exécution n'existe pas** dans le CSS produit : les
   couleurs de trait passent par une variable CSS en ligne.
+
+### 18/09 — Administration ✅
+
+`GET/DELETE /api/admin/drawings(/:id)` derrière `requireAuth` + `requireAdmin`, services
+séparés et explicitement nommés, dessins de démonstration générés, vue admin en grille avec
+ouverture et suppression. 64 tests backend. Branche `feature/admin`, commits `7d92cf1` →
+`32513ed`.
+
+Écarts au plan, et pourquoi :
+
+- **Suppression derrière une modale de confirmation dédiée**, atteinte depuis l'icône d'une
+  carte comme depuis le dessin ouvert, et nommant ce qui va disparaître. Les boutons de
+  suppression sont le seul rouge de l'application : l'exception assumée à « rien n'est
+  coloré sauf le dessin ».
+- **`strokeCount` retiré** de la liste et de l'interface : conséquence utile, la requête
+  n'a plus besoin de charger la colonne `jsonb` du tout.
+- **Un admin atterrit sur `/admin`** après connexion ; l'écran de dessin reste accessible.
+- **Le compte `admin` du seed n'a pas de dessin** : la démonstration sépare mieux les rôles,
+  et ça fait tester le canvas vide.
+- **`DELETE /api/drawing` côté utilisateur reste non exposée** (décision du lot précédent).
+
+Pièges qui mordent encore :
+
+- **Le rôle vient du jeton vérifié** : promouvoir un compte en base ne suffit pas, un jeton
+  émis avant dit encore `USER`. C'est ce qui a fait échouer le premier test admin, et c'est
+  la limite assumée du JWT sans état.
+- **Une réponse `204` n'a pas de corps** : `res.json()` y échoue, la suppression paraissait
+  échouer alors qu'elle avait réussi, et le `404` du second essai n'était que la conséquence.
+- **`clamp()` masque une erreur de géométrie** : la spirale sortait aplatie parce qu'un rayon
+  rond ne peut pas dépasser `0,5 / aspectRatio` de la largeur.
+- **Le rechargement à chaud de Vite peut garder un module périmé** quand script et template
+  changent coup sur coup : rechargement forcé avant de conclure à un bug.
+- **Sur une suppression, « déjà absent » n'est pas un échec** : un 404 se traite comme un
+  succès.

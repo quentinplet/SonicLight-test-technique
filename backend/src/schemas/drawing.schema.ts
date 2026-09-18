@@ -4,6 +4,9 @@ import type { DrawingData } from "../types/drawing.js";
 
 const HEX_COLOUR = /^#[0-9a-fA-F]{6}$/;
 
+/** The shape of the drawing surface, shared by the client: every drawing uses it. */
+export const ASPECT_RATIO = 1.5;
+
 const PointSchema = z.object({
   x: z.number().min(0).max(1),
   y: z.number().min(0).max(1),
@@ -34,3 +37,6 @@ export const SaveDrawingSchema = z.object({
 });
 
 export type SaveDrawingInput = z.infer<typeof SaveDrawingSchema>;
+
+/** Route parameter of the admin routes — the only surface where a drawing id travels. */
+export const DrawingIdSchema = z.object({ id: z.uuid() });
