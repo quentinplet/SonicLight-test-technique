@@ -17,8 +17,6 @@ services:
       timeout: 3s
       retries: 10
 
-  # No container for the client, on purpose: `npm run build` produces static files a CDN
-  # serves directly, so the image would never run anywhere. The API's image does.
   server:
     build: ./backend
     depends_on:
@@ -35,6 +33,20 @@ services:
     # migrate deploy applies the existing migrations and never generates or resets one.
     # The seed follows, guarded in code by NODE_ENV !== "production".
     command: sh -c "npx prisma migrate deploy && npx prisma db seed && node dist/index.js"
+
+  # Local demonstration only: `docker compose up` has to give a working application, not two
+  # thirds of one. Deployment still ships dist/ to a CDN — the API URL is baked in below,
+  # so this image belongs to this machine.
+  client:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:3000
+    depends_on:
+      - server
+    # 5173 on the host, so the origin matches CLIENT_ORIGINS and the habit from `npm run dev`.
+    ports:
+      - "5173:4173"
 
 volumes:
   db-data:
