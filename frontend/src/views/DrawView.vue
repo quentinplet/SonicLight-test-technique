@@ -6,14 +6,15 @@ import { ApiError } from "@/api/http";
 import DrawingToolbar from "@/components/DrawingToolbar.vue";
 import EditableTitle from "@/components/EditableTitle.vue";
 import { countPoints } from "@/canvas/renderStrokes";
-import { PALETTE, useDrawing, WIDTHS, type Tool } from "@/composables/useDrawing";
+import { PALETTE, WIDTHS, type Tool } from "@/canvas/tools";
+import { useDrawing } from "@/composables/useDrawing";
 import { useSonification } from "@/composables/useSonification";
 import { useToast } from "@/composables/useToast";
 
 const { notify } = useToast();
 
 const canvas = ref<HTMLCanvasElement | null>(null);
-const tool = ref<Tool>({ color: PALETTE[0].hex, width: WIDTHS[1].value });
+const tool = ref<Tool>({ color: PALETTE[0].hex, width: WIDTHS[1].value, mode: "draw" });
 
 // The audio owns the playhead, the canvas only draws it.
 const audio = useSonification();
@@ -117,7 +118,8 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
       <!-- touch-none: without touch-action, drawing with a finger scrolls the page instead. -->
       <canvas
         ref="canvas"
-        class="mt-3 w-full cursor-crosshair touch-none rounded-box border border-base-300"
+        class="mt-3 w-full touch-none rounded-box border border-base-300"
+        :class="tool.mode === 'erase' ? 'cursor-cell' : 'cursor-crosshair'"
         style="aspect-ratio: 3 / 2"
         @pointerdown="drawing.onPointerDown"
         @pointermove="drawing.onPointerMove"
@@ -128,6 +130,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
       <DrawingToolbar
         v-model="tool"
         :is-empty="drawing.isEmpty.value"
+        :can-undo="drawing.canUndo.value"
         :unsaved="unsaved"
         :saving="saving"
         @undo="drawing.undo"
