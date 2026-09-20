@@ -397,10 +397,12 @@ it is the question worth being able to answer.
   inside the host's network, and **a failure aborts the deploy so the previous version stays
   up**. `migrate deploy` is idempotent and takes a Postgres advisory lock, so concurrency is
   not the issue — the failure mode is
-- **The seed never runs in production.** `docker compose` runs `migrate deploy` then the seed;
-  a deploy runs `migrate deploy` alone. The same entrypoint shipped unchanged would insert
-  demo accounts, with passwords committed to a Git repository, into the production database.
-  The guard is `NODE_ENV !== "production"` in code, not an intention
+- **The seed never creates an admin in production.** What the committed passwords cost
+  depends on the role behind them: a demo user reaches their own drawing and nothing else —
+  anyone could register — while the admin can delete everybody's work. So `NODE_ENV=production`
+  filters the ADMIN out of the account list, and the deployed admin is created by hand with a
+  password that lives nowhere in the repository. Filtering the list rather than branching
+  inside the loop is deliberate: the account cannot be created by a forgotten condition
 - **Whether a deploy workflow exists at all depends on the host.** Render and Railway deploy on
   push through their own Git integration, so an Actions workflow would duplicate it — same
   argument as Vercel on the frontend. Fly.io has no Git integration, so `flyctl deploy` in

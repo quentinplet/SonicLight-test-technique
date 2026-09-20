@@ -811,11 +811,13 @@ Objectif : un relecteur qui clone le repo et lance `docker compose up` voit une 
 d'administration **peuplée**, sans avoir à créer trois comptes et dessiner à la souris. C'est
 un détail d'accueil qui pèse plus lourd qu'il n'en a l'air sur la première impression.
 
-> **Le seed est gardé par `NODE_ENV !== "production"` et sort en erreur explicite sinon.** Ces
-> comptes ont des mots de passe connus, écrits dans un dépôt Git public. Les laisser s'insérer
-> dans la base déployée serait une porte d'entrée, pas une commodité. Sur la démonstration en
-> ligne, un compte de test est créé une fois à la main et son identifiant figure dans le
-> README — jamais dans le code.
+> **En production, le seed crée les comptes `USER` mais jamais l'`ADMIN`.** Ces mots de passe
+> sont écrits dans un dépôt Git public, et ce qu'ils coûtent dépend du rôle : un utilisateur
+> n'atteint que son propre dessin — n'importe qui obtiendrait autant en s'inscrivant — tandis
+> que l'administrateur peut supprimer le travail de tous. Le premier est donc une commodité de
+> démonstration, le second une porte d'entrée. L'administrateur en ligne est créé à la main,
+> avec un mot de passe qui n'existe nulle part dans le dépôt, et son identifiant figure dans
+> le README.
 
 ---
 
@@ -1439,9 +1441,9 @@ avec sa base, c'est du Docker.
 | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | `healthcheck` sur `db` + `condition: service_healthy`      | `depends_on` seul attend que le conteneur démarre, pas que Postgres accepte les connexions — l'API planterait au premier démarrage |
 | `prisma migrate deploy` au lancement du serveur, pas `dev` | `deploy` applique les migrations existantes sans jamais en générer ni réinitialiser la base           |
-| Le seed est gardé par `NODE_ENV !== "production"`          | Le même point d'entrée déployé tel quel insérerait des comptes de démonstration, mots de passe connus et versionnés, dans la base de production |
+| En production, le seed ne crée que les comptes `USER`      | Leurs mots de passe sont publics mais sans privilège ; l'`ADMIN`, lui, peut supprimer le travail de tous et se crée à la main |
 | En production, les migrations passent par le hook de release de l'hébergeur, pas par le démarrage du conteneur | Une migration qui échoue doit annuler le déploiement, pas mettre l'application en boucle de redémarrage |
-| Build multi-étapes côté serveur                            | Une étape compile le TypeScript, l'image finale ne garde que `dist/` et les dépendances de production  |
+| Image serveur en une seule étape                           | Le plus simple qui marche, et la CLI Prisma reste dans l'image — c'est ce qui permet au hook de release d'y lancer `migrate deploy`. Le prix est la taille, qu'un build multi-étapes diviserait |
 | Volume nommé pour les données Postgres                     | `docker compose down` ne perd pas les dessins ; `down -v` les efface volontairement                   |
 | `.dockerignore` dans `backend/`                             | Sans lui, `node_modules` part dans le contexte de build et le rend dix fois plus lent                  |
 
@@ -1517,15 +1519,20 @@ annuler le déploiement, pas mettre l'application en boucle de redémarrage.**
 > exécutions concurrentes ne se marchent pas dessus. Ce n'est pas la concurrence le problème
 > du démarrage-conteneur, c'est le mode d'échec.
 
-#### Le seed ne tourne **jamais** en production
+#### Le seed ne crée **jamais** d'administrateur en production
 
-Le `docker-compose` local lance `migrate deploy` **puis** le seed. Le déploiement lance
-`migrate deploy` **seul**.
+Le `docker-compose` local lance `migrate deploy` **puis** le seed complet. Le déploiement
+lance `migrate deploy`, et le seed n'y crée que les comptes `USER` et leurs dessins.
 
-C'est la distinction à ne pas rater : la même image, déployée avec le même point d'entrée,
-insérerait le compte `admin` et deux comptes de démonstration dans la base de
-production — avec des mots de passe connus, écrits dans un dépôt Git. Le seed est gardé par
-`NODE_ENV !== "production"`, et cette garde est du code, pas une intention.
+La distinction se joue sur le rôle, pas sur l'environnement : ces mots de passe sont dans un
+dépôt public, mais un utilisateur n'atteint que son propre dessin — l'inscription est ouverte,
+n'importe qui obtiendrait le même accès — alors que l'administrateur peut supprimer le travail
+de tous. Le premier est une commodité de démonstration, le second serait une porte d'entrée.
+
+En production, l'`ADMIN` est donc **retiré de la liste des comptes** plutôt que sauté par une
+condition dans la boucle : il ne peut pas être créé par un `if` oublié. Le compte
+d'administration de la démonstration est créé à la main, et son mot de passe n'existe nulle
+part dans le dépôt.
 
 #### Ce qui déclenche le déploiement
 
@@ -1674,7 +1681,7 @@ Git est un critère d'évaluation. L'historique cible, dans l'ordre :
 | 19  | `passwordHash` ne sort jamais d'un service. Les DTO de sortie sont construits explicitement.        |
 | 20  | Tout changement de schéma passe par une migration Prisma générée. Jamais `db push`.                |
 | 21  | `.env` n'est jamais commité. `.env.example` l'est, avec des valeurs factices.                       |
-| 30  | Le seed ne s'exécute **jamais** en production : garde `NODE_ENV !== "production"` dans le code.     |
+| 30  | Le seed ne crée **jamais** d'`ADMIN` en production : le rôle est retiré de la liste, pas sauté par un `if`. |
 | 31  | En production, les migrations tournent dans le hook de release de l'hébergeur, jamais au démarrage du conteneur. |
 
 ### Frontend

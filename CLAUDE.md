@@ -108,8 +108,10 @@ four accounts: `demo` / `demo1234`, `alex` / `alex1234` and `sam` / `sam12345` (
 with one generated drawing), plus `admin` / `admin1234` (ADMIN, no drawing — the admin view
 then shows three drawings by three authors). Shapes are generated in `prisma/shapes.ts`:
 formulas read better than transcribed points, and they show the format is geometry.
-**It refuses to run when `NODE_ENV === "production"`** — these passwords are committed to a
-public repository.
+**In production it seeds the USER accounts only, never the ADMIN.** These passwords are
+committed to a public repository: a user can reach nothing but their own drawing, which
+anyone could get by registering, whereas the admin can delete everybody else's work. The
+deployed admin is created by hand, with a password that exists nowhere in this repository.
 
 ## Gotchas
 
@@ -166,9 +168,10 @@ push` silently diverges the schema from the migration history; it is not used in
   container startup and never from a CI runner. At startup a failed migration crash-loops
   the app; in a release hook it fails once and aborts the deploy, leaving the previous
   version up.
-- **The seed never runs in production.** `docker compose` runs `migrate deploy` then the
-  seed; a deploy runs `migrate deploy` alone. Shipping the same entrypoint unchanged would
-  put demo accounts with committed passwords in the live database.
+- **The seed never creates an admin in production.** The privileged account is the only one
+  whose committed password would matter, so `NODE_ENV=production` filters it out of the list
+  rather than guarding an `if` inside the loop. The demo users and their drawings do get
+  seeded: a deployed demonstration needs something to show.
 - **After editing `schema.prisma`, run `npx prisma generate`** (or `migrate dev`, which
   includes it) or the TypeScript client keeps the previous types and the errors make no
   sense.

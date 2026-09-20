@@ -5,11 +5,16 @@ import { hashPassword } from "../src/services/auth.service.js";
 import type { DrawingData } from "../src/types/drawing.js";
 import { burst, spiral, waves } from "./shapes.js";
 
-// These passwords are committed to the repository: they must never reach a real database.
-if (process.env.NODE_ENV === "production") {
-  console.error("Refusing to seed: NODE_ENV is production.");
-  process.exit(1);
-}
+/**
+ * These passwords are committed to a public repository, so what the seed is allowed to
+ * create depends on where it runs.
+ *
+ * In production it creates the USER accounts and their drawings — a demonstration needs
+ * something to show, and a user can only reach their own drawing, which anyone could create
+ * by registering anyway. It never creates the ADMIN: that one account can delete everybody
+ * else's work, so it is made by hand, with a password that exists nowhere in this repository.
+ */
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 interface DemoUser {
   userName: string;
@@ -47,7 +52,11 @@ const DEMO_USERS: DemoUser[] = [
 ];
 
 async function main(): Promise<void> {
-  for (const { userName, password, role, drawing } of DEMO_USERS) {
+  // Filtered, not skipped inside the loop: an ADMIN cannot be created in production by
+  // forgetting a condition — it is simply not in the list.
+  const accounts = IS_PRODUCTION ? DEMO_USERS.filter(({ role }) => role === "USER") : DEMO_USERS;
+
+  for (const { userName, password, role, drawing } of accounts) {
     // upsert with an empty update: creates the account once, leaves an existing one untouched.
     const user = await prisma.user.upsert({
       where: { userName },
