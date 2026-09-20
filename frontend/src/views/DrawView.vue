@@ -97,7 +97,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
       <!-- The title takes the room it needs and truncates; the button never moves. -->
       <div class="flex items-center justify-between gap-3">
         <!-- Click the title to rename. Left blank, the server keeps the one already saved. -->
-        <EditableTitle v-model="title" placeholder="Untitled drawing" class="min-w-0" />
+        <EditableTitle v-model="title" placeholder="Enter a title" class="min-w-0" />
         <button
           class="btn btn-primary h-11 shrink-0 cursor-pointer gap-2 px-6"
           type="button"
