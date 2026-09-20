@@ -10,6 +10,7 @@
     "test": "vitest run",
     "format": "prettier --write src/ tests/ prisma/ prisma.config.ts",
     "seed": "prisma db seed",
+    "predeploy": "prisma migrate deploy && prisma db seed",
     "test:db": "DATABASE_URL=postgresql://soniclight:soniclight@localhost:5433/soniclight_test prisma migrate deploy"
   },
   "engines": {
