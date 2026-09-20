@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { renderPlayhead, renderStrokes } from "@/canvas/renderStrokes";
-import { ASPECT_RATIO } from "@/composables/useDrawing";
+import { ASPECT_RATIO } from "@/canvas/tools";
 import type { DrawingData } from "@/types/drawing";
 
 // The same render function as the editor, at thumbnail size or full size.

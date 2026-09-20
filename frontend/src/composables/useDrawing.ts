@@ -1,42 +1,18 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch, type Ref } from "vue";
+import { strokesOutside } from "@/canvas/hitTest";
 import { renderPlayhead, renderStrokes } from "@/canvas/renderStrokes";
+import { ASPECT_RATIO, BACKGROUND, type Tool } from "@/canvas/tools";
 import type { DrawingData, Point, Stroke } from "@/types/drawing";
-
-/** Fixed shape, so every drawing shares one aspect ratio. */
-export const ASPECT_RATIO = 1.5;
-export const BACKGROUND = "#ffffff";
 
 // Below this distance (in normalised units, ~2 px on a 1000 px canvas) a point adds nothing
 // but weight: a two-second stroke emits hundreds of pointermove events.
 const MIN_DISTANCE = 0.002;
 
-export interface Tool {
-  color: string;
-  width: number;
-}
+/** Eraser reach, as a fraction of the canvas width: ~20 px on a 1000 px canvas. */
+const ERASER_RADIUS = 0.02;
 
-/**
- * Closed palette, named for screen readers, darkened to clear 3:1 on white. It is also the
- * instrument list: one colour, one timbre (audio/sonify.ts), so a new colour has to sound
- * like something.
- */
-export const PALETTE = [
-  { name: "Ink", hex: "#18181b" },
-  { name: "Red", hex: "#e11d48" },
-  { name: "Yellow", hex: "#a16207" },
-  { name: "Green", hex: "#15803d" },
-  { name: "Violet", hex: "#7c3aed" },
-] as const;
-
-/**
- * Widths as a fraction of the canvas width, so they hold at any size.
- * The glyph is the only visual cue a native <option> can carry: it holds text, never markup.
- */
-export const WIDTHS = [
-  { name: "Thin", glyph: "•", value: 0.002 },
-  { name: "Medium", glyph: "●", value: 0.005 },
-  { name: "Thick", glyph: "⬤", value: 0.012 },
-] as const;
+/** Undo depth. A snapshot is an array of references, but an unbounded stack still grows. */
+const MAX_HISTORY = 50;
 
 export function useDrawing(
   canvas: Ref<HTMLCanvasElement | null>,
@@ -48,6 +24,22 @@ export function useDrawing(
   const current = ref<Stroke | null>(null);
   // Bumped by every change, so a view can tell whether the canvas moved since a save.
   const revision = ref(0);
+
+  /**
+   * Undo is a stack of past states, not a pop of the last stroke: once the eraser can take
+   * strokes away, undo has to be able to put them back. A snapshot copies the array, not
+   * the strokes — a stroke is never mutated once pushed, so the references are enough.
+   */
+  const history = ref<Stroke[][]>([]);
+  const canUndo = computed(() => history.value.length > 0);
+  // One snapshot per gesture, so a whole eraser swipe is undone in a single step.
+  let gestureSnapshot = false;
+  let erasing = false;
+
+  function remember(): void {
+    history.value.push(strokes.value.slice());
+    if (history.value.length > MAX_HISTORY) history.value.shift();
+  }
 
   const data = computed<DrawingData>(() => ({
     version: 1,
@@ -89,18 +81,40 @@ export function useDrawing(
     };
   }
 
+  /** Rubs out every stroke under the eraser. Does nothing over blank canvas. */
+  function erase(point: Point): void {
+    const kept = strokesOutside(strokes.value, point, ERASER_RADIUS, ASPECT_RATIO);
+    if (kept === strokes.value) return;
+
+    // Snapshotted on the first removal, not on pointerdown: a swipe that rubs out nothing
+    // would otherwise leave an undo step that undoes nothing.
+    if (!gestureSnapshot) {
+      remember();
+      gestureSnapshot = true;
+    }
+    strokes.value = kept;
+    revision.value++;
+    draw();
+  }
+
   function onPointerDown(event: PointerEvent): void {
     // The stroke survives the cursor leaving the canvas, and pointerup always fires.
     canvas.value?.setPointerCapture(event.pointerId);
-    current.value = {
-      color: tool.value.color,
-      width: tool.value.width,
-      points: [pointFrom(event)],
-    };
+    const point = pointFrom(event);
+
+    if (tool.value.mode === "erase") {
+      erasing = true;
+      erase(point);
+      return;
+    }
+
+    current.value = { color: tool.value.color, width: tool.value.width, points: [point] };
     draw();
   }
 
   function onPointerMove(event: PointerEvent): void {
+    if (erasing) return erase(pointFrom(event));
+
     const stroke = current.value;
     if (!stroke) return;
     const point = pointFrom(event);
@@ -111,7 +125,10 @@ export function useDrawing(
   }
 
   function onPointerUp(): void {
+    erasing = false;
+    gestureSnapshot = false;
     if (!current.value) return;
+    remember();
     strokes.value.push(current.value);
     current.value = null;
     revision.value++;
@@ -122,17 +139,23 @@ export function useDrawing(
   function load(saved: Stroke[]): void {
     strokes.value = saved;
     current.value = null;
+    // A drawing that was just opened has nothing to undo yet.
+    history.value = [];
     revision.value++;
     draw();
   }
 
   function undo(): void {
-    strokes.value.pop();
+    const previous = history.value.pop();
+    if (!previous) return;
+    strokes.value = previous;
+    current.value = null;
     revision.value++;
     draw();
   }
 
   function clear(): void {
+    if (!isEmpty.value) remember();
     strokes.value = [];
     current.value = null;
     revision.value++;
@@ -147,7 +170,18 @@ export function useDrawing(
   watch(canvas, resize);
   if (playhead) watch(playhead, draw);
 
-  return { data, isEmpty, revision, load, onPointerDown, onPointerMove, onPointerUp, undo, clear };
+  return {
+    data,
+    isEmpty,
+    canUndo,
+    revision,
+    load,
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+    undo,
+    clear,
+  };
 }
 
 function clamp(value: number): number {
