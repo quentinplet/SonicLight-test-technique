@@ -17,5 +17,24 @@ services:
       timeout: 3s
       retries: 10
 
+  # No container for the client, on purpose: `npm run build` produces static files a CDN
+  # serves directly, so the image would never run anywhere. The API's image does.
+  server:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # `db` is the service name: inside the compose network Postgres is on its own port.
+      DATABASE_URL: postgresql://soniclight:soniclight@db:5432/soniclight
+      # Development only, and that is why it is readable here.
+      JWT_SECRET: development-secret-not-for-any-real-deployment
+      CLIENT_ORIGINS: http://localhost:5173
+    ports:
+      - "3000:3000"
+    # migrate deploy applies the existing migrations and never generates or resets one.
+    # The seed follows, guarded in code by NODE_ENV !== "production".
+    command: sh -c "npx prisma migrate deploy && npx prisma db seed && node dist/index.js"
+
 volumes:
   db-data:

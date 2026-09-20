@@ -1,0 +1,10 @@
+# Without this, node_modules travels to the daemon and the build is ten times slower.
+node_modules
+dist
+coverage
+
+# Generated at build time by `prisma generate`, never copied in.
+src/generated
+
+# Secrets stay out of the image; compose and the host provide real variables.
+.env
