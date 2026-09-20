@@ -1,0 +1,6 @@
+# Without this, node_modules travels to the daemon and the build is ten times slower.
+node_modules
+dist
+
+# The API URL comes from the build argument, never from a committed file.
+.env

@@ -17,5 +17,36 @@ services:
       timeout: 3s
       retries: 10
 
+  server:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # `db` is the service name: inside the compose network Postgres is on its own port.
+      DATABASE_URL: postgresql://soniclight:soniclight@db:5432/soniclight
+      # Development only, and that is why it is readable here.
+      JWT_SECRET: development-secret-not-for-any-real-deployment
+      CLIENT_ORIGINS: http://localhost:5173
+    ports:
+      - "3000:3000"
+    # migrate deploy applies the existing migrations and never generates or resets one.
+    # The seed follows, guarded in code by NODE_ENV !== "production".
+    command: sh -c "npx prisma migrate deploy && npx prisma db seed && node dist/index.js"
+
+  # Local demonstration only: `docker compose up` has to give a working application, not two
+  # thirds of one. Deployment still ships dist/ to a CDN — the API URL is baked in below,
+  # so this image belongs to this machine.
+  client:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:3000
+    depends_on:
+      - server
+    # 5173 on the host, so the origin matches CLIENT_ORIGINS and the habit from `npm run dev`.
+    ports:
+      - "5173:4173"
+
 volumes:
   db-data:
