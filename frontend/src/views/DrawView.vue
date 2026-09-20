@@ -93,11 +93,12 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
       fit on screen: nobody should scroll to reach the palette.
     -->
     <div class="mx-auto w-full" style="max-width: calc((100dvh - 15rem) * 1.5)">
-      <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+      <!-- The title takes the room it needs and truncates; the button never moves. -->
+      <div class="flex items-center justify-between gap-3">
         <!-- Click the title to rename. Left blank, the server keeps the one already saved. -->
-        <EditableTitle v-model="title" placeholder="Untitled drawing" class="self-end" />
+        <EditableTitle v-model="title" placeholder="Untitled drawing" class="min-w-0" />
         <button
-          class="btn btn-primary h-11 cursor-pointer gap-2 px-6"
+          class="btn btn-primary h-11 shrink-0 cursor-pointer gap-2 px-6"
           type="button"
           :disabled="drawing.isEmpty.value"
           :aria-pressed="audio.playing.value"
@@ -112,8 +113,6 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
           </svg>
           {{ audio.playing.value ? "Stop" : "Play Sound" }}
         </button>
-
-        <span aria-hidden="true" />
       </div>
       <!-- touch-none: without touch-action, drawing with a finger scrolls the page instead. -->
       <canvas
