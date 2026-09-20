@@ -67,6 +67,8 @@ npm run build          # tsc -p tsconfig.build.json — emits src/ only to dist/
 npm start              # node dist/index.js (production)
 npm run test:db        # create/migrate the soniclight_test database — once, then after each migration
 npm test               # vitest — tests/ (mirrors src/), against soniclight_test, never the dev DB
+npm run format         # prettier — src/, tests/, prisma/, prisma.config.ts
+npm run predeploy      # migrate deploy + seed — what Railway runs in its pre-deploy step
 npx tsc --noEmit       # typecheck alone — covers src/, tests/, prisma/seed.ts, configs
 ```
 
@@ -197,3 +199,25 @@ push` silently diverges the schema from the migration history; it is not used in
   criterion for this exercise (see `@context/exercise-brief.md`). One commit per coherent
   step, imperative subject line, no `wip` dumps at the end.
 - A test that was already failing before a task started is reported, not silently fixed.
+
+## Deployed
+
+API and Postgres on **Railway**, client on **Vercel**. Both deploy on a push to `main`
+through their own Git integration — there is no deploy workflow in `.github/`, on purpose.
+
+- **Railway reads its configuration at the service's root directory, not the repository's.**
+  Without `Root Directory = backend`, neither `backend/Dockerfile` nor `backend/railway.json`
+  is seen: it falls back to Nixpacks and the pre-deploy step silently never runs.
+- **`railway.json` overrides the dashboard, silently.** A pre-deploy command typed into the
+  UI is ignored while the file says something else. Change the file, not the form.
+- **A `preDeployCommand` entry is not handed to a shell**, so `a && b` does not work there.
+  `npm run predeploy` does, because npm provides the shell.
+- **`VITE_API_URL` must carry its scheme.** Without `https://`, the value is a relative path
+  resolved against the front's own origin — the symptom is a `POST` landing on `index.html`
+  and a 405 that names nothing.
+- **`VITE_*` is inlined at build time**, so changing it on Vercel needs a redeploy, not just
+  a save. And `CLIENT_ORIGINS` on Railway must hold the exact Vercel origin, no trailing
+  slash, or every call fails as an opaque network error with nothing in the server log.
+- **A 404 on `/` is not a failure**: no route is mounted there, and the answer comes from
+  `notFoundHandler` in the project's own `{ code, message }` shape.
+- Free tiers sleep: the first call after a pause takes seconds. Say so in the README.

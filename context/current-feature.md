@@ -5,41 +5,39 @@
 
 ## Feature
 
-Retours d'interface — toasts, états de chargement, page 404 (branche `feature/toasts`)
+README final et livraison
 
 ## Status
 
-Done — 18 septembre 2026, testé dans le navigateur. À fusionner dans `main` en `--no-ff`.
-Prochains chantiers : README, déploiement, sonification.
+En cours — 20 septembre 2026. **L'application est déployée et fonctionnelle en ligne.**
+Il reste le README : choix techniques, arbitrages, périmètre écarté, liens et identifiants
+de démonstration.
 
 ## Goals
 
-- **Toast de confirmation** sur l'issue d'une action : enregistrement d'un dessin,
-  suppression côté admin, connexion et inscription. L'échec de ces mêmes actions part en
-  toast rouge.
-- Fermeture **manuelle** (bouton ✕) en plus de la disparition automatique à trois secondes.
-- **Spinners** sur les attentes qui n'en avaient pas : chargement du dessin, liste admin,
-  suppression en cours.
-- **Page 404** pour toute URL inconnue, avec une sortie adaptée à la session.
+- Les deux liens cliquables, front et API, en tête de README.
+- Les identifiants de démonstration : les comptes `USER` du seed, et le compte
+  d'administration créé à la main — son mot de passe ne va **pas** dans le dépôt.
+- Les décisions structurantes, chacune en trois lignes : format vectoriel, coordonnées
+  normalisées, isolation par la signature des services, quantification pentatonique.
+- La liste de ce qui est **hors périmètre**, reprise de l'overview §3 : c'est la preuve
+  qu'un arbitrage a eu lieu.
+- La mise en veille des paliers gratuits, pour qu'un relecteur ne prenne pas la latence du
+  premier appel pour un défaut.
 
 ## Notes
 
-**Hors périmètre** — file d'attente bornée, priorités ou catégories de toasts, annulation
-d'une suppression, page d'erreur 500, rejeu animé, sonification.
+**Hors périmètre du README** — refaire la documentation : `context/` porte déjà le détail,
+le README renvoie dessus plutôt que de le recopier.
 
-**Décisions prises avant de coder** :
+**Ce qui reste ouvert**, à trancher ou à assumer :
 
-- **La liste de toasts vit au scope module**, pas dans un composant ni dans Pinia : un toast
-  doit survivre à la navigation qui le déclenche (connexion puis redirection). La règle
-  « un seul store » tient.
-- **Deux mécanismes, deux rôles** : les `alert` en ligne gardent les erreurs attachées à un
-  écran (chargement en échec, identifiants refusés), le toast prend l'issue d'une action.
-- **Le succès est vert** — exception assumée à « rien n'est coloré sauf le dessin », bornée
-  aux notifications et au rouge des suppressions.
-
-**Definition of done** : les quatre toasts apparaissent et se ferment à la main comme au
-bout de trois secondes ; Clear est actif sur un dessin rechargé ; `/nimportequoi` affiche le
-404 et sa sortie mène au bon écran. `type-check` et build verts avant fusion en `--no-ff`.
+- La branche `experiment/audio-engine` (un trait = sa propre forme d'onde) n'est pas
+  fusionnée. À garder comme trace d'exploration, ou à supprimer.
+- `AdminView.vue` fait 207 lignes, au-dessus de la limite de 150 : les deux `<dialog>`
+  restent à extraire.
+- L'image serveur pèse 1,2 Go faute de build multi-étapes — choix « le plus simple d'abord »,
+  à assumer ou à corriger.
 
 ## History
 
@@ -221,3 +219,79 @@ Pièges qui mordent encore :
 - **Le formateur de l'éditeur réécrit tout le fichier** (guillemets, points-virgules) dès
   qu'il est ouvert : les diffs mélangent le fond et la forme, et découper un commit par lot
   devient impossible. Un `.prettierrc` commité réglerait le sujet une fois pour toutes.
+
+### 20/09 — Sonification ✅
+
+Un dessin devient une partition : `x` → temps, `y` → hauteur quantifiée sur une pentatonique
+mineure, épaisseur → gain, couleur → timbre. Lecture en boucle de 8 s, tête de lecture
+dessinée dans le canvas, écoute depuis l'écran de dessin et depuis chaque carte de la vue
+admin. Branches `feature/sonification` puis `feature/audio-effects`, commits `ba106d6` →
+`923d494`.
+
+Écarts au plan, et pourquoi :
+
+- **Un dossier `audio/` et un dossier `canvas/`**, hors de `composables/`, qui ne garde que
+  ce qui touche à Vue. Le mapping et le moteur ne connaissent ni `ref` ni cycle de vie.
+- **Un port `AudioEngine` et une classe `WebAudioEngine`** : remplacer la Web Audio brute par
+  Tone.js, des samples, un AudioWorklet, RNBO ou Faust devient une seconde implémentation, pas
+  une modification. C'est une demande explicite, et le seul endroit du projet où l'ouverture à
+  l'extension a été payée d'avance.
+- **Le timbre est nommé comme un son** (`pure`, `soft`, `hollow`, `bright`), jamais comme une
+  forme d'onde : un moteur à base de samples n'a pas d'oscillateur à nommer.
+- **La palette descend à cinq couleurs**, une par voix. Elle devient la liste des instruments,
+  donc une sixième couleur devrait sonner comme quelque chose.
+- **Simplifié après coup** : l'ordonnanceur à horizon glissant, la fusion des notes tenues et
+  le calcul de teinte ont été retirés — 336 lignes ramenées à 229. Web Audio sait dater ses
+  propres événements, donc une passe entière est programmée d'un coup.
+- **Delay et réverbération** en sends parallèles, master en bout de chaîne. L'impulsion de la
+  réverbération est générée (bruit décroissant), pas embarquée en fichier.
+- **Écarté : le bruit comme timbre** — il n'existe pas comme type d'oscillateur, il aurait
+  fallu un `AudioBufferSourceNode` filtré. Trop de complexité pour une cinquième voix.
+- **Écarté : le trait comme forme d'onde** (DFT du tracé → `setPeriodicWave`). Écrit, essayé,
+  conservé sur `experiment/audio-engine`.
+
+Pièges qui mordent encore :
+
+- **`AudioContext` ne démarre que dans un geste utilisateur**, d'où sa création au premier clic.
+- **Un oscillateur est à usage unique** : sans `onended` qui déconnecte, chaque passe laisse
+  ses nœuds derrière elle.
+- **`exponentialRampToValueAtTime` lève sur 0** : on descend vers `0.0001`.
+- **Une seule instance du moteur pour toute la vue admin**, sinon deux dessins sonnent ensemble.
+- **Tailwind lit du texte, pas du code** : une constante nommée `STEPS` et une fonction `toggle`
+  ont suffi à faire émettre à DaisyUI ses composants `steps` et `toggle` — 7 kB de CSS mort.
+
+### 20/09 — Docker et déploiement ✅
+
+`docker compose up --build` lance la base, l'API et le client. En ligne : API et Postgres sur
+Railway, front sur Vercel. Branche `feature/docker`, commits `b6f3e06` → `16bbaf3`.
+
+Écarts au plan, et pourquoi :
+
+- **Le client est containerisé**, alors que la documentation disait l'inverse. L'argument a
+  changé de forme, pas de fond : l'image sert à la **démonstration locale** — une commande doit
+  donner une application entière — mais le déploiement reste un `dist/` sur CDN, et l'image
+  contient `http://localhost:3000` en dur, ce qui prouve qu'elle n'est pas un artefact de
+  déploiement.
+- **Images en une seule étape**, pas de multi-étapes : le plus simple qui marche. Conséquence
+  heureuse, la CLI Prisma reste dans l'image, donc le hook de release peut y lancer
+  `migrate deploy`. Conséquence coûteuse, 1,2 Go côté serveur.
+- **Le seed tourne en production, mais sans l'`ADMIN`.** La règle a changé de nature : elle
+  porte sur le **rôle**, plus sur l'environnement. Un compte `USER` aux identifiants publics
+  n'ouvre rien qu'une inscription n'ouvrirait ; l'administrateur, lui, peut supprimer le
+  travail de tous. Il est créé à la main, avec un mot de passe absent du dépôt.
+
+Pièges qui mordent encore :
+
+- **`railway.json` écrase le tableau de bord**, silencieusement : une commande de pre-deploy
+  réglée dans l'interface n'a jamais tourné parce que le fichier disait autre chose.
+- **Railway lit sa configuration à la racine du service**, pas du dépôt : sans `Root Directory`
+  sur `backend`, ni le `Dockerfile` ni le `railway.json` ne sont vus.
+- **Une entrée de `preDeployCommand` n'est pas passée à un shell** : `a && b` n'y fonctionne
+  pas. Un script npm, si.
+- **`VITE_API_URL` sans `https://` produit une URL relative**, résolue contre l'origine du
+  front — d'où un `POST` sur `index.html` et un 405 incompréhensible.
+- **Un 404 sur `/` d'une API n'est pas une panne** : aucune route n'y est montée, et c'est le
+  `notFoundHandler` qui répond au bon format.
+- **`docker compose run` démarre les dépendances du service** : sans `--no-deps`, tester le
+  client seul réveille l'API et bute sur un port déjà pris.
+- **Le titre de l'onglet était resté `Vite App`** jusqu'à la veille du rendu.
