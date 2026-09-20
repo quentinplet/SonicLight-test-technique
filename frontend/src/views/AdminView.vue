@@ -3,10 +3,24 @@ import { onMounted, ref } from "vue";
 import * as adminApi from "@/api/admin";
 import { errorMessage } from "@/api/errors";
 import { ApiError } from "@/api/http";
+import DrawingCard from "@/components/DrawingCard.vue";
 import DrawingPreview from "@/components/DrawingPreview.vue";
+import { useSonification } from "@/composables/useSonification";
 import { useToast } from "@/composables/useToast";
 
 const { notify } = useToast();
+
+// One engine for the whole view, and the id of what it is playing: two drawings sounding at
+// once would be noise, and the playhead has to know which card to run across.
+const audio = useSonification();
+const listening = ref<string | null>(null);
+
+function listen(drawing: adminApi.DrawingWithAuthor): void {
+  const again = listening.value === drawing.id;
+  audio.stop();
+  listening.value = again ? null : drawing.id;
+  if (!again) audio.toggle(() => drawing.data);
+}
 
 const drawings = ref<adminApi.DrawingWithAuthor[]>([]);
 const loading = ref(true);
@@ -48,6 +62,10 @@ function askDeletion(drawing: adminApi.DrawingWithAuthor): void {
 
 // Gone from the server: drop it from the list and say so, whichever path got us here.
 function forget(drawing: adminApi.DrawingWithAuthor): void {
+  if (listening.value === drawing.id) {
+    audio.stop();
+    listening.value = null;
+  }
   drawings.value = drawings.value.filter((other) => other.id !== drawing.id);
   notify(`“${drawing.title}” by ${drawing.userName} was deleted successfully.`);
 }
@@ -98,50 +116,16 @@ onMounted(load);
     </div>
 
     <ul v-else class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <!-- `card` is a class, so the list keeps its semantics and still looks like a card. -->
-      <li
+      <DrawingCard
         v-for="drawing in drawings"
         :key="drawing.id"
-        class="card relative overflow-hidden border border-base-300 bg-base-100"
-      >
-        <button
-          type="button"
-          class="cursor-pointer text-left transition-opacity hover:opacity-80"
-          @click="open(drawing)"
-        >
-          <DrawingPreview :data="drawing.data" />
-          <div class="card-body gap-0 border-t border-base-300 p-3">
-            <p class="truncate pr-10 font-semibold">{{ drawing.title }}</p>
-            <p class="truncate pr-10 font-mono text-xs text-base-content/70">
-              {{ drawing.userName }} ·
-              {{ new Date(drawing.updatedAt).toLocaleDateString() }}
-            </p>
-          </div>
-        </button>
-
-        <!-- Red, and behind a confirmation: moderation should never be one stray click. -->
-        <button
-          type="button"
-          class="btn btn-sm btn-circle absolute right-2 bottom-2 cursor-pointer border-error bg-base-100 text-error hover:border-error hover:bg-error hover:text-error-content"
-          :aria-label="`Delete ${drawing.title} by ${drawing.userName}`"
-          @click="askDeletion(drawing)"
-        >
-          <svg
-            class="size-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            aria-hidden="true"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"
-            />
-          </svg>
-        </button>
-      </li>
+        :drawing="drawing"
+        :playing="listening === drawing.id"
+        :playhead="listening === drawing.id ? audio.head.value : null"
+        @open="open(drawing)"
+        @listen="listen(drawing)"
+        @remove="askDeletion(drawing)"
+      />
     </ul>
 
     <dialog ref="dialog" class="modal">
@@ -151,9 +135,28 @@ onMounted(load);
           {{ opened.userName }} · saved
           {{ new Date(opened.updatedAt).toLocaleString() }}
         </p>
-        <DrawingPreview class="mt-3 rounded-box border border-base-300" :data="opened.data" />
+        <DrawingPreview
+          class="mt-3 rounded-box border border-base-300"
+          :data="opened.data"
+          :playhead="listening === opened.id ? audio.head.value : null"
+        />
 
         <div class="modal-action">
+          <button
+            class="btn btn-sm btn-primary mr-auto cursor-pointer gap-2"
+            type="button"
+            :aria-pressed="listening === opened.id"
+            @click="listen(opened)"
+          >
+            <svg class="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <rect v-if="listening === opened.id" x="7" y="7" width="10" height="10" rx="1.5" />
+              <path
+                v-else
+                d="M8 5.5v13a1 1 0 0 0 1.53.85l10-6.5a1 1 0 0 0 0-1.7l-10-6.5A1 1 0 0 0 8 5.5z"
+              />
+            </svg>
+            {{ listening === opened.id ? "Stop" : "Play Sound" }}
+          </button>
           <button
             class="btn btn-sm btn-error cursor-pointer"
             type="button"

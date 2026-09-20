@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { renderStrokes } from "@/canvas/renderStrokes";
+import { renderPlayhead, renderStrokes } from "@/canvas/renderStrokes";
 import { ASPECT_RATIO } from "@/composables/useDrawing";
 import type { DrawingData } from "@/types/drawing";
 
 // The same render function as the editor, at thumbnail size or full size.
-const props = defineProps<{ data: DrawingData | null }>();
+const props = defineProps<{ data: DrawingData | null; playhead?: number | null }>();
 
 const canvas = ref<HTMLCanvasElement | null>(null);
 
@@ -19,7 +19,9 @@ function paint(): void {
   element.width = width * devicePixelRatio;
   element.height = (width / ASPECT_RATIO) * devicePixelRatio;
   ctx.scale(devicePixelRatio, devicePixelRatio);
-  renderStrokes(ctx, props.data, { x: 0, y: 0, width, height: width / ASPECT_RATIO });
+  const box = { x: 0, y: 0, width, height: width / ASPECT_RATIO };
+  renderStrokes(ctx, props.data, box);
+  if (props.playhead != null) renderPlayhead(ctx, box, props.playhead);
 }
 
 onMounted(() => {
@@ -27,7 +29,7 @@ onMounted(() => {
   window.addEventListener("resize", paint);
 });
 onBeforeUnmount(() => window.removeEventListener("resize", paint));
-watch(() => props.data, paint);
+watch(() => [props.data, props.playhead], paint);
 </script>
 
 <template>

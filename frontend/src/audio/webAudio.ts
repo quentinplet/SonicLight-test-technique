@@ -3,7 +3,7 @@ import type { Note, Timbre } from "@/audio/sonify";
 
 /** Seconds of tail: stopping an oscillator dead produces an audible click. */
 const RELEASE = 0.12;
-const MASTER_GAIN = 0.45;
+const MASTER_GAIN = 0.6;
 /** exponentialRampToValueAtTime throws on 0. */
 const SILENCE = 0.0001;
 
@@ -11,7 +11,7 @@ const DELAY_SECONDS = 0.25;
 const DELAY_FEEDBACK = 0.6;
 const DELAY_MIX = 0.3;
 const REVERB_SECONDS = 1.6;
-const REVERB_MIX = 0.3;
+const REVERB_MIX = 0.7;
 
 const WAVES: Record<Timbre, OscillatorType> = {
   pure: "sine",
