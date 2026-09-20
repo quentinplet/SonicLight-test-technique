@@ -1396,30 +1396,39 @@ citer honnêtement en entretien plutôt qu'à masquer.
 
 ## 16. Docker, déploiement & variables d'environnement
 
-### `docker compose` — deux services, pas trois
+### `docker compose` — trois services
 
 ```yaml
 services:
   db:      # postgres:16-alpine, volume nommé, healthcheck pg_isready
   server:  # build ./backend, depends_on db (condition: service_healthy), migrate deploy + seed (dev uniquement)
+  client:  # build ./frontend, VITE_API_URL en build arg, vite preview sur 5173
 ```
 
-**Il n'y a délibérément pas de conteneur pour le client.** C'est une décision, pas un oubli,
-et elle se défend en une phrase : le `Dockerfile` du serveur sera **réellement utilisé en
-production** — un hébergeur de conteneurs le consomme tel quel — tandis qu'un `Dockerfile` du
-client ne servirait jamais, puisque le front part sur un CDN qui ingère le `dist/` directement.
+**Le client est containerisé pour la démonstration locale, pas pour le déploiement.** La
+distinction est toute la décision : `docker compose up --build` doit donner une application
+qui marche, pas les deux tiers d'une ; mais le front continue de partir en `dist/` sur un CDN,
+et l'image client ne sera **jamais** déployée.
 
-Trois raisons s'empilent derrière :
+La preuve que ce n'est pas un artefact de déploiement est dans l'image elle-même : on y
+retrouve `http://localhost:3000` en dur dans le bundle JavaScript.
 
-- **La sortie du build est statique.** `npm run build` produit du HTML, du CSS et du JS.
-  Ajouter nginx dans un conteneur, c'est mettre un serveur applicatif sur un problème qui
-  n'en a pas.
-- **Ça ferait une troisième topologie.** Développement = serveur Vite ; production = CDN ;
-  Docker = nginx. Trois façons de servir les mêmes fichiers, dont deux seulement existent —
-  exactement le défaut pour lequel le proxy Vite a été écarté ([§12](#12-authentification)).
-- **Ça supprime le piège du build arg.** Une variable `VITE_*` est inlinée au moment du
-  build, pas lue à l'exécution. Construire une image du client obligerait à lui passer
-  `VITE_API_URL` en `build arg` ; sans image, le problème disparaît.
+Ce que ça coûte, et qu'il faut savoir énoncer :
+
+- **`VITE_*` est inliné au build, jamais lu à l'exécution.** L'URL de l'API passe donc en
+  `build arg`, et l'image est liée à une API précise. On ne peut plus promouvoir un artefact
+  d'un environnement à l'autre — il faudrait injecter la configuration au démarrage
+  (`envsubst` sur un gabarit d'`index.html`) pour redonner à l'image son indépendance.
+- **Ça fait une troisième topologie.** Développement = serveur Vite ; production = CDN ;
+  Docker = `vite preview`. Trois façons de servir les mêmes fichiers, assumées parce que la
+  troisième ne sert qu'à démarrer le projet en une commande.
+- **`vite preview` n'est pas un serveur de production**, Vite le dit lui-même. C'est
+  acceptable ici précisément parce que cette image ne quitte pas la machine du relecteur.
+
+> **Ce qui ferait basculer la décision dans l'autre sens** : une infrastructure déjà en
+> Kubernetes, ou le besoin de servir le front derrière le même domaine que l'API pour
+> supprimer le CORS. L'image client deviendrait alors l'artefact de déploiement, et la
+> configuration à l'exécution deviendrait obligatoire.
 
 Docker garde donc son utilité là où elle est réelle : reproduire **Postgres**, qu'un relecteur
 n'a pas forcément installé en version 16, et empaqueter l'API telle qu'elle sera déployée. Le
@@ -1609,7 +1618,7 @@ Git est un critère d'évaluation. L'historique cible, dans l'ordre :
 | 14  | `test(server): cover ownership isolation in drawing service`  | Les tests qui comptent                            |
 | 15  | `feat(db): seed demo users and drawings`                      | Le jeu de démonstration                           |
 | 16  | `feat(drawing): animate stroke-by-stroke replay`              | P1                                                |
-| 17  | `chore(docker): containerise the api and its database`        | P1 — le bonus Docker (pas de conteneur client)    |
+| 17  | `chore(docker): containerise the api and its database`        | P1 — le bonus Docker, puis le client pour un `up` complet |
 | 18  | `ci: typecheck, test and build both packages on push`         | P1b — GitHub Actions                              |
 | 19  | `chore(db): gate the seed behind a non-production check`      | Avant tout déploiement, jamais après              |
 | 20  | `chore(deploy): configure api, database and static front`     | P1c — migrations dans le hook de release          |

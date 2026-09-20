@@ -30,7 +30,7 @@ backend/   Express 5 API — TypeScript, single package
            prisma/schema.prisma, prisma/migrations/, prisma/seed.ts
            src/routes/ src/controllers/ src/services/ src/middleware/ src/schemas/ src/lib/
 context/   Project context files read by Claude Code (see above)
-docker-compose.yml   PostgreSQL 16 (the API service comes with its Dockerfile). No client container
+docker-compose.yml   PostgreSQL 16 + the API and the client, each with its own Dockerfile
 .github/workflows/   ci.yml — typecheck, test and build both packages on push
 ```
 
@@ -84,8 +84,9 @@ docker compose up -d db          # start the database alone
 docker compose down -v           # stop and wipe the volume (destroys all data)
 ```
 
-The client is never containerised: run it with `npm run dev`, and deploy it as a static
-`dist/` to a CDN.
+`docker compose up --build` runs the three services — database, API, client — on
+`http://localhost:5173`. For day-to-day work, still `npm run dev` on both packages: the client
+image rebuilds on every change, the dev server does not.
 
 Prisma lives entirely in `backend/`, so every command runs from there:
 
@@ -142,8 +143,9 @@ public repository.
   nothing in the server log.
 - **`VITE_*` is inlined at build time, never read at runtime.** Changing `VITE_API_URL` on a
   deployed service does nothing without a rebuild. The symptom is `undefined/api/drawing`.
-- **There is no `Dockerfile` for the client, on purpose.** `docker compose` is `db` +
-  `server` only. The CDN ingests `dist/` directly, so a client image would never run.
+- **The client's image is for local demonstration, not for deployment.** It bakes
+  `VITE_API_URL=http://localhost:3000` into the bundle, so it only ever works on the machine
+  that built it. The deployed front stays a `dist/` on a CDN.
 - **One drawing per user** (IRCAM answer, `context/exercise-brief.md`). `Drawing.userId` is
   unique; user routes are singular (`/api/drawing`) and take no drawing id — the token
   names the resource. Saving is an `upsert` on `userId`. Only `/api/admin/*` addresses a

@@ -359,10 +359,11 @@ components. The split is the decision, not the tool:
 Front and API deploy **separately**: a static `dist/` on a CDN, the API as a container, a
 managed Postgres. Two origins in production, which is why development is cross-origin too.
 
-- **There is no `Dockerfile` for the client, on purpose.** The server's image is really used
-  in production; a client image never would be, since the CDN ingests `dist/` directly.
-  Building an artifact that never runs is the opposite of the prioritisation this exercise
-  grades. `docker compose` is `db` + `server`, and that still satisfies the Docker bonus
+- **The client's image is for local demonstration, never for deployment.** `docker compose up`
+  has to give a working application, not two thirds of one — so `db` + `server` + `client`.
+  But the front still ships as `dist/` on a CDN: the image bakes `VITE_API_URL` into the
+  bundle at build time, which ties it to one API and to one machine. `vite preview` serves it,
+  and Vite says itself that it is not a production server
 - **`VITE_*` variables are inlined at build time, not read at runtime.** Setting `VITE_API_URL`
   in a service's environment after the fact changes nothing — it needs a rebuild. The symptom
   is a front calling `undefined/api/drawing`
