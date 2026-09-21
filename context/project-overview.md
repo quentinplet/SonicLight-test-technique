@@ -1,8 +1,8 @@
 # SonicLight — Project Overview
 
-> **Dessiner, puis écouter son dessin : un trait devient une phrase sonore.**
+> **Draw, then listen to your drawing: a stroke becomes a musical phrase.**
 
-![Status](https://img.shields.io/badge/status-exercice%20technique-blue)
+![Status](https://img.shields.io/badge/status-technical%20exercise-blue)
 ![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vuedotjs&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
 ![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)
@@ -13,299 +13,291 @@
 
 |                 |                                                            |
 | --------------- | ---------------------------------------------------------- |
-| **Produit**     | SonicLight — version simplifiée                            |
-| **Type**        | Exercice technique de recrutement — IRCAM, Service Web     |
+| **Product**     | SonicLight — simplified version                            |
+| **Type**        | Recruitment technical exercise — IRCAM, Web Department     |
 | **Owner**       | Quentin Plet                                               |
-| **Doc version** | 1.0 — 16 septembre 2026                                    |
-| **Échéance**    | **mercredi 23 septembre 2026**                             |
-| **Statut**      | **Démarrage à zéro** — aucune ligne de code écrite         |
+| **Doc version** | 1.0 — 16 September 2026                                    |
+| **Deadline**    | **Wednesday 23 September 2026**                            |
+| **Status**      | **Starting from zero** — not a line of code written        |
 
-> **⚠️ Ce projet est évalué sur la capacité à expliquer ses choix, pas sur son exhaustivité.**
-> L'énoncé le dit explicitement : *« il est important que vous compreniez le code que vous
-> produisez et soyez capable d'expliquer vos choix lors de l'entretien »*, et *« l'entretien
-> est plus important que le fait d'avoir terminé ou non le projet »*. Le [§4](#4-travailler-sur-ce-projet-avec-claude-code)
-> traduit cette contrainte en règles de travail. **Le lire avant toute intervention sur le code.**
+> **⚠️ This project is graded on the ability to explain its choices, not on its completeness.**
+> The brief says so explicitly: *"it is important that you understand the code you produce and
+> are able to explain your choices during the interview"*, and *"the interview matters more
+> than whether the project is finished"*. [§4](#4-working-on-this-project-with-claude-code)
+> turns that constraint into working rules. **Read it before touching the code.**
 
 ---
 
-## Table des matières
+## Table of contents
 
-1. [Le besoin & la lecture qu'on en fait](#1-le-besoin--la-lecture-quon-en-fait)
-2. [Contraintes de l'exercice](#2-contraintes-de-lexercice)
-3. [Périmètre fonctionnel & priorisation](#3-périmètre-fonctionnel--priorisation)
-4. [Travailler sur ce projet avec Claude Code](#4-travailler-sur-ce-projet-avec-claude-code)
-5. [Architecture système](#5-architecture-système)
-6. [Architecture backend en couches](#6-architecture-backend-en-couches)
-7. [Principes de code](#7-principes-de-code)
-8. [Modèle de données](#8-modèle-de-données)
-9. [Le format d'un dessin](#9-le-format-dun-dessin)
-10. [Schéma Prisma](#10-schéma-prisma)
-11. [Routing & surface API](#11-routing--surface-api)
-12. [Authentification](#12-authentification)
-13. [Canvas — capture et rejeu](#13-canvas--capture-et-rejeu)
+1. [The need, and how we read it](#1-the-need-and-how-we-read-it)
+2. [Constraints of the exercise](#2-constraints-of-the-exercise)
+3. [Functional scope & prioritisation](#3-functional-scope--prioritisation)
+4. [Working on this project with Claude Code](#4-working-on-this-project-with-claude-code)
+5. [System architecture](#5-system-architecture)
+6. [Layered backend architecture](#6-layered-backend-architecture)
+7. [Code principles](#7-code-principles)
+8. [Data model](#8-data-model)
+9. [The format of a drawing](#9-the-format-of-a-drawing)
+10. [Prisma schema](#10-prisma-schema)
+11. [Routing & API surface](#11-routing--api-surface)
+12. [Authentication](#12-authentication)
+13. [Canvas — capture and replay](#13-canvas--capture-and-replay)
 14. [Sonification (bonus)](#14-sonification-bonus)
 15. [UI/UX & design tokens](#15-uiux--design-tokens)
-16. [Docker, déploiement & variables d'environnement](#16-docker-déploiement--variables-denvironnement)
-17. [Plan de commits](#17-plan-de-commits)
-18. [Règles d'ingénierie](#18-règles-dingénierie)
-19. [Questions ouvertes](#19-questions-ouvertes)
-20. [Liens de référence](#20-liens-de-référence)
+16. [Docker, deployment & environment variables](#16-docker-deployment--environment-variables)
+17. [Commit plan](#17-commit-plan)
+18. [Engineering rules](#18-engineering-rules)
+19. [Open questions](#19-open-questions)
+20. [Reference links](#20-reference-links)
 
 ---
 
-## 1. Le besoin & la lecture qu'on en fait
+## 1. The need, and how we read it
 
-### L'énoncé, littéralement
+### The brief, literally
 
-> « SonicLight est une application web permettant de créer des dessins et de les
-> transformer en une expérience sonore et visuelle. Pour cet exercice, nous vous proposons
-> d'en réaliser une version simplifiée. L'application devra notamment permettre d'identifier
-> un utilisateur, de créer un dessin à l'aide d'un canvas et d'enregistrer son dessin. Un
-> utilisateur doit pouvoir retrouver son propre dessin. Une interface d'administration devra
-> permettre de consulter les dessins enregistrés par les différents utilisateurs. La lecture
-> des dessins sous forme sonore peut être ajoutée en option. »
+> "SonicLight is a web application for creating drawings and turning them into a sonic and
+> visual experience. For this exercise, we propose you build a simplified version of it. The
+> application must allow a user to be identified, to create a drawing using a canvas, and to
+> save that drawing. A user must be able to find their own drawing again. An administration
+> interface must allow the drawings saved by the different users to be reviewed. Playing the
+> drawings back as sound may be added as an option."
 
-Quatre exigences fermes, une option :
+Four firm requirements, one option:
 
-| #   | Exigence                                              | Statut       |
+| #   | Requirement                                           | Status       |
 | --- | ----------------------------------------------------- | ------------ |
-| 1   | Identifier un utilisateur                             | **Ferme**    |
-| 2   | Créer un dessin sur un canvas                         | **Ferme**    |
-| 3   | Enregistrer le dessin, l'utilisateur le retrouve      | **Ferme**    |
-| 4   | Interface d'administration listant tous les dessins   | **Ferme**    |
-| 5   | Lecture sonore des dessins                            | _Optionnel_  |
+| 1   | Identify a user                                       | **Firm**     |
+| 2   | Create a drawing on a canvas                          | **Firm**     |
+| 3   | Save it; the user finds it again                      | **Firm**     |
+| 4   | An admin interface listing every drawing              | **Firm**     |
+| 5   | Sonic playback of drawings                            | _Optional_   |
 
-### La lecture qu'on en fait
+### How we read it
 
-L'énoncé est volontairement sous-spécifié — c'est écrit noir sur blanc. Trois interprétations
-structurent tout le reste du document, et chacune doit pouvoir être défendue à l'oral :
+The brief is deliberately under-specified — it says so in as many words. Three readings
+structure everything that follows, and each one has to be defensible out loud:
 
-**A. Un dessin est un objet vectoriel, pas une image.** Le nom du produit dit « transformer
-un dessin en expérience sonore ». Sonifier un PNG, c'est analyser des pixels ; sonifier une
-liste de traits, c'est lire une partition. On stocke donc **la géométrie** ([§9](#9-le-format-dun-dessin)),
-pas le rendu. C'est la décision la plus structurante du projet : elle rend le bonus audio
-possible pour quasiment zéro coût supplémentaire, alors qu'un dataURL PNG le rendrait
-presque irréalisable dans le temps imparti.
+**A. A drawing is a vector object, not an image.** The product's name says "turn a drawing into
+a sonic experience". Sonifying a PNG means analysing pixels; sonifying a list of strokes means
+reading a score. So we store **the geometry** ([§9](#9-the-format-of-a-drawing)), not the
+rendering. It is the most structuring decision of the project: it makes the audio bonus
+possible at almost no extra cost, where a PNG data URL would have made it nearly unreachable
+in the time available.
 
-**B. « Identifier » ≠ « authentifier », mais l'admin force la main.** On pourrait lire
-« identifier » au sens faible (un pseudo saisi une fois). Mais une interface d'administration
-qui consulte les dessins de *tous* les utilisateurs est par définition une ressource à
-protéger : sans authentification réelle, n'importe qui y accède. L'authentification n'est donc
-pas un sur-scope, c'est la conséquence directe de l'exigence n°4.
+**B. "Identify" ≠ "authenticate", but the admin forces our hand.** One could read "identify"
+weakly — a nickname typed once. But an administration interface that reviews *everybody's*
+drawings is by definition a resource to protect: without real authentication, anyone reaches
+it. Authentication is therefore not over-scope, it is the direct consequence of requirement 4.
 
-**C. Un dessin par utilisateur, et l'admin modère.** L'hypothèse initiale — plusieurs
-dessins par utilisateur, un admin qui consulte sans gérer — a été **invalidée par les
-réponses de l'IRCAM** ([§19](#19-questions-ouvertes)) : chaque utilisateur a **un seul**
-dessin, qu'il peut remplacer ou supprimer, et l'admin voit tous les dessins et peut les
-**supprimer**. Il ne les modifie pas. La contrainte « un seul dessin » est portée par la
-base (`userId` unique), pas seulement par le code.
+**C. One drawing per user, and the admin moderates.** The initial assumption — several drawings
+per user, an admin who reviews without managing — was **invalidated by IRCAM's answers**
+([§19](#19-open-questions)): each user has **one** drawing, which they can replace or delete,
+and the admin sees every drawing and can **delete** them. They do not edit them. The "one
+drawing only" constraint is carried by the database (`userId` unique), not by the code alone.
 
 ```mermaid
 flowchart LR
-    subgraph Draw["🎨 Dessiner"]
+    subgraph Draw["🎨 Draw"]
         D1[Canvas<br/>pointer events]
-        D2[Traits capturés<br/>en coordonnées normalisées]
+        D2[Strokes captured<br/>in normalised coordinates]
     end
 
-    subgraph Store["💾 Stocker"]
+    subgraph Store["💾 Store"]
         S1[(PostgreSQL<br/>jsonb)]
     end
 
-    subgraph Play["🔊 Rejouer"]
-        P1[Rejeu visuel<br/>trait par trait]
+    subgraph Play["🔊 Play back"]
+        P1[Visual replay<br/>stroke by stroke]
         P2[Sonification<br/>Web Audio API]
     end
 
     D1 --> D2 --> S1 --> P1 & P2
 ```
 
-### Pourquoi ce projet est un bon sujet d'entretien
+### Why this project makes a good interview subject
 
-Le domaine est minuscule — deux tables, six endpoints. Toute la matière de discussion est
-concentrée sur quatre décisions, et c'est exactement là que l'évaluation se joue :
+The domain is tiny — two tables, six endpoints. All the material for discussion is concentrated
+in four decisions, and that is exactly where the grading happens:
 
-| Décision                                     | Ce qu'elle révèle                                                       |
+| Decision                                     | What it reveals                                                         |
 | -------------------------------------------- | ----------------------------------------------------------------------- |
-| Format vectoriel plutôt que bitmap           | Capacité à lire l'intention derrière l'énoncé, pas seulement la lettre  |
-| Coordonnées normalisées plutôt qu'en pixels  | Anticipation du rejeu multi-résolution — un piège classique du canvas   |
-| Isolation par la signature des services      | Réflexe de sécurité appliqué avant l'incident, pas après                |
-| Sonification par quantification pentatonique | Culture du domaine musical — et un choix esthétique assumé              |
+| Vector rather than bitmap                    | The ability to read the intent behind the brief, not only its letter    |
+| Normalised rather than pixel coordinates     | Anticipating multi-resolution replay — a classic canvas trap            |
+| Isolation through service signatures         | A security reflex applied before the incident, not after                |
+| Sonification by pentatonic quantisation      | Familiarity with the musical domain — and an owned aesthetic choice     |
 
 ---
 
-## 2. Contraintes de l'exercice
+## 2. Constraints of the exercise
 
-### Ce qui est explicitement évalué
+### What is explicitly graded
 
-| Critère (dans l'ordre de l'énoncé)                          | Traduction concrète dans ce document                                       |
+| Criterion (in the brief's order)                            | Concrete translation in this document                                      |
 | ------------------------------------------------------------ | -------------------------------------------------------------------------- |
-| Qualité du code et des choix techniques                      | [§6](#6-architecture-backend-en-couches) · [§7](#7-principes-de-code)      |
-| Compréhension du besoin et décisions pertinentes             | [§1](#1-le-besoin--la-lecture-quon-en-fait) · [§19](#19-questions-ouvertes) |
-| Capacité à prioriser et à produire un résultat cohérent      | [§3](#3-périmètre-fonctionnel--priorisation)                               |
-| Manière de travailler avec Git                               | [§17](#17-plan-de-commits)                                                 |
+| Code quality and technical choices                           | [§6](#6-layered-backend-architecture) · [§7](#7-code-principles)            |
+| Understanding of the need, and relevant decisions            | [§1](#1-the-need-and-how-we-read-it) · [§19](#19-open-questions)            |
+| The ability to prioritise and produce a coherent result      | [§3](#3-functional-scope--prioritisation)                                   |
+| The way Git is used                                          | [§17](#17-commit-plan)                                                      |
 
-### Bonus explicitement cités
+### Bonuses named explicitly
 
-Docker · génération et lecture audio avec la Web Audio API · toute autre extension pertinente.
-**« Ces éléments restent entièrement optionnels et ne doivent pas se faire au détriment du reste. »**
-Ce document traite donc Docker et l'audio comme des paliers P1/P2, jamais comme du P0.
+Docker · audio generation and playback with the Web Audio API · any other relevant extension.
+**"These remain entirely optional and must not come at the expense of the rest."** This document
+therefore treats Docker and audio as P1/P2 tiers, never as P0.
 
-### Budget temps
+### Time budget
 
-L'énoncé estime « quelques heures » pour une première version. Ce document part sur
-**~20 h utiles réparties du 16 au 22 septembre**, avec une soumission le 22 au soir pour
-garder une marge d'un jour. Répartition cible :
+The brief estimates "a few hours" for a first version. This document plans for **~20 useful
+hours spread from 16 to 22 September**, with submission on the evening of the 22nd to keep a
+day of margin. Target split:
 
-| Palier                                 | Budget | Cumul |
+| Tier                                   | Budget | Total |
 | -------------------------------------- | ------ | ----- |
-| P0 — MVP complet et fini               | 8 h    | 8 h   |
-| P1 — Docker + rejeu visuel + tests     | 4 h    | 12 h  |
-| P1b — CI GitHub Actions                | 1 h    | 13 h  |
-| P1c — Déploiement front + API + base   | 3 h    | 16 h  |
-| P2 — Sonification Web Audio            | 3 h    | 19 h  |
-| Finition — README, relecture           | 1 h    | 20 h  |
+| P0 — a complete, finished MVP          | 8 h    | 8 h   |
+| P1 — Docker + visual replay + tests    | 4 h    | 12 h  |
+| P1b — GitHub Actions CI                | 1 h    | 13 h  |
+| P1c — front + API + database deployment| 3 h    | 16 h  |
+| P2 — Web Audio sonification            | 3 h    | 19 h  |
+| Finishing — README, proofreading        | 1 h    | 20 h  |
 
-> **Règle d'arrêt.** Si le P0 déborde au-delà de 10 h, on coupe le P2 sans hésiter et on
-> livre un MVP propre, déployé. Un projet cohérent et fini vaut mieux qu'un projet
-> ambitieux à moitié câblé — c'est littéralement le critère n°3.
+> **Stopping rule.** If P0 runs past 10 h, cut P2 without hesitating and ship a clean, deployed
+> MVP. A coherent, finished project beats an ambitious half-wired one — that is literally
+> criterion 3.
 
-> **Le déploiement est budgété à 3 h, et ce n'est pas pessimiste.** Le code est prêt en
-> quinze minutes ; ce qui prend du temps, c'est le premier CORS qui ne passe pas, le
-> `VITE_API_URL` oublié au build, la base managée dont l'URL de connexion exige
-> `?sslmode=require`, et le service gratuit qui s'endort. Prévoir cette marge évite de
-> devoir choisir entre déployer et finir le canvas.
+> **Deployment is budgeted at 3 h, and that is not pessimistic.** The code is ready in fifteen
+> minutes; what takes time is the first CORS failure, the `VITE_API_URL` forgotten at build
+> time, the managed database whose connection URL demands `?sslmode=require`, and the free
+> service that falls asleep. Planning that margin avoids having to choose between deploying and
+> finishing the canvas.
 
-### Ce que l'énoncé autorise et qu'il ne faut pas gâcher
+### What the brief allows, and what must not be wasted
 
-> « Vous pouvez et devez nous poser toutes les questions que vous jugez nécessaires avant de
-> commencer le développement. »
+> "You can and **must** ask us any question you deem necessary before starting development."
 
-Le mot **devez** n'est pas décoratif. Le [§19](#19-questions-ouvertes) recense les zones
-d'ombre réelles ; les plus structurantes partent par mail avant le début du développement.
-Les autres sont tranchées unilatéralement, documentées ici, et deviennent des sujets
-d'entretien.
+The word **must** is not decorative. [§19](#19-open-questions) lists the real grey areas; the
+most structuring ones go out by email before development starts. The others are settled
+unilaterally, documented here, and become interview material.
 
 ---
 
-## 3. Périmètre fonctionnel & priorisation
+## 3. Functional scope & prioritisation
 
-### P0 — Le MVP, non négociable
+### P0 — the MVP, non-negotiable
 
-| Domaine     | Contenu                                                                                      |
+| Area        | Content                                                                                      |
 | ----------- | -------------------------------------------------------------------------------------------- |
-| **Auth**    | Inscription (nom d'utilisateur + mot de passe), connexion, déconnexion, session persistante au refresh   |
-| **Responsive** | Desktop **et** mobile — exigence confirmée par l'IRCAM. Canvas, barre d'outils et vue admin utilisables au doigt sur petit écran |
-| **Dessin**  | Canvas plein écran, tracé à la souris et au doigt, choix de couleur, choix d'épaisseur, gomme d'annulation (undo), effacer tout |
-| **Sauver**  | Titre + enregistrement. **Un seul dessin par utilisateur** : enregistrer à nouveau remplace l'ancien |
-| **Retrouver** | « Mon dessin » : rejeu, titre, date de dernière modification, suppression                  |
-| **Admin**   | Route protégée listant **tous** les dessins avec leur auteur, tri par date, ouverture et **suppression** (modération) |
+| **Auth**    | Sign-up (user name + password), sign-in, sign-out, session surviving a reload                |
+| **Responsive** | Desktop **and** mobile — confirmed by IRCAM. Canvas, toolbar and admin view usable with a finger on a small screen |
+| **Drawing** | Full-width canvas, drawing with mouse and finger, colour choice, width choice, undo, clear all |
+| **Saving**  | Title + save. **One drawing per user**: saving again replaces the previous one               |
+| **Finding it again** | "My drawing": replay, title, last modified date, deletion                           |
+| **Admin**   | A protected route listing **every** drawing with its author, sorted by date, opening and **deletion** (moderation) |
 
-### P1 — Le premier palier de bonus
+### P1 — the first bonus tier
 
-| Domaine        | Contenu                                                                     |
+| Area           | Content                                                                     |
 | -------------- | --------------------------------------------------------------------------- |
-| **Docker**     | `docker compose up` démarre Postgres + API. Un seul prérequis : Docker      |
-| **CI**         | GitHub Actions : types, tests et build vérifiés à chaque push               |
-| **Déploiement**| Front sur CDN, API en conteneur, base managée — un lien cliquable à envoyer |
-| **Rejeu visuel** | Le dessin se reconstruit trait par trait à l'ouverture, au lieu d'apparaître d'un coup |
-| **Tests**      | Tests unitaires sur les services backend (isolation par utilisateur, validation du format d'un dessin) |
-| **Seed**       | Jeu de démonstration : 1 admin, 2 utilisateurs, quelques dessins — l'admin a quelque chose à afficher sans saisie manuelle |
+| **Docker**     | `docker compose up` starts Postgres + API. One prerequisite: Docker         |
+| **CI**         | GitHub Actions: types, tests and build checked on every push                |
+| **Deployment** | Front on a CDN, API in a container, managed database — a clickable link     |
+| **Visual replay** | The drawing rebuilds stroke by stroke when opened, instead of appearing at once |
+| **Tests**      | Unit tests on the backend services (per-user isolation, drawing format validation) |
+| **Seed**       | A demo dataset: 1 admin, 2 users, a few drawings — the admin view has something to show without manual input |
 
-### P2 — Le bonus qui donne son nom au produit
+### P2 — the bonus that gives the product its name
 
-| Domaine          | Contenu                                                                    |
+| Area             | Content                                                                    |
 | ---------------- | -------------------------------------------------------------------------- |
-| **Sonification** | Lecture audio d'un dessin via la Web Audio API, tête de lecture synchronisée avec le rejeu visuel ([§14](#14-sonification-bonus)) |
+| **Sonification** | Audio playback of a drawing through the Web Audio API, playhead synchronised with the visual replay ([§14](#14-sonification-bonus)) |
 
-### Explicitement hors scope
+### Explicitly out of scope
 
-Plusieurs dessins par utilisateur · modification d'un dessin par l'admin · rôles au-delà de `USER`/`ADMIN` ·
-partage public d'un dessin par lien · édition d'un dessin déjà enregistré · calques ·
-formes géométriques, remplissage, texte · export PNG/SVG · collaboration temps réel ·
-OAuth · réinitialisation de mot de passe · email · pagination ·
-internationalisation · mode hors ligne.
+Several drawings per user · editing of a drawing by the admin · roles beyond `USER`/`ADMIN` ·
+public sharing of a drawing by link · editing an already-saved drawing · layers · geometric
+shapes, fill, text · PNG/SVG export · real-time collaboration · OAuth · password reset · email ·
+pagination · internationalisation · offline mode.
 
-> Cette liste n'est pas une liste de regrets : c'est la démonstration qu'un arbitrage a eu
-> lieu. Elle est reprise telle quelle dans le README et sert de trame à l'entretien.
+> This list is not a list of regrets: it is the proof that an arbitration took place. It is
+> reused as-is in the README and serves as the backbone of the interview.
 
 ---
 
-## 4. Travailler sur ce projet avec Claude Code
+## 4. Working on this project with Claude Code
 
-> Cette section prime sur toutes les autres. Les sections suivantes décrivent une **cible** ;
-> celle-ci décrit comment il est permis de l'atteindre.
+> This section takes precedence over all the others. The following ones describe a **target**;
+> this one describes how it is permitted to be reached.
 
-### Le contexte
+### The context
 
-Contrairement à un projet ordinaire, **le livrable n'est pas le code : c'est la capacité à le
-défendre à l'oral**. L'énoncé autorise explicitement les outils d'IA, et pose une seule
-condition en retour — comprendre ce qui est produit. Un fichier que Quentin découvrirait
-pendant l'entretien est un passif, quelle que soit sa qualité.
+Unlike an ordinary project, **the deliverable is not the code: it is the ability to defend it
+out loud**. The brief explicitly allows AI tools, and sets one condition in exchange —
+understanding what is produced. A file Quentin would discover during the interview is a
+liability, whatever its quality.
 
-Les règles qui suivent découlent toutes de là.
+Every rule that follows comes from there.
 
-### Règle 1 — Expliquer avant d'écrire
+### Rule 1 — Explain before writing
 
-Pour toute étape non triviale (un nouveau module, un algorithme, un choix de bibliothèque),
-annoncer **d'abord** le plan en cinq lignes maximum, et attendre l'accord :
+For any non-trivial step (a new module, an algorithm, a library choice), announce the plan
+**first**, in five lines at most, and wait for agreement:
 
 ```
-Ce que je vais faire  : capture des traits dans un composable useDrawing()
-Fichiers touchés      : frontend/src/composables/useDrawing.ts (nouveau)
-Décision structurante : coordonnées normalisées [0,1], pas de pixels
-Alternative écartée   : stocker en pixels + facteur d'échelle (casse au resize)
-Vérification          : npm run type-check
+What I am going to do : capture strokes in a useDrawing() composable
+Files touched         : frontend/src/composables/useDrawing.ts (new)
+Structuring decision  : normalised [0,1] coordinates, no pixels
+Alternative discarded : store pixels + a scale factor (breaks on resize)
+Verification          : npm run type-check
 ```
 
-Une étape triviale (ajouter un champ, corriger un import, écrire un test évident) n'a pas
-besoin de ça. Le critère : *est-ce que Quentin saurait justifier ce choix demain sans relire
-le code ?* Si non, l'annoncer.
+A trivial step (adding a field, fixing an import, writing an obvious test) does not need this.
+The test: *would Quentin be able to justify this choice tomorrow without rereading the code?*
+If not, announce it.
 
-### Règle 2 — Pas de code que Quentin ne puisse relire d'une traite
+### Rule 2 — No code Quentin cannot read in one pass
 
-Un fichier de plus de ~150 lignes, une fonction de plus de ~40 lignes, ou une abstraction qui
-demande de sauter entre trois fichiers pour être comprise : c'est un signal, pas une réussite.
-Découper, ou simplifier.
+A file over ~150 lines, a function over ~40 lines, or an abstraction that requires jumping
+between three files to be understood: that is a signal, not an achievement. Split, or simplify.
 
-Corollaire : **pas de génération en masse**. On construit un morceau, on le relit, on le
-commit, on passe au suivant. Vider le MVP entier en un seul message produit du code que
-personne n'a lu.
+Corollary: **no mass generation**. Build one piece, read it, commit it, move to the next.
+Dumping the whole MVP in a single message produces code nobody has read.
 
-### Règle 3 — Un commit = une étape cohérente
+### Rule 3 — One commit = one coherent step
 
-Les commits réguliers sont un **critère d'évaluation explicite**. Concrètement :
+Regular commits are an **explicit grading criterion**. Concretely:
 
-- Un commit par étape fonctionnelle terminée et qui compile. Jamais de `wip`, jamais de
-  « tout le backend » en un commit.
-- Messages en anglais, à l'impératif, style _Conventional Commits_ :
+- One commit per finished functional step that compiles. Never `wip`, never "the whole backend"
+  in one commit.
+- Messages in English, imperative, _Conventional Commits_ style:
   `feat(drawing): capture strokes in normalised coordinates`.
-- Le corps du message sert à documenter une décision quand elle mérite de l'être — c'est
-  gratuit, et ça se relit en entretien.
-- L'historique doit se lire comme le récit du projet. Un relecteur qui fait `git log --oneline`
-  doit comprendre l'ordre dans lequel les problèmes ont été attaqués.
+- The message body documents a decision when it deserves it — it is free, and it reads well in
+  an interview.
+- The history must read like the story of the project. A reviewer running `git log --oneline`
+  should understand the order in which the problems were attacked.
 
-Le plan de commits cible est au [§17](#17-plan-de-commits).
+The target commit plan is at [§17](#17-commit-plan).
 
-### Règle 4 — Pas de nouvelle dépendance sans demander
+### Rule 4 — No new dependency without asking
 
-La liste des dépendances est **figée** ([§5](#5-architecture-système)). Toute addition se
-propose d'abord, avec la justification et l'alternative sans dépendance. Sur un projet de
-cette taille, chaque ligne du `package.json` est une question potentielle en entretien :
-« pourquoi celle-là ? ». Il faut une réponse pour chacune.
+The dependency list is **frozen** ([§5](#5-system-architecture)). Every addition is proposed
+first, with its justification and the dependency-free alternative. On a project this size, every
+line of `package.json` is a potential interview question: "why that one?". There has to be an
+answer for each.
 
-Interdits d'office : une bibliothèque de dessin (Fabric.js, Konva, Paper.js) — le canvas natif
-**est** l'exercice ; une bibliothèque audio (Tone.js) — la Web Audio API brute **est** le
-bonus ; un framework UI lourd alors que le projet a cinq écrans.
+Barred outright: a drawing library (Fabric.js, Konva, Paper.js) — the native canvas **is** the
+exercise; an audio library (Tone.js) — the raw Web Audio API **is** the bonus; a heavy UI
+framework on a project with five screens.
 
-### Règle 5 — Le plus simple qui fonctionne
+### Rule 5 — The simplest thing that works
 
-Voir [§7](#7-principes-de-code). Entre deux solutions, celle qui tient en moins de fichiers
-gagne. Un exercice de quelques heures sur-architecturé se retourne contre son auteur : il
-démontre l'inverse du critère « capacité à prioriser ».
+See [§7](#7-code-principles). Between two solutions, the one that fits in fewer files wins. A
+few-hours exercise that is over-architected turns against its author: it demonstrates the
+opposite of the "ability to prioritise" criterion.
 
-### Règle 6 — Vérifier avant de rendre la main
+### Rule 6 — Verify before handing back
 
-À la fin de toute tâche touchant au code :
+At the end of any task that touches code:
 
 ```bash
 # Backend
@@ -315,37 +307,37 @@ cd backend && npx tsc --noEmit && npm test
 cd frontend && npm run type-check && npm run build
 ```
 
-Ne pas annoncer une tâche terminée si l'un des quatre échoue. Un test qui échouait déjà
-avant l'intervention est signalé, pas corrigé silencieusement.
+Do not announce a task as finished if any of the four fails. A test that was already failing
+before the intervention is reported, not silently fixed.
 
-### Règle 7 — Ne pas anticiper les paliers
+### Rule 7 — Do not run ahead of the tiers
 
-Aucune ligne de code de sonification tant que le P0 n'est pas terminé et commité. Aucun
-`Dockerfile` tant que l'application ne tourne pas en local. Le risque réel de cet exercice
-n'est pas le manque d'ambition, c'est un P2 à moitié fait qui empêche de livrer un P0 fini.
+Not a line of sonification code until P0 is finished and committed. No `Dockerfile` until the
+application runs locally. The real risk of this exercise is not a lack of ambition, it is a
+half-finished P2 that prevents shipping a finished P0.
 
-### Ce qui est fait sans demander
+### What is done without asking
 
-- Écrire une fonctionnalité listée en P0 dans un fichier neuf, en suivant les conventions.
-- Ajouter un test.
-- Corriger un bug identifié dans le périmètre de la tâche en cours.
-- Répondre à une question, expliquer du code, proposer un plan.
+- Writing a P0 feature in a new file, following the conventions.
+- Adding a test.
+- Fixing a bug identified within the scope of the current task.
+- Answering a question, explaining code, proposing a plan.
 
-### Ce qui demande un accord préalable
+### What requires prior agreement
 
-- Ajouter une dépendance.
-- Modifier le schéma Prisma.
-- Changer une convention (arborescence, nommage, format de réponse d'API).
-- Attaquer un palier P1 ou P2.
-- Toucher à un fichier hors du périmètre de la tâche en cours.
+- Adding a dependency.
+- Changing the Prisma schema.
+- Changing a convention (folder layout, naming, API response shape).
+- Starting a P1 or P2 tier.
+- Touching a file outside the scope of the current task.
 
 ---
 
-## 5. Architecture système
+## 5. System architecture
 
 ```mermaid
 flowchart TB
-    subgraph Client["Navigateur"]
+    subgraph Client["Browser"]
         UI["Vue 3 SPA — Vite<br/>script setup · Pinia · Vue Router"]
         CV["Canvas 2D<br/>pointer events"]
         WA["Web Audio API<br/>(P2)"]
@@ -360,91 +352,91 @@ flowchart TB
         SVC["Services"]
     end
 
-    subgraph Data["Couche données"]
+    subgraph Data["Data layer"]
         PR["Prisma 7"]
-        PG[("PostgreSQL 16<br/>strokes en jsonb")]
+        PG[("PostgreSQL 16<br/>strokes as jsonb")]
     end
 
     UI -->|"/api · Authorization: Bearer"| MW
     MW --> RT --> CTRL --> SVC --> PR --> PG
 ```
 
-### Décisions d'architecture
+### Architecture decisions
 
-| Décision       | Choix                                                  | Justification                                                                                                                                  |
+| Decision       | Choice                                                 | Rationale                                                                                                                                      |
 | -------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Frontend       | Vue 3 SPA, `<script setup>`, pas de SSR ni de Nuxt     | Techno privilégiée par l'IRCAM. Aucun enjeu SEO derrière une authentification ; un build statique suffit                                        |
-| Build front    | Vite                                                   | Standard de l'écosystème Vue. Produit un `dist/` purement statique, déployable tel quel sur n'importe quel CDN ([§16](#16-docker-déploiement--variables-denvironnement)) |
-| Déploiement    | Front et API déployés **séparément**                   | Le front est statique → CDN ; l'API est un conteneur → hébergeur de conteneurs. Deux origines distinctes, assumées ([§16](#16-docker-déploiement--variables-denvironnement)) |
-| État front     | Pinia, un seul store (`auth`)                          | Le reste de l'état est local au composant. Un store par écran serait de la cérémonie                                                           |
-| Backend        | Express 5 + TypeScript                                 | Express reste la référence Node, immédiatement lisible par un relecteur. TypeScript pour le typage du format de dessin, partagé des deux côtés |
-| Couches        | Route → Controller → Service → Prisma                  | Voir [§6](#6-architecture-backend-en-couches)                                                                                                  |
-| **Pas** de repository | Les services appellent Prisma directement       | Prisma **est** déjà la couche d'accès. Un repository par-dessus ne ferait que transférer des appels ([§6](#6-architecture-backend-en-couches)) |
-| ORM            | Prisma 7, migrations versionnées                       | Schéma déclaratif lisible, migrations générées, client typé de bout en bout                                                                    |
-| Base           | PostgreSQL 16, traits en `jsonb`                       | Voir [§8](#8-modèle-de-données) — un dessin est un document, pas une relation                                                                  |
-| Auth           | JWT signé, stocké en `localStorage`, en-tête `Bearer`  | Pattern standard d'une SPA devant une API sans état, et maîtrisé. Le risque XSS est assumé et compensé ([§12](#12-authentification))           |
-| Validation     | Zod, sur chaque corps de requête                       | Un schéma Zod sert **à la fois** de validateur runtime et de type TypeScript — une seule source de vérité                                      |
-| Tests          | Vitest des deux côtés                                  | Même runner sur les deux packages, zéro configuration côté Vite                                                                                |
-| Repo           | Deux packages npm indépendants (`frontend/`, `backend/`)  | Pas de workspace : l'overhead ne se justifie pas à deux packages, et `npm install` dans chacun reste trivial à documenter                      |
+| Frontend       | Vue 3 SPA, `<script setup>`, no SSR and no Nuxt        | IRCAM's preferred technology. Nothing behind authentication needs indexing; a static build is enough                                            |
+| Front build    | Vite                                                   | The Vue ecosystem standard. Produces a purely static `dist/`, deployable as-is on any CDN ([§16](#16-docker-deployment--environment-variables)) |
+| Deployment     | Front and API deployed **separately**                  | The front is static → CDN; the API is a container → container host. Two distinct origins, owned ([§16](#16-docker-deployment--environment-variables)) |
+| Front state    | Pinia, a single store (`auth`)                         | The rest of the state is local to its component. A store per screen would be ceremony                                                          |
+| Backend        | Express 5 + TypeScript                                 | Express is still the Node reference, immediately readable by a reviewer. TypeScript for typing the drawing format, shared on both sides         |
+| Layers         | Route → Controller → Service → Prisma                  | See [§6](#6-layered-backend-architecture)                                                                                                      |
+| **No** repository | Services call Prisma directly                       | Prisma **is** already the data-access layer. A repository on top would only forward calls ([§6](#6-layered-backend-architecture))               |
+| ORM            | Prisma 7, versioned migrations                         | A readable declarative schema, generated migrations, an end-to-end typed client                                                                |
+| Database       | PostgreSQL 16, strokes as `jsonb`                      | See [§8](#8-data-model) — a drawing is a document, not a relation                                                                              |
+| Auth           | Signed JWT, stored in `localStorage`, `Bearer` header  | The standard pattern for a SPA in front of a stateless API, and a familiar one. The XSS risk is owned and offset ([§12](#12-authentication))    |
+| Validation     | Zod, on every request body                             | A Zod schema is **both** a runtime validator and a TypeScript type — one single source of truth                                                 |
+| Tests          | Vitest on both sides                                   | The same runner for both packages, zero configuration on the Vite side                                                                         |
+| Repo           | Two independent npm packages (`frontend/`, `backend/`) | No workspace: the overhead is not justified for two packages, and `npm install` in each stays trivial to document                              |
 
-### Dépendances — la liste figée
+### Dependencies — the frozen list
 
-| Package                   | Côté   | Pourquoi                                                    |
+| Package                   | Side   | Why                                                         |
 | ------------------------- | ------ | ----------------------------------------------------------- |
-| `vue`, `vue-router`, `pinia` | client | Le socle Vue 3                                           |
-| `vite`, `@vitejs/plugin-vue`, `vue-tsc` | client | Build et typecheck                            |
-| `tailwindcss`, `@tailwindcss/vite` | client | Méthode d'écriture du CSS, tokens en `@theme` — aucun runtime |
-| `daisyui`                 | client | Plugin Tailwind purement CSS : composants génériques, thème sur mesure |
+| `vue`, `vue-router`, `pinia` | client | The Vue 3 foundation                                     |
+| `vite`, `@vitejs/plugin-vue`, `vue-tsc` | client | Build and typecheck                           |
+| `tailwindcss`, `@tailwindcss/vite` | client | A way of writing CSS, tokens in `@theme` — no runtime |
+| `daisyui`                 | client | A purely CSS Tailwind plugin: generic components, custom theme |
 | `vitest`                  | client, server | Tests                                               |
-| `express`, `@types/express` | server | Le serveur HTTP                                           |
-| `@prisma/client`, `prisma`, `@prisma/adapter-pg`, `pg` | server | ORM et migrations — Prisma 7 exige un adaptateur de driver |
-| `zod`                     | server | Validation des entrées + inférence de types                 |
-| `jsonwebtoken`            | server | Signature et vérification du JWT                            |
-| `bcryptjs`                | server | Hachage des mots de passe                                   |
-| `cors`                    | server | Autorise l'origine du client pour un appel direct à l'API   |
-| `tsx`                     | server | Exécution TypeScript en développement, sans étape de build  |
+| `express`, `@types/express` | server | The HTTP server                                           |
+| `@prisma/client`, `prisma`, `@prisma/adapter-pg`, `pg` | server | ORM and migrations — Prisma 7 requires a driver adapter |
+| `zod`                     | server | Input validation + type inference                           |
+| `jsonwebtoken`            | server | Signing and verifying the JWT                               |
+| `bcryptjs`                | server | Password hashing                                            |
+| `cors`                    | server | Allows the client's origin for a direct call to the API     |
+| `tsx`                     | server | Running TypeScript in development, with no build step       |
 
-Douze lignes, dont trois pour le style et aucune n'embarquant de JavaScript au runtime. Toute
-treizième se justifie ([§4 règle 4](#règle-4--pas-de-nouvelle-dépendance-sans-demander)).
+Twelve lines, three of them for styling, and not one shipping JavaScript at runtime. Any
+thirteenth has to justify itself ([§4 rule 4](#rule-4--no-new-dependency-without-asking)).
 
 ---
 
-## 6. Architecture backend en couches
+## 6. Layered backend architecture
 
-Trois couches, en dossiers, dans un seul package. Les dépendances vont dans un seul sens :
+Three layers, as folders, in a single package. Dependencies point one way only:
 
 ```
 Route  ──▶  Controller  ──▶  Service  ──▶  Prisma Client
               │                 │
-              └── Schéma Zod ───┘
+              └── Zod schema ───┘
 ```
 
 ```
 backend/src/
 ├── routes/         auth.routes.ts · drawings.routes.ts · admin.routes.ts
-├── controllers/    traduction HTTP ↔ service
-├── services/       règles métier, seul endroit qui touche Prisma
-├── schemas/        schémas Zod (validation + types inférés)
+├── controllers/    HTTP ↔ service translation
+├── services/       business rules, the only place that touches Prisma
+├── schemas/        Zod schemas (validation + inferred types)
 ├── middleware/     requireAuth · requireAdmin · errorHandler
 ├── lib/            prisma.ts (singleton) · jwt.ts · env.ts
-├── types/          drawing.ts — le format d'un dessin (§9)
-└── index.ts        montage de l'app, écoute
+├── types/          drawing.ts — the format of a drawing (§9)
+└── index.ts        app wiring, listening
 ```
 
-### Responsabilités
+### Responsibilities
 
-| Couche         | Rôle                                                             | Peut dépendre de      | Ne doit jamais connaître             |
+| Layer          | Role                                                             | May depend on         | Must never know about               |
 | -------------- | ---------------------------------------------------------------- | --------------------- | ------------------------------------ |
-| **Route**      | Chemin, méthode, middlewares appliqués                           | controllers, middleware | services, Prisma                   |
-| **Controller** | HTTP : parse la requête, appelle le service, choisit le statut   | services, schémas Zod | Prisma, règles métier                |
-| **Service**    | Règles métier, accès aux données, propriété des ressources       | Prisma, types, `AppError` | `req`, `res`                     |
-| **Schéma Zod** | Contrat d'entrée, validation, type inféré                        | rien                  | Prisma, HTTP                         |
-| **Middleware** | Auth, rôle, erreurs                                              | lib/jwt               | services métier                      |
+| **Route**      | Path, method, middlewares applied                                | controllers, middleware | services, Prisma                   |
+| **Controller** | HTTP: parse the request, call the service, choose the status     | services, Zod schemas | Prisma, business rules               |
+| **Service**    | Business rules, data access, resource ownership                  | Prisma, types, `AppError` | `req`, `res`                     |
+| **Zod schema** | Input contract, validation, inferred type                        | nothing               | Prisma, HTTP                         |
+| **Middleware** | Auth, role, errors                                               | lib/jwt               | business services                    |
 
-### Les trois règles qui font tenir le pattern
+### The three rules that hold the pattern together
 
-**1. Le controller ne contient aucune règle métier.** Il valide, appelle, traduit. Une action
-qui dépasse une dizaine de lignes a de la logique au mauvais endroit.
+**1. A controller contains no business rule.** It validates, calls, translates. An action that
+runs past ten lines has logic in the wrong place.
 
 ```ts
 // controllers/drawing.controller.ts
@@ -455,130 +447,128 @@ export async function getMine(req: Request, res: Response) {
 }
 ```
 
-**2. Le service ne manipule ni `req` ni `res`.** Il retourne une valeur, `null`, ou lève une
-`AppError` (`NotFoundError`, `ConflictError`…) que l'`errorHandler` transforme en réponse.
-Chaque erreur porte son statut HTTP : simplification assumée, le statut est lu à côté de
-l'erreur qu'il décrit, sans table de correspondance à maintenir. Un
-service qui manipule `res.status()` n'est plus testable hors d'un contexte Express — et
-c'est précisément ce qu'on veut tester.
+**2. A service touches neither `req` nor `res`.** It returns a value, `null`, or throws an
+`AppError` (`NotFoundError`, `ConflictError`…) that the `errorHandler` turns into a response.
+Each error carries its own HTTP status: an owned simplification, the status sitting next to the
+error it describes, with no mapping table to maintain. A service that calls `res.status()` is no
+longer testable outside an Express context — and that is precisely what we want to test.
 
-**3. Seul le service touche Prisma.** Un controller qui importe `prisma` court-circuite la
-couche où vivent les règles de propriété. C'est la règle la plus facile à enfreindre par
-inadvertance, et la plus coûteuse.
+**3. Only a service touches Prisma.** A controller that imports `prisma` short-circuits the
+layer where ownership rules live. It is the easiest rule to break by accident, and the most
+expensive.
 
-### L'isolation par utilisateur passe par la signature
+### Per-user isolation goes through the signature
 
-C'est le point le plus important du backend, et le meilleur sujet d'entretien qu'il contient.
-Plutôt que de compter sur la discipline pour ne jamais oublier le filtre `userId`, **on
-l'impose par la signature** :
+This is the most important point of the backend, and the best interview subject it contains.
+Rather than relying on discipline never to forget the `userId` filter, **we impose it through
+the signature**:
 
 ```ts
 // services/drawing.service.ts
 
-// Impossible d'appeler sans fournir le propriétaire. Le compilateur fait le travail.
-// Un seul dessin par utilisateur : le userId SUFFIT à désigner la ressource.
+// Impossible to call without supplying the owner. The compiler does the work.
+// One drawing per user: the userId is ENOUGH to designate the resource.
 export function getMine(userId: string): Promise<Drawing | null> {
   return prisma.drawing.findUnique({ where: { userId } });
 }
 
-// Crée ou remplace — upsert sur la colonne unique, atomique.
+// Create or replace — an upsert on the unique column, atomic.
 export function saveMine(userId: string, input: DrawingInput): Promise<Drawing> { /* … */ }
 
 export function removeMine(userId: string): Promise<boolean> { /* … */ }
 
-// L'accès admin est une fonction SÉPARÉE, au nom explicite — jamais un paramètre
-// optionnel `userId?` sur les fonctions ci-dessus, qui rendrait l'oubli silencieux.
+// Admin access is a SEPARATE function with an explicit name — never an optional
+// `userId?` parameter on the functions above, which would make an omission silent.
 export function listAllForAdmin(): Promise<DrawingWithAuthor[]> { /* … */ }
 export function getByIdForAdmin(id: string): Promise<Drawing | null> { /* … */ }
 export function removeForAdmin(id: string): Promise<boolean> { /* … */ }
 ```
 
-> **Le `userId` est la clé de la requête, jamais un filtre ajouté après.** Un utilisateur
-> ayant au plus un dessin, `findUnique({ where: { userId } })` le désigne entièrement : les
-> routes utilisateur n'acceptent **aucun identifiant de dessin** venu du client. Il n'existe
-> donc pas de requête « charger par id, puis vérifier le propriétaire » à oublier — et
-> aucun moyen de viser le dessin d'un autre.
+> **The `userId` is the key of the query, never a filter added afterwards.** Since a user has at
+> most one drawing, `findUnique({ where: { userId } })` designates it entirely: the user routes
+> accept **no drawing id** from the client. There is therefore no "load by id, then check the
+> owner" query to forget — and no way to aim at someone else's drawing.
 
-> **Pas de 403 côté utilisateur.** Sans id dans l'URL, un utilisateur ne peut pas désigner une
-> ressource qui ne lui appartient pas : sans dessin, c'est un 404. Le seul 403 du projet est
-> celui de `requireAdmin`, où l'existence de la route n'est pas un secret.
+> **No 403 on the user side.** With no id in the URL, a user cannot designate a resource that is
+> not theirs: no drawing means a 404. The project's only 403 is the one from `requireAdmin`,
+> where the route's existence is not a secret.
 
-### Pourquoi pas de couche repository
+### Why there is no repository layer
 
-Le pattern repository a du sens au-dessus d'un ORM bavard, pour donner des noms métier aux
-requêtes et pouvoir mocker. Avec Prisma, `prisma.drawing` **est** déjà cet objet : typé,
-nommé, testable via une base de test. Ajouter `DrawingRepository.findById()` qui fait
-`return prisma.drawing.findFirst()` serait de la cérémonie pure — un fichier de plus à lire,
-zéro règle métier gagnée.
+The repository pattern makes sense on top of a verbose ORM, to give business names to queries
+and to allow mocking. With Prisma, `prisma.drawing` **is** already that object: typed, named,
+testable against a test database. Adding `DrawingRepository.findById()` that does
+`return prisma.drawing.findFirst()` would be pure ceremony — one more file to read, zero
+business rules gained.
 
-C'est un arbitrage assumé, pas un oubli. Le contre-argument — « et si on changeait d'ORM ? » —
-ne tient pas : on ne change pas d'ORM sur un projet de deux tables, et l'abstraire coûterait
-plus cher aujourd'hui que la migration hypothétique de demain. Voir la règle des trois
-([§7](#7-principes-de-code)).
+It is an owned arbitration, not an oversight. The counter-argument — "what if we changed ORM?" —
+does not hold: you do not change ORM on a two-table project, and abstracting it would cost more
+today than tomorrow's hypothetical migration. See the rule of three
+([§7](#7-code-principles)).
 
 ---
 
-## 7. Principes de code
+## 7. Code principles
 
-### SOLID — appliqué à ce projet
+### SOLID — applied to this project
 
-| Principe | Traduction concrète ici                                                                                     |
+| Principle | Concrete translation here                                                                                   |
 | -------- | ----------------------------------------------------------------------------------------------------------- |
-| **S**    | Un service par agrégat (`auth.service`, `drawing.service`). Un fichier nommé `utils` ou `helpers` est le signe qu'on ne sait pas où ranger quelque chose |
-| **O**    | Ajouter une fonctionnalité = ajouter un fichier, pas modifier cinq fichiers existants                       |
-| **L**    | Aucune hiérarchie de classes dans ce projet. Des fonctions et des modules                                   |
-| **I**    | Les services exportent les fonctions réellement appelées, pas un CRUD générique complet                     |
-| **D**    | Les controllers importent des services, jamais Prisma. La dépendance pointe vers l'abstraction métier       |
+| **S**    | One service per aggregate (`auth.service`, `drawing.service`). A file named `utils` or `helpers` is the sign that we do not know where to put something |
+| **O**    | Adding a feature = adding a file, not modifying five existing ones                                          |
+| **L**    | No class hierarchy in this project. Functions and modules                                                   |
+| **I**    | Services export the functions that are actually called, not a full generic CRUD                             |
+| **D**    | Controllers import services, never Prisma. The dependency points at the business abstraction                |
 
-### DRY — mais du bon côté
+### DRY — but on the right side
 
-DRY s'applique à la **connaissance**, pas au texte. Dans ce projet, quatre règles n'existent
-qu'à un seul endroit :
+DRY applies to **knowledge**, not to text. In this project, four rules exist in exactly one
+place:
 
-1. Le filtre par `userId` — dans la signature des services ([§6](#6-architecture-backend-en-couches)).
-2. Le format d'un dessin — dans le schéma Zod `DrawingDataSchema` ([§9](#9-le-format-dun-dessin)).
-3. La normalisation des coordonnées — dans le composable `useDrawing` côté client.
-4. Le mapping dessin → son — dans `useSonification`, jamais dupliqué dans un composant.
+1. The `userId` filter — in the service signatures ([§6](#6-layered-backend-architecture)).
+2. The format of a drawing — in the `DrawingDataSchema` Zod schema ([§9](#9-the-format-of-a-drawing)).
+3. Coordinate normalisation — in the `useDrawing` composable on the client.
+4. The drawing → sound mapping — in `useSonification`, never duplicated into a component.
 
-Le type `DrawingData` est en revanche **volontairement dupliqué** entre `frontend/src/types/`
-et `backend/src/types/`, avec un en-tête qui le signale. Vingt lignes recopiées coûtent moins
-cher qu'un package partagé et sa configuration de build, sur un projet de cette taille. C'est
-la première chose à changer si le projet grossissait ([§19](#19-questions-ouvertes) Q6).
+The `DrawingData` type, on the other hand, is **deliberately duplicated** between
+`frontend/src/types/` and `backend/src/types/`, with a header comment saying so. Twenty copied
+lines cost less than a shared package and its build configuration, on a project this size. It is
+the first thing to change if the project grew ([§19](#19-open-questions) Q6).
 
-### KISS & YAGNI — la liste de ce qu'on n'écrit pas
+### KISS & YAGNI — the list of what we do not write
 
-Ce projet **n'introduit pas** :
+This project **does not introduce**:
 
-- De couche repository ([§6](#6-architecture-backend-en-couches))
-- De pattern CQRS, de bus d'événements, d'injection de dépendances par conteneur
-- De `BaseService`, `BaseController`, ou de générique `<T>` sur une seule entité
-- De bibliothèque de dessin — le canvas natif est l'exercice
-- De bibliothèque audio — la Web Audio API brute est le bonus
-- De système de rôles au-delà de l'énumération `USER` / `ADMIN`
-- De pagination, de cache, de rate limiting, de logs structurés
-- De table `Stroke` séparée ([§8](#8-modèle-de-données))
-- D'abstraction « pour plus tard »
+- A repository layer ([§6](#6-layered-backend-architecture))
+- CQRS, an event bus, or container-based dependency injection
+- A `BaseService`, a `BaseController`, or a `<T>` generic over a single entity
+- A drawing library — the native canvas is the exercise
+- An audio library — the raw Web Audio API is the bonus
+- A role system beyond the `USER` / `ADMIN` enum
+- Pagination, caching, rate limiting, structured logging
+- A separate `Stroke` table ([§8](#8-data-model))
+- Any abstraction "for later"
 
-**La règle des trois :** on abstrait au troisième cas réel, pas au premier. Sur une semaine,
-le troisième cas n'arrivera pas.
+**The rule of three:** abstract on the third real case, not the first. In one week, the third
+case will not arrive.
 
-### L'arbitrage entre les principes
+### Arbitrating between the principles
 
-Quand SOLID pousse vers l'abstraction et KISS vers le concret, **KISS gagne** — et sur cet
-exercice, il gagne largement. Le critère évalué est « capacité à prioriser » : une
-architecture d'entreprise sur deux tables démontre exactement le contraire.
+When SOLID pushes towards abstraction and KISS towards the concrete, **KISS wins** — and on this
+exercise, it wins by a wide margin. The criterion being graded is "ability to prioritise": an
+enterprise architecture over two tables demonstrates exactly the opposite.
 
-Le seul endroit où la rigueur prime sur la simplicité est **l'isolation par utilisateur** :
-là, le coût d'un oubli est une fuite de données entre comptes, sur une application qui a
-précisément une interface d'administration pour montrer qu'on sait séparer les deux.
+The one place where rigour beats simplicity is **per-user isolation**: there, the cost of an
+oversight is a data leak between accounts, on an application that has an administration
+interface precisely to show that the two are kept apart.
 
 ---
 
-## 8. Modèle de données
+## 8. Data model
 
 ```mermaid
 erDiagram
-    USER ||--o| DRAWING : "possède"
+    USER ||--o| DRAWING : "owns"
 
     USER {
         uuid id PK
@@ -591,97 +581,96 @@ erDiagram
     DRAWING {
         uuid id PK
         string title
-        jsonb data "traits vectoriels — §9"
+        jsonb data "vector strokes — §9"
         uuid userId FK
         datetime createdAt
         datetime updatedAt
     }
 ```
 
-Deux tables. C'est tout, et c'est délibéré.
+Two tables. That is all, and it is deliberate.
 
-### Notes de conception
+### Design notes
 
-| #   | Décision                                            | Pourquoi                                                                                                                                                                                                                    |
-| --- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **Les traits en `jsonb`, pas en table `Stroke`**     | Un dessin est lu et écrit **en entier, toujours**. On ne requête jamais « les traits rouges », on ne met jamais à jour un point isolé. Une table `Stroke` + une table `Point` produirait des milliers de lignes par dessin pour un agrégat qui n'est jamais découpé — un coût de jointure pur, sans bénéfice |
-| 2   | `role` sur `User`, pas de table `Role`              | Deux valeurs, aucune permission granulaire. Une énumération suffit ; une table de rôles serait une abstraction sans second cas                                                                                              |
-| 3   | Un seul `userName`, pas d'email                  | Aucune fonctionnalité n'a besoin d'un email (ni réinitialisation, ni notification). Un nom unique sert à la fois d'identifiant de connexion et de nom d'auteur affiché dans l'admin — un champ de moins, une donnée personnelle de moins |
-| 4   | Pas de champ `thumbnail`                            | La vignette se rend côté client en rejouant les traits sur un petit canvas. Stocker un PNG dérivé dupliquerait la source de vérité pour un gain invisible à cette échelle ([§19](#19-questions-ouvertes) Q4)               |
-| 5   | `onDelete: Cascade` sur `Drawing.userId`            | Supprimer un compte supprime son dessin. Aucun intérêt à conserver des dessins orphelins                                                                                                                                  |
-| 6   | **`userId` unique**, aucun autre index              | Un seul dessin par utilisateur (réponse de l'IRCAM) : la base l'impose, deux enregistrements simultanés ne peuvent pas créer deux lignes, et remplacer devient un `upsert` sur cette colonne. L'index unique sert aussi la seule requête côté utilisateur. La liste admin tient en quelques dizaines de lignes : un index de tri n'y serait même pas utilisé |
-| 7   | Pas de soft delete                                  | Aucune exigence de corbeille dans l'énoncé. `DELETE` supprime                                                                                                                                                              |
+| #   | Decision                                            | Why                                                                                                                                                                                                                         |
+| --- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Strokes as `jsonb`, not a `Stroke` table**         | A drawing is read and written **whole, always**. We never query "the red strokes", we never update a single point. A `Stroke` + `Point` table pair would produce thousands of rows per drawing for an aggregate that is never split — a pure join cost, with no benefit |
+| 2   | `role` on `User`, no `Role` table                   | Two values, no granular permissions. An enum is enough; a role table would be an abstraction with no second case                                                                                                            |
+| 3   | A single `userName`, no email                       | No feature needs an email (neither reset nor notification). One unique name serves as both the sign-in identifier and the author name shown in the admin view — one field fewer, one piece of personal data fewer            |
+| 4   | No `thumbnail` column                               | The thumbnail renders client-side by replaying the strokes on a small canvas. Storing a derived PNG would duplicate the source of truth for a gain that is invisible at this scale ([§19](#19-open-questions) Q4)           |
+| 5   | `onDelete: Cascade` on `Drawing.userId`             | Deleting an account deletes its drawing. There is no point keeping orphan drawings                                                                                                                                          |
+| 6   | **`userId` unique**, no other index                 | One drawing per user (IRCAM's answer): the database enforces it, two simultaneous saves cannot create two rows, and replacing becomes an `upsert` on that column. The unique index also serves the only user-side query. The admin list is a few dozen rows: a sort index would not even be used |
+| 7   | No soft delete                                      | The brief requires no trash bin. `DELETE` deletes                                                                                                                                                                           |
 
-> **Le `jsonb` est le point qu'un relecteur va challenger.** La réponse tient en une phrase :
-> *le critère de choix n'est pas la forme de la donnée mais son unité d'accès — les traits
-> d'un dessin sont toujours lus ensemble, écrits ensemble et supprimés ensemble, donc ils
-> forment un document et pas une relation.* Le jour où il faudrait requêter les traits
-> individuellement — chercher tous les dessins contenant du rouge, par exemple — la
-> normalisation deviendrait justifiée, et Postgres permet de le faire progressivement avec
-> un index GIN sur la colonne `jsonb` avant d'en arriver là.
+> **The `jsonb` is the point a reviewer will challenge.** The answer fits in one sentence: *the
+> criterion is not the shape of the data but its unit of access — the strokes of a drawing are
+> always read together, written together and deleted together, so they form a document and not a
+> relation.* The day individual strokes needed querying — finding every drawing containing red,
+> say — normalisation would become justified, and Postgres lets you get there gradually with a
+> GIN index on the `jsonb` column first.
 
 ---
 
-## 9. Le format d'un dessin
+## 9. The format of a drawing
 
-**C'est la décision structurante du projet.** Elle conditionne le rejeu, la sonification,
-la robustesse au redimensionnement, et l'essentiel de la discussion d'entretien.
+**This is the project's structuring decision.** It determines replay, sonification, robustness
+to resizing, and most of the interview discussion.
 
 ```ts
-// types/drawing.ts — copie canonique dans backend/, dupliquée dans frontend/ (§7)
+// types/drawing.ts — canonical copy in backend/, duplicated in frontend/ (§7)
 
-/** Un point, en coordonnées NORMALISÉES dans [0, 1] relativement à la boîte du canvas. */
+/** A point, in NORMALISED coordinates within [0, 1] relative to the canvas box. */
 export interface Point {
   x: number;
   y: number;
 }
 
 export interface Stroke {
-  /** Couleur au format hexadécimal, ex. "#e11d48". */
+  /** Hex colour, e.g. "#e11d48". */
   color: string;
-  /** Épaisseur normalisée : fraction de la LARGEUR du canvas, pas des pixels. */
+  /** Normalised thickness: a fraction of the canvas WIDTH, not pixels. */
   width: number;
   points: Point[];
 }
 
 export interface DrawingData {
-  /** Version du format. Permet de faire évoluer le schéma sans casser l'existant. */
+  /** Format version. Lets the schema evolve without breaking what exists. */
   version: 1;
-  /** Ratio largeur / hauteur du canvas de création. Nécessaire pour rejouer sans déformer. */
+  /** Width / height ratio of the authoring canvas. Needed to replay without distortion. */
   aspectRatio: number;
   background: string;
   strokes: Stroke[];
 }
 ```
 
-### Les quatre décisions contenues dans ces vingt lignes
+### The four decisions contained in those twenty lines
 
-**1. Coordonnées normalisées dans `[0, 1]`, jamais des pixels.**
-Le canvas de création fait 1200 px de large sur un écran de bureau, 380 px sur un téléphone,
-et 240 px dans une vignette de la galerie admin. Des coordonnées en pixels ne seraient
-valides que sur l'écran qui les a produites. Normaliser à la capture et dénormaliser au rendu
-rend le dessin **indépendant de sa surface d'affichage** — c'est ce qui permet à la même
-donnée d'alimenter le canvas plein écran, la vignette et la tête de lecture audio.
+**1. Normalised coordinates in `[0, 1]`, never pixels.**
+The authoring canvas is 1200 px wide on a desktop screen, 380 px on a phone, and 240 px in an
+admin gallery thumbnail. Pixel coordinates would only be valid on the screen that produced them.
+Normalising at capture and denormalising at render makes the drawing **independent of its
+display surface** — that is what lets the same data feed the full-width canvas, the thumbnail
+and the audio playhead.
 
-**2. `aspectRatio` stocké avec le dessin.**
-Normaliser `x` et `y` indépendamment sur `[0, 1]` écrase l'information de proportion : un
-cercle dessiné sur un canvas 16:9 redeviendrait un cercle sur un canvas carré — donc un
-ovale déformé en pratique. On mémorise le ratio de création, et le rejeu le respecte en
-adaptant sa boîte (letterbox) plutôt qu'en étirant le dessin.
+**2. `aspectRatio` stored with the drawing.**
+Normalising `x` and `y` independently onto `[0, 1]` crushes the proportion information: a circle
+drawn on a 16:9 canvas would come back as a circle on a square canvas — in practice, a distorted
+oval. We record the authoring ratio, and replay respects it by adapting its box (letterboxing)
+rather than stretching the drawing.
 
-**3. `width` normalisé sur la largeur, pas sur les deux axes.**
-Un trait a une épaisseur scalaire, pas un vecteur. On la normalise sur une seule dimension —
-la largeur, par convention — pour qu'elle reste cohérente quelle que soit la taille de rendu.
+**3. `width` normalised against the width, not both axes.**
+A stroke has a scalar thickness, not a vector. We normalise it against one dimension — the
+width, by convention — so that it stays consistent whatever the render size.
 
-**4. `version: 1` littéral.**
-Un octet dans la base, une garantie pour la suite : le jour où le format évolue, on sait
-distinguer les anciens dessins sans deviner. Le type littéral fait que TypeScript refuse
-une valeur autre que `1`, et le schéma Zod refuse un `version: 2` inconnu à l'entrée.
+**4. A literal `version: 1`.**
+One byte in the database, one guarantee for the future: the day the format changes, we can tell
+old drawings apart without guessing. The literal type makes TypeScript refuse any value other
+than `1`, and the Zod schema refuses an unknown `version: 2` at the door.
 
-### Validation côté serveur
+### Server-side validation
 
-Le serveur **ne fait jamais confiance** au JSON reçu. Le même schéma Zod sert de validateur
-et de source du type :
+The server **never trusts** the JSON it receives. The same Zod schema serves as validator and as
+the source of the type:
 
 ```ts
 // schemas/drawing.schema.ts
@@ -711,38 +700,36 @@ export const CreateDrawingSchema = z.object({
 });
 ```
 
-> **Les bornes `max()` ne sont pas décoratives.** Sans elles, un client malveillant poste un
-> `jsonb` de 200 Mo et sature la base. 1 000 traits × 5 000 points est très au-delà d'un
-> usage réel tout en restant un plafond dur. C'est la seule mesure de sécurité applicative
-> du projet au-delà de l'authentification, et elle mérite d'être mentionnée à l'oral.
+> **The `max()` bounds are not decorative.** Without them, a malicious client posts a 200 MB
+> `jsonb` row and fills the database. 1,000 strokes × 5,000 points is far beyond real use while
+> remaining a hard ceiling. It is the project's only application-level security measure beyond
+> authentication, and it is worth mentioning out loud.
 
-### Simplification de la trajectoire à la capture
+### Path simplification at capture
 
-Un `pointermove` émet un événement tous les quelques millisecondes : un trait de deux
-secondes produit facilement 300 points, dont l'immense majorité sont visuellement redondants.
-On filtre à la capture, avec la règle la plus simple qui marche : **on ignore un point situé
-à moins d'une distance seuil du précédent** (~0,002 en coordonnées normalisées, soit ~2 px
-sur un canvas de 1000 px).
+A `pointermove` fires every few milliseconds: a two-second stroke easily produces 300 points,
+the vast majority of them visually redundant. We filter at capture, with the simplest rule that
+works: **we drop a point closer than a threshold distance to the previous one** (~0.002 in
+normalised coordinates, roughly 2 px on a 1000 px canvas).
 
-Résultat : un dessin passe typiquement de ~400 Ko à ~40 Ko de JSON, le rejeu est plus fluide,
-et la sonification produit moins de notes parasites. L'algorithme de Ramer–Douglas–Peucker
-ferait mieux — il est cité au [§19](#19-questions-ouvertes) Q5 comme évolution, pas comme
-prérequis.
+The result: a drawing typically goes from ~400 KB to ~40 KB of JSON, replay is smoother, and
+sonification produces fewer spurious notes. The Ramer–Douglas–Peucker algorithm would do better
+— it is listed at [§19](#19-open-questions) Q5 as an evolution, not a prerequisite.
 
 ---
 
-## 10. Schéma Prisma
+## 10. Prisma schema
 
 ```prisma
 // backend/prisma/schema.prisma
 
 generator client {
   provider            = "prisma-client"
-  output              = "../src/generated/prisma"   // non commité
-  importFileExtension = "js"                        // résout sous tsx comme sous node
+  output              = "../src/generated/prisma"   // not committed
+  importFileExtension = "js"                        // resolves under tsx as under node
 }
 
-// Prisma 7 : l'URL de connexion vit dans prisma.config.ts, plus dans le schéma.
+// Prisma 7: the connection URL lives in prisma.config.ts, no longer in the schema.
 datasource db {
   provider = "postgresql"
 }
@@ -768,14 +755,14 @@ model Drawing {
   id        String   @id @default(uuid()) @db.Uuid
   title     String   @db.VarChar(80)
 
-  /// Traits vectoriels, conformes à DrawingDataSchema (§9).
-  /// Document lu et écrit en entier — jamais requêté par trait.
+  /// Vector strokes, conforming to DrawingDataSchema (§9).
+  /// A document read and written whole — never queried stroke by stroke.
   data      Json     @db.JsonB
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  /// Unique : un seul dessin par utilisateur, imposé par la base. Remplacer = upsert.
+  /// Unique: one drawing per user, enforced by the database. Replacing = upsert.
   userId    String   @unique @db.Uuid
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -783,19 +770,18 @@ model Drawing {
 }
 ```
 
-### Points d'attention
+### Points to watch
 
-- **`@db.JsonB` explicitement**, même si Prisma mappe déjà `Json` vers `jsonb` sur
-  PostgreSQL. L'écrire rend l'intention lisible dans le schéma, et protège d'un changement
-  de comportement par défaut.
-- **Le `Json` de Prisma n'est pas typé.** `drawing.data` arrive en `Prisma.JsonValue` côté
-  TypeScript. On le parse systématiquement avec `DrawingDataSchema.parse()` en sortie de
-  service plutôt que de faire un `as DrawingData` — un cast masquerait une donnée corrompue
-  jusqu'au crash côté client.
-- **`@@map` vers des noms de tables au pluriel en minuscules.** Convention SQL, découplée
-  du nommage des modèles.
-- Migrations générées (`prisma migrate dev`), **jamais** `prisma db push` : `db push`
-  diverge silencieusement de l'historique et rend la base non reproductible.
+- **`@db.JsonB` spelled out**, even though Prisma already maps `Json` to `jsonb` on PostgreSQL.
+  Writing it makes the intent readable in the schema, and guards against a change of default
+  behaviour.
+- **Prisma's `Json` is not typed.** `drawing.data` arrives as `Prisma.JsonValue` on the
+  TypeScript side. We systematically parse it with `DrawingDataSchema.parse()` on the way out of
+  a service rather than writing `as DrawingData` — a cast would hide corrupted data until it
+  crashed on the client.
+- **`@@map` to lowercase plural table names.** SQL convention, decoupled from model naming.
+- Migrations are generated (`prisma migrate dev`), **never** `prisma db push`: `db push`
+  silently diverges from the history and makes the database irreproducible.
 
 ### Seed
 
@@ -803,198 +789,194 @@ model Drawing {
 backend/prisma/seed.ts
 ```
 
-Crée, si absents : un compte `admin` (rôle `ADMIN`), deux comptes
-utilisateur, et trois à quatre dessins générés programmatiquement (spirales, ondes) répartis
-entre eux. Chaque étape est gardée par un test d'existence, donc rejouable sans doublon.
+Creates, if absent: an `admin` account (role `ADMIN`), two user accounts, and three or four
+programmatically generated drawings (spirals, waves) spread between them. Every step is guarded
+by an existence check, so it is replayable without duplicates.
 
-Objectif : un relecteur qui clone le repo et lance `docker compose up` voit une interface
-d'administration **peuplée**, sans avoir à créer trois comptes et dessiner à la souris. C'est
-un détail d'accueil qui pèse plus lourd qu'il n'en a l'air sur la première impression.
+The goal: a reviewer who clones the repo and runs `docker compose up` sees a **populated**
+administration interface, without having to create three accounts and draw with a mouse. It is a
+welcome detail that weighs more than it looks on a first impression.
 
-> **En production, le seed crée les comptes `USER` mais jamais l'`ADMIN`.** Ces mots de passe
-> sont écrits dans un dépôt Git public, et ce qu'ils coûtent dépend du rôle : un utilisateur
-> n'atteint que son propre dessin — n'importe qui obtiendrait autant en s'inscrivant — tandis
-> que l'administrateur peut supprimer le travail de tous. Le premier est donc une commodité de
-> démonstration, le second une porte d'entrée. L'administrateur en ligne est créé à la main,
-> avec un mot de passe qui n'existe nulle part dans le dépôt, et son identifiant figure dans
-> le README.
+> **In production the seed creates the `USER` accounts but never the `ADMIN`.** Those passwords
+> are written in a public Git repository, and what they cost depends on the role: a user reaches
+> nothing but their own drawing — anyone would get as much by registering — whereas the
+> administrator can delete everybody's work. The first is a demonstration convenience, the
+> second a way in. The online administrator is created by hand, with a password that exists
+> nowhere in the repository, and its identifier is in the README.
 
 ---
 
-## 11. Routing & surface API
+## 11. Routing & API surface
 
-### Pages Vue
+### Vue pages
 
-| Route            | Garde              | Description                                              |
+| Route            | Guard              | Description                                              |
 | ---------------- | ------------------ | -------------------------------------------------------- |
-| `/login`         | invité             | Connexion                                                |
-| `/register`      | invité             | Inscription                                              |
-| `/`              | authentifié        | Le canvas — écran d'accueil, on dessine tout de suite    |
-| `/drawing`       | authentifié        | « Mon dessin » : rejeu visuel, puis audio (P2), suppression |
-| `/admin`         | authentifié + ADMIN | Tous les dessins, tous utilisateurs confondus, suppression |
-| `/admin/drawings/:id` | authentifié + ADMIN | Lecture d'un dessin de n'importe quel utilisateur   |
+| `/login`         | guest              | Sign in                                                  |
+| `/register`      | guest              | Sign up                                                  |
+| `/`              | authenticated      | The canvas — the landing screen, you draw straight away   |
+| `/drawing`       | authenticated      | "My drawing": visual replay, then audio (P2), deletion    |
+| `/admin`         | authenticated + ADMIN | Every drawing, all users together, with deletion       |
+| `/admin/drawings/:id` | authenticated + ADMIN | Reading any user's drawing                         |
 
-> **Le canvas est la page d'accueil, pas la galerie.** L'application sert à dessiner ; la
-> première action possible après connexion doit être de dessiner, pas de naviguer vers un
-> écran qui permet de dessiner.
+> **The canvas is the landing page, not the gallery.** The application exists to draw; the first
+> possible action after signing in must be drawing, not navigating to a screen that lets you
+> draw.
 
-### API Express
+### Express API
 
-| Route                  | Méthode  | Garde   | Description                                            |
+| Route                  | Method   | Guard   | Description                                            |
 | ---------------------- | -------- | ------- | ------------------------------------------------------ |
-| `/api/auth/register`   | `POST`   | —       | Crée le compte, pose le cookie, retourne l'utilisateur |
-| `/api/auth/login`      | `POST`   | —       | Pose le cookie, retourne l'utilisateur                 |
-| `/api/auth/me`         | `GET`    | auth    | L'utilisateur courant — seule source fiable de l'identité et du rôle ([§12](#12-authentification)) |
-| `/api/drawing`         | `GET`    | auth    | Mon dessin, `data` compris — 404 si je n'en ai pas     |
-| `/api/drawing`         | `PUT`    | auth    | Crée ou remplace mon dessin                            |
-| `/api/drawing`         | `DELETE` | auth    | Supprime mon dessin                                    |
-| `/api/admin/drawings`  | `GET`    | admin   | Tous les dessins avec leur auteur, sans le `data`      |
-| `/api/admin/drawings/:id` | `GET` | admin   | N'importe quel dessin, `data` compris                  |
-| `/api/admin/drawings/:id` | `DELETE` | admin | Supprime n'importe quel dessin (modération)           |
+| `/api/auth/register`   | `POST`   | —       | Creates the account and returns the user               |
+| `/api/auth/login`      | `POST`   | —       | Returns the user                                       |
+| `/api/auth/me`         | `GET`    | auth    | The current user — the only reliable source of identity and role ([§12](#12-authentication)) |
+| `/api/drawing`         | `GET`    | auth    | My drawing, `data` included — 404 if I have none       |
+| `/api/drawing`         | `PUT`    | auth    | Creates or replaces my drawing                         |
+| `/api/drawing`         | `DELETE` | auth    | Deletes my drawing                                     |
+| `/api/admin/drawings`  | `GET`    | admin   | Every drawing with its author, without the `data`      |
+| `/api/admin/drawings/:id` | `GET` | admin   | Any drawing, `data` included                           |
+| `/api/admin/drawings/:id` | `DELETE` | admin | Deletes any drawing (moderation)                      |
 
-> **`/api/drawing` est au singulier, sans identifiant.** Un utilisateur a au plus un dessin :
-> le jeton suffit à le désigner. Aucun id n'est accepté du client sur ces routes, donc aucun
-> moyen d'en viser un autre — l'isolation est structurelle, pas seulement vérifiée.
+> **`/api/drawing` is singular, with no identifier.** A user has at most one drawing: the token
+> is enough to designate it. No id is accepted from the client on these routes, so there is no
+> way to aim at someone else's — isolation is structural, not merely checked.
 
-> **`PUT` et pas `POST`.** Enregistrer remplace une ressource unique : envoyer deux fois la
-> même requête laisse le même état. C'est la définition d'une opération idempotente, donc
-> de `PUT`. La ligne est conservée (même id, `createdAt` d'origine), seuls `title`, `data`
-> et `updatedAt` changent.
+> **`PUT`, not `POST`.** Saving replaces a unique resource: sending the same request twice
+> leaves the same state. That is the definition of an idempotent operation, and therefore of
+> `PUT`. The row is kept (same id, original `createdAt`); only `title`, `data` and `updatedAt`
+> change.
 
-> **`GET /api/admin/drawings` ne renvoie pas le `data`.** Une liste de vingt dessins complets,
-> c'est plusieurs mégaoctets de JSON pour afficher vingt titres. La liste renvoie
-> `{ id, title, updatedAt, author, strokeCount }` ; le `data` n'arrive qu'à l'ouverture.
+> **`GET /api/admin/drawings` does not return the `data`.** A list of twenty full drawings is
+> several megabytes of JSON to display twenty titles. The list returns
+> `{ id, title, updatedAt, author, strokeCount }`; the `data` only arrives when one is opened.
 
-### Pipeline d'une écriture
+### The pipeline of a write
 
-Chaque mutation suit le même enchaînement. Sauter une étape, c'est la fuite de données garantie.
+Every mutation follows the same sequence. Skipping a step is a guaranteed data leak.
 
 ```
-1. requireAuth               → 401 si l'en-tête Authorization est absent ou le JWT invalide
-2. Validation Zod du corps   → 400 avec le détail des champs en échec
-3. Chargement via le service, avec le userId dans la signature (§6)
-                             → 404 si absent OU si la ressource appartient à un autre
-4. Mutation via Prisma
-5. Retour d'un DTO — jamais l'entité brute (le passwordHash ne sort jamais du service)
+1. requireAuth               → 401 if the Authorization header is missing or the JWT invalid
+2. Zod validation of the body → 400 with the failing fields spelled out
+3. Loading through the service, with the userId in the signature (§6)
+                             → 404 if absent OR if the resource belongs to someone else
+4. Mutation through Prisma
+5. Returning a DTO — never the raw entity (the passwordHash never leaves a service)
 ```
 
-### Format d'erreur
+### Error shape
 
-Une seule forme, produite par l'`errorHandler` :
+One single shape, produced by the `errorHandler`:
 
 ```json
 { "code": "drawing.notFound", "message": "Drawing not found." }
 ```
 
-Le `code` est stable et machine-lisible ; le `message` est pour le développeur. Le client
-réagit sur le `code`, jamais en parsant le texte — c'est ce qui permettrait d'ajouter une
-traduction plus tard sans rien casser.
+The `code` is stable and machine-readable; the `message` is for the developer. The client reacts
+to the `code`, never by parsing the text — which is what would let a translation be added later
+without breaking anything.
 
 ---
 
-## 12. Authentification
+## 12. Authentication
 
-**JWT signé (HS256), stocké en `localStorage`, transmis dans l'en-tête
-`Authorization: Bearer`.** Email + mot de passe, haché avec bcrypt (coût 10).
+**A signed JWT (HS256), stored in `localStorage`, sent in the `Authorization: Bearer` header.**
+User name + password, hashed with bcrypt (cost 10).
 
-### Pourquoi ce choix, et ce qu'il coûte
+### Why this choice, and what it costs
 
-C'est le pattern le plus répandu pour une SPA devant une API sans état, et celui que le
-développeur maîtrise. Sur un exercice dont le critère explicite est *« il est important que
-vous compreniez le code que vous produisez »*, travailler dans un pattern connu vaut mieux
-qu'en découvrir un autre pendant la semaine : le temps gagné va au canvas, qui est le vrai
-sujet.
+It is the most widespread pattern for a SPA in front of a stateless API, and the one this
+developer knows. On an exercise whose explicit criterion is *"it is important that you
+understand the code you produce"*, working inside a familiar pattern beats discovering another
+one during the week: the time saved goes to the canvas, which is the real subject.
 
-Il a aussi deux propriétés qui vont bien à cette architecture : **l'API reste sans état et
-indépendante du navigateur** — le même endpoint servirait un client mobile ou un client tiers
-sans rien changer — et **le transport est universel**, là où un cookie est une mécanique
-propre au navigateur.
+It also has two properties that suit this architecture: **the API stays stateless and
+browser-independent** — the same endpoint would serve a mobile client or a third-party client
+unchanged — and **the transport is universal**, where a cookie is a browser-specific mechanism.
 
-**Le coût est réel et il est assumé : un jeton en `localStorage` est lisible par n'importe
-quel script de la page.** Une faille XSS, et l'attaquant repart avec un jeton portable,
-valable sept jours, utilisable depuis chez lui. Un cookie `httpOnly` fermerait ce vecteur —
-au prix d'une exposition au CSRF, laquelle se neutralise avec un seul attribut
-(`sameSite: "lax"`), alors que le vol de jeton en `localStorage` n'a aucune parade
-équivalente.
+**The cost is real and it is owned: a token in `localStorage` is readable by any script on the
+page.** One XSS flaw, and the attacker walks away with a portable token, valid for seven days,
+usable from home. An `httpOnly` cookie would close that vector — at the price of CSRF exposure,
+which a single attribute neutralises (`sameSite: "lax"`), whereas stealing a token from
+`localStorage` has no equivalent countermeasure.
 
-Le compromis se tient ici parce que l'application ne manipule aucune donnée sensible — des
-dessins — et que la surface XSS est réduite par construction (voir ci-dessous). Il ne se
-tiendrait pas sur une application bancaire ou médicale.
+The trade-off holds here because the application handles no sensitive data — drawings — and
+because the XSS surface is reduced by construction (see below). It would not hold on a banking
+or medical application.
 
-> **La condition qui ferait basculer la décision**, et c'est elle qu'il faut savoir énoncer :
-> dès que l'application afficherait du contenu produit par d'autres utilisateurs sous forme de
-> HTML, ou manipulerait des données sensibles, le cookie `httpOnly` redeviendrait le bon
-> choix. Le changement est d'ailleurs peu coûteux : le jeton n'est lu qu'à **un seul endroit**
-> côté serveur, dans `requireAuth`, et un middleware peut accepter les deux transports en
-> trois lignes.
+> **The condition that would flip the decision**, and this is the one to be able to state: as
+> soon as the application displayed content authored by other users as HTML, or handled
+> sensitive data, the `httpOnly` cookie would become the right choice again. The change is
+> cheap, as it happens: the token is read in **one single place** server-side, in `requireAuth`,
+> and a middleware can accept both transports in three lines.
 >
 > ```ts
 > const token = req.headers.authorization?.replace("Bearer ", "")
 >             ?? req.cookies?.token;
 > ```
 >
-> On ne l'écrit pas maintenant — ce serait de l'anticipation ([§4 règle 7](#règle-7--ne-pas-anticiper-les-paliers)) —
-> mais le savoir transforme « et si ça devait évoluer ? » en réponse d'une phrase.
+> We do not write it now — that would be anticipation
+> ([§4 rule 7](#rule-7--do-not-run-ahead-of-the-tiers)) — but knowing it turns "what if this had
+> to change?" into a one-sentence answer.
 
-### Ce qui réduit réellement le risque XSS
+### What actually reduces the XSS risk
 
-Puisque le jeton est exposé au JavaScript de la page, les mesures qui limitent l'exécution de
-JavaScript hostile ne sont pas optionnelles :
+Since the token is exposed to the page's JavaScript, the measures that limit hostile JavaScript
+from running are not optional:
 
-- **Aucun `v-html`, nulle part.** Vue échappe tout par défaut via `{{ }}` ; `v-html` est
-  précisément la porte d'entrée du XSS. Le projet n'en contient aucun, et c'est une règle
-  vérifiable en relecture ([§18](#18-règles-dingénierie) règle 27).
-- **Aucun contenu utilisateur rendu en HTML.** Un titre de dessin est du texte, affiché comme
-  du texte. Le seul champ libre de l'application est ce titre, borné à 80 caractères.
-- **Aucune dépendance frontend au-delà du socle Vue** ([§5](#5-architecture-système)). Chaque
-  bibliothèque tierce est du JavaScript exécuté dans la page, donc une surface de plus.
-- **Durée de vie du jeton à 7 jours**, pas davantage, et `logout` l'efface.
+- **No `v-html`, anywhere.** Vue escapes everything by default through `{{ }}`; `v-html` is
+  precisely the XSS door. The project contains none, and it is a rule that can be checked in
+  review ([§18](#18-engineering-rules) rule 27).
+- **No user content rendered as HTML.** A drawing title is text, displayed as text. The
+  application's only free-text field is that title, capped at 80 characters.
+- **No frontend dependency beyond the Vue foundation** ([§5](#5-system-architecture)). Every
+  third-party library is JavaScript executed in the page, therefore one more surface.
+- **A seven-day token lifetime**, no more, and `logout` erases it.
 
-### Pourquoi un JWT et pas une session serveur
+### Why a JWT and not a server session
 
-Avec un seul serveur et une base déjà présente, une session en base serait tout aussi
-valable — et même plus simple à révoquer. Le JWT est retenu parce qu'il **ne demande aucun
-stockage de session** et se vérifie par une signature. Le prix payé est réel : **un jeton émis
-n'est pas révocable avant son expiration**. Sur une application de dessin, c'est acceptable ;
-sur une application traitant des données sensibles, ce ne le serait pas.
+With a single server and a database already present, a database-backed session would be just as
+valid — and easier to revoke, even. The JWT is chosen because it **requires no session storage**
+and verifies through a signature. The price paid is real: **an issued token cannot be revoked
+before it expires**. On a drawing application that is acceptable; on an application handling
+sensitive data it would not be.
 
-### Pas de refresh token
+### No refresh token
 
-Un couple access court + refresh long sert à réduire la fenêtre d'exploitation d'un jeton
-volé. Ajouter ce mécanisme doublerait la surface de code d'authentification pour un gain
-marginal sur un exercice d'une semaine. C'est — avec le passage au cookie `httpOnly` — la
-première chose à ajouter si le projet devenait réel.
+A short access token plus a long refresh token exists to shrink the exploitation window of a
+stolen token. Adding that mechanism would double the authentication code surface for a marginal
+gain on a one-week exercise. It is — along with the move to an `httpOnly` cookie — the first
+thing to add if the project became real.
 
-### Le client stocke le jeton, mais ne lui fait jamais confiance
+### The client stores the token, but never trusts it
 
-Le payload d'un JWT est en base64, pas chiffré : **n'importe qui peut le lire, donc il ne
-prouve rien côté client**. Le frontend peut y lire `exp` pour se déconnecter proprement à
-l'expiration, mais il ne déduit **jamais** de son contenu qu'il est administrateur.
+A JWT payload is base64, not encrypted: **anyone can read it, so it proves nothing client-side**.
+The frontend may read `exp` from it to sign out cleanly on expiry, but it **never** infers from
+its contents that it is an administrator.
 
-Au démarrage de l'application, si un jeton est présent en `localStorage`, le client appelle
-`GET /api/auth/me`. C'est le serveur — seul détenteur du secret de signature — qui confirme
-l'identité et le rôle. Un `401` sur un appel qui portait un jeton termine la session ; la
-garde de route renvoie vers `/login` à la navigation suivante.
+At application start, if a token is present in `localStorage`, the client calls
+`GET /api/auth/me`. It is the server — the only holder of the signing secret — that confirms the
+identity and the role. A `401` on a call that carried a token ends the session; the route guard
+sends the user to `/login` on the next navigation.
 
 ```ts
-// stores/auth.ts — le store possède la session, jeton compris
+// stores/auth.ts — the store owns the session, token included
 const TOKEN_KEY = "soniclight.token";
 const token = ref(localStorage.getItem(TOKEN_KEY));
 ```
 
-Corollaire : **`POST /api/auth/logout` n'existe pas.** Avec un jeton sans état stocké côté
-client, la déconnexion est un `removeItem` — un appel serveur ne révoquerait rien et
-donnerait l'illusion inverse. C'est une simplification réelle du choix retenu, et un bon
-exemple de cohérence entre une décision et ses conséquences.
+Corollary: **`POST /api/auth/logout` does not exist.** With a stateless token held client-side,
+signing out is a `removeItem` — a server call would revoke nothing and would suggest the
+opposite. It is a genuine simplification of the chosen design, and a good example of coherence
+between a decision and its consequences.
 
-### Le transport des appels
+### How calls travel
 
-Toutes les requêtes passent par un unique wrapper dans `src/api/http.ts` (une trentaine de
-lignes), seul endroit où l'en-tête est injecté. Il ne fait que ça : il ne navigue pas et ne
-stocke rien. Aucun composant, aucune vue n'ajoute d'en-tête à la main.
+Every request goes through a single wrapper in `src/api/http.ts` (about thirty lines), the only
+place the header is injected. It does nothing else: it does not navigate and it stores nothing.
+No component and no view adds a header by hand.
 
 ```ts
-// api/http.ts — lit le jeton dans le store, ne le stocke pas
+// api/http.ts — reads the token from the store, does not store it
 const auth = useAuthStore();
 const res = await fetch(`${API_URL}${path}`, {
   ...init,
@@ -1006,28 +988,28 @@ const res = await fetch(`${API_URL}${path}`, {
 });
 ```
 
-### Pas de proxy Vite : le cross-origin est assumé de bout en bout
+### No Vite proxy: cross-origin is owned end to end
 
-**Il n'y a délibérément pas de proxy dans `vite.config.ts`.** Le client appelle l'API par son
-URL absolue, lue dans `VITE_API_URL`, en développement comme en production.
+**There is deliberately no proxy in `vite.config.ts`.** The client calls the API by its absolute
+URL, read from `VITE_API_URL`, in development exactly as in production.
 
-Un proxy Vite ferait que le navigateur ne voit qu'une seule origine en développement — donc
-zéro CORS, donc un confort réel. Mais le front et l'API sont **déployés séparément** : un
-build statique sur un CDN d'un côté, un conteneur de l'autre, deux domaines distincts
-([§16](#16-docker-déploiement--variables-denvironnement)). Un proxy modéliserait donc en
-développement une topologie qui n'existera jamais en production, et repousserait la première
-erreur CORS au moment du déploiement — c'est-à-dire au pire moment possible.
+A Vite proxy would mean the browser only ever sees one origin in development — so no CORS, so
+real comfort. But the front and the API are **deployed separately**: a static build on a CDN on
+one side, a container on the other, two distinct domains
+([§16](#16-docker-deployment--environment-variables)). A proxy would therefore model, in
+development, a topology that will never exist in production, and would push the first CORS
+failure to deployment day — that is, to the worst possible moment.
 
-**Développer dans la même configuration que celle qu'on déploie coûte une configuration CORS
-et évite une classe entière de mauvaises surprises.** C'est aussi ce qui rend le transport par
-en-tête `Bearer` pertinent plutôt qu'arbitraire : un cookie, sur deux origines réelles,
-exigerait `SameSite=None`, donc `Secure`, donc HTTPS des deux côtés, plus `credentials: true`
-avec une liste d'origines exacte — le joker `*` étant interdit dès qu'il y a des credentials.
-Le choix du stockage et le choix du déploiement se tiennent l'un l'autre.
+**Developing in the same configuration you deploy costs one CORS setting and avoids an entire
+class of nasty surprises.** It is also what makes the `Bearer` header transport relevant rather
+than arbitrary: a cookie, across two real origins, would require `SameSite=None`, therefore
+`Secure`, therefore HTTPS on both sides, plus `credentials: true` with an exact origin list —
+the `*` wildcard being forbidden as soon as credentials are involved. The storage choice and the
+deployment choice hold each other up.
 
 ```ts
 // backend/src/index.ts
-app.use(cors({ origin: env.CLIENT_ORIGINS }));   // liste explicite, jamais "*"
+app.use(cors({ origin: env.CLIENT_ORIGINS }));   // an explicit list, never "*"
 ```
 
 ```ts
@@ -1035,129 +1017,128 @@ app.use(cors({ origin: env.CLIENT_ORIGINS }));   // liste explicite, jamais "*"
 const res = await fetch(`${import.meta.env.VITE_API_URL}${path}`, { /* … */ });
 ```
 
-`credentials: true` n'est **pas** activé : plus aucun cookie ne circule, l'en-tête
-`Authorization` suffit.
+`credentials: true` is **not** enabled: no cookie travels any more, the `Authorization` header is
+enough.
 
-> **Le préliminaire CORS est réel, pas théorique.** Un en-tête `Authorization` rend la requête
-> « non simple », donc le navigateur envoie un `OPTIONS` avant chaque appel. Le paquet `cors`
-> y répond automatiquement — mais si l'origine ne figure pas exactement dans la liste (un
-> `https://` oublié, un slash final de trop), l'échec se manifeste comme une erreur réseau
-> opaque côté client, sans rien dans les logs du serveur. C'est le premier endroit à regarder
-> quand un appel marche en `curl` et échoue dans le navigateur.
+> **The CORS preflight is real, not theoretical.** An `Authorization` header makes the request
+> "non-simple", so the browser sends an `OPTIONS` before every call. The `cors` package answers
+> it automatically — but if the origin is not in the list exactly (a forgotten `https://`, one
+> trailing slash too many), the failure shows up as an opaque network error client-side, with
+> nothing in the server log. It is the first place to look when a call works in `curl` and fails
+> in the browser.
 
-### Les gardes
+### The guards
 
-- `requireAuth` : lit l'en-tête `Authorization`, vérifie la signature, pose
-  `req.user = { id, role }`, sinon 401.
-- `requireAdmin` : s'applique **après** `requireAuth`, vérifie `role === "ADMIN"`, sinon 403.
-- Le rôle vient **du jeton vérifié côté serveur**, jamais d'un champ envoyé par le client.
-- Côté Vue : un `beforeEach` du router protège `/admin` — **confort d'interface, pas
-  sécurité**. La vraie barrière est le middleware serveur, et elle doit être testée comme telle.
+- `requireAuth`: reads the `Authorization` header, verifies the signature, sets
+  `req.user = { id, role }`, otherwise 401.
+- `requireAdmin`: runs **after** `requireAuth`, checks `role === "ADMIN"`, otherwise 403.
+- The role comes **from the token verified server-side**, never from a field sent by the client.
+- On the Vue side: a router `beforeEach` protects `/admin` — **interface comfort, not security**.
+  The real barrier is the server middleware, and it must be tested as such.
 
 ---
 
-## 13. Canvas — capture et rejeu
+## 13. Canvas — capture and replay
 
 ### Capture
 
 ```
-pointerdown  → ouvrir un trait, capturer le premier point, setPointerCapture()
-pointermove  → si la distance au point précédent > seuil, ajouter le point + tracer le segment
-pointerup    → fermer le trait, le pousser dans la pile
+pointerdown  → open a stroke, capture the first point, setPointerCapture()
+pointermove  → if the distance to the previous point > threshold, add the point + draw the segment
+pointerup    → close the stroke, push it onto the stack
 ```
 
-| Décision                                     | Pourquoi                                                                                                                                       |
+| Decision                                     | Why                                                                                                                                            |
 | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pointer*` et non `mouse*` / `touch*`        | Un seul jeu d'événements couvre souris, doigt et stylet. Gérer les deux familles séparément est la source de bugs tactiles la plus courante   |
-| `setPointerCapture()` sur `pointerdown`      | Le trait continue même si le curseur sort du canvas, et le `pointerup` arrive toujours. Sans ça, un trait reste « ouvert » indéfiniment        |
-| `touch-action: none` en CSS sur le canvas    | Sans cette ligne, dessiner au doigt fait défiler la page au lieu de tracer. Une ligne de CSS, un bug mobile en moins                           |
-| Backing store × `devicePixelRatio`           | `canvas.width = cssWidth * dpr` puis `ctx.scale(dpr, dpr)`. Sans ça, le trait est flou sur tout écran haute densité                            |
-| `lineCap` et `lineJoin` en `"round"`         | Sans arrondi, un trait rapide montre ses segments et ses angles. Deux propriétés pour un rendu de crayon crédible                              |
-| Pile d'annulation en mémoire                 | `undo` retire le dernier trait et redessine tout. À quelques centaines de traits, redessiner est instantané — inutile de gérer un cache d'image |
+| `pointer*` rather than `mouse*` / `touch*`   | One event family covers mouse, finger and stylus. Handling two families separately is the most common source of broken tactile drawing        |
+| `setPointerCapture()` on `pointerdown`       | The stroke continues even if the cursor leaves the canvas, and `pointerup` always arrives. Without it, a stroke stays "open" indefinitely      |
+| `touch-action: none` in CSS on the canvas    | Without that line, drawing with a finger scrolls the page instead of drawing. One line of CSS, one mobile bug fewer                           |
+| Backing store × `devicePixelRatio`           | `canvas.width = cssWidth * dpr` then `ctx.scale(dpr, dpr)`. Without it, strokes are blurry on any high-density display                        |
+| `lineCap` and `lineJoin` set to `"round"`    | Without rounding, a fast stroke shows its segments and its angles. Two properties for a believable pencil look                                |
+| An in-memory undo stack                      | `undo` removes the last stroke and redraws everything. At a few hundred strokes, redrawing is instantaneous — no need for an image cache      |
 
-### Rejeu
+### Replay
 
-Le rendu et le rejeu partagent **la même fonction** : `renderStrokes(ctx, data, box, upTo)`,
-où `upTo` est le nombre de points à tracer. Rendre un dessin complet, c'est appeler cette
-fonction une fois avec le total ; le rejouer, c'est l'appeler dans une boucle
-`requestAnimationFrame` avec un `upTo` croissant.
+Rendering and replay share **the same function**: `renderStrokes(ctx, data, box, upTo)`, where
+`upTo` is the number of points to draw. Rendering a complete drawing means calling that function
+once with the total; replaying it means calling it in a `requestAnimationFrame` loop with an
+increasing `upTo`.
 
-Une seule fonction de rendu, trois usages : le canvas d'édition, la vue de lecture, la
-vignette. C'est la seule factorisation vraiment justifiée du frontend.
+One render function, three uses: the editing canvas, the reading view, the thumbnail. It is the
+only genuinely justified factorisation on the frontend.
 
-`box` est calculée depuis `aspectRatio` ([§9](#9-le-format-dun-dessin)) : le dessin est
-centré dans le conteneur disponible en respectant sa proportion d'origine, avec des marges
-si nécessaire, plutôt qu'étiré.
+`box` is computed from `aspectRatio` ([§9](#9-the-format-of-a-drawing)): the drawing is centred
+in the available container while respecting its original proportion, with margins if needed,
+rather than stretched.
 
 ---
 
 ## 14. Sonification (bonus)
 
-> **Palier P2 — aucune ligne avant que le P0 ne soit terminé et commité**
-> ([§4 règle 7](#règle-7--ne-pas-anticiper-les-paliers)).
+> **P2 tier — not a line before P0 is finished and committed**
+> ([§4 rule 7](#rule-7--do-not-run-ahead-of-the-tiers)).
 
-### Filiation — Kandinsky
+### Lineage — Kandinsky
 
-La référence directe est **[Kandinsky](https://musiclab.chromeexperiments.com/Kandinsky/)**, du
-Chrome Music Lab de Google : on dessine, le dessin est lu de gauche à droite, et ce qu'on a
-tracé devient du son. C'est le même geste que SonicLight, et il vaut d'aller le manipuler avant
-d'écrire une ligne de code.
+The direct reference is **[Kandinsky](https://musiclab.chromeexperiments.com/Kandinsky/)**, from
+Google's Chrome Music Lab: you draw, the drawing is read from left to right, and what you traced
+becomes sound. It is the same gesture as SonicLight, and it is worth going and playing with it
+before writing a line of code.
 
-Derrière l'expérience il y a **Wassily Kandinsky** lui-même, qui percevait des correspondances
-entre couleur, forme et son — il associait par exemple le jaune à une trompette, le bleu à un
-violoncelle — et a théorisé ces correspondances dans *Du spirituel dans l'art* (1911). Ce n'est
-pas de l'habillage : ça donne une **généalogie** au mapping choisi ici, plutôt qu'un choix
-arbitraire. Sur un entretien à l'IRCAM, savoir d'où vient l'idée de faire correspondre une
-teinte à un timbre vaut mieux que de l'avoir inventée dans son coin.
+Behind the experiment stands **Wassily Kandinsky** himself, who perceived correspondences
+between colour, shape and sound — he associated yellow with a trumpet, blue with a cello, for
+instance — and theorised those correspondences in *Concerning the Spiritual in Art* (1911). This
+is not decoration: it gives the mapping chosen here a **genealogy**, rather than an arbitrary
+choice. In an interview at IRCAM, knowing where the idea of matching a hue to a timbre comes
+from is worth more than having invented it alone.
 
-> **Ce qu'on prend, et ce qu'on ne prend pas.** On reprend la tête de lecture horizontale, la
-> lecture en boucle, et surtout le fait qu'**on entend quelque chose immédiatement, sans rien
-> régler**. On ne reprend **pas** la reconnaissance de formes (Kandinsky distingue traits,
-> points et formes fermées, et leur attribue des instruments différents) : c'est un problème de
-> vision par ordinateur, hors de portée du temps imparti, et le mapping du §14 s'en passe très
-> bien. Savoir nommer cette limite est une meilleure réponse que d'essayer de la franchir.
+> **What we take, and what we do not.** We take the horizontal playhead, the looping playback,
+> and above all the fact that **you hear something immediately, with nothing to configure**. We
+> do **not** take shape recognition (Kandinsky distinguishes lines, dots and closed shapes, and
+> assigns them different instruments): that is a computer-vision problem, out of reach in the
+> time available, and the §14 mapping does very well without it. Being able to name that limit
+> is a better answer than trying to cross it.
 
-### Le principe
+### The principle
 
-Le dessin est lu **de gauche à droite comme une partition**. Une tête de lecture balaie
-l'axe `x` sur une durée fixe ; chaque point de trait qu'elle croise déclenche une note.
+The drawing is read **from left to right like a score**. A playhead sweeps the `x` axis over a
+fixed duration; every stroke point it crosses triggers a note.
 
-**La lecture est en boucle**, pas en un seul passage. C'est trois lignes de plus, et ça change
-la nature du produit : une lecture unique donne l'impression d'un fichier qu'on écoute, une
-boucle donne l'impression d'un instrument qu'on manipule — on peut modifier le dessin en
-écoutant. C'est la leçon la plus rentable à prendre chez Kandinsky.
+**Playback loops**, rather than running once. That is three extra lines, and it changes the
+nature of the product: a single pass feels like listening to a file, a loop feels like handling
+an instrument — you can modify the drawing while listening. It is the most profitable lesson to
+take from Kandinsky.
 
 ```mermaid
 flowchart LR
-    A["Point du trait<br/>(x, y, couleur, épaisseur)"] --> B["x → temps<br/>position de la tête de lecture"]
-    A --> C["y → hauteur<br/>quantifiée sur une gamme pentatonique"]
-    A --> D["épaisseur → gain"]
-    A --> E["teinte → timbre<br/>type d'oscillateur"]
+    A["Stroke point<br/>(x, y, colour, width)"] --> B["x → time<br/>playhead position"]
+    A --> C["y → pitch<br/>quantised on a pentatonic scale"]
+    A --> D["width → gain"]
+    A --> E["hue → timbre<br/>oscillator type"]
     B & C & D & E --> F["OscillatorNode → GainNode → destination"]
 ```
 
-### Le mapping
+### The mapping
 
-| Dimension du dessin | Paramètre sonore     | Détail                                                                    |
+| Drawing dimension   | Sound parameter      | Detail                                                                    |
 | ------------------- | -------------------- | ------------------------------------------------------------------------- |
-| `x` ∈ [0, 1]        | Temps                | Position dans une lecture de durée fixe (8 s par défaut)                 |
-| `y` ∈ [0, 1]        | Hauteur              | Inversé (haut = aigu), **quantifié sur une gamme pentatonique**          |
-| `width`             | Gain                 | Un trait épais sonne plus fort                                            |
-| `color` (teinte)    | Forme d'onde         | `sine` · `triangle` · `square` · `sawtooth` selon le secteur de teinte    |
+| `x` ∈ [0, 1]        | Time                 | Position within a playback of fixed duration (8 s by default)            |
+| `y` ∈ [0, 1]        | Pitch                | Inverted (up = high), **quantised on a pentatonic scale**                |
+| `width`             | Gain                 | A thick stroke sounds louder                                              |
+| `color` (hue)       | Waveform             | `sine` · `triangle` · `square` · `sawtooth` depending on the hue sector   |
 
-### Pourquoi la quantification pentatonique
+### Why pentatonic quantisation
 
-C'est le choix le plus intéressant à défendre. Un mapping linéaire `y → fréquence` produit
-un glissando continu : tout dessin sonne comme une sirène, et deux dessins différents se
-ressemblent. En projetant la hauteur sur une **gamme pentatonique mineure** — cinq degrés
-par octave, sans demi-ton adjacent — n'importe quelle combinaison de notes reste consonante.
-Le résultat est musical quel que soit le dessin, ce qui est exactement le but d'un produit
-qui s'appelle SonicLight.
+This is the most interesting choice to defend. A linear `y → frequency` mapping produces a
+continuous glissando: every drawing sounds like a siren, and two different drawings sound alike.
+By projecting pitch onto a **minor pentatonic scale** — five degrees per octave, with no adjacent
+semitone — any combination of notes stays consonant. The result is musical whatever the drawing,
+which is exactly the point of a product called SonicLight.
 
 ```ts
-// Pentatonique mineure : 5 degrés par octave, aucun intervalle dissonant possible
-const SCALE = [0, 3, 5, 7, 10];       // demi-tons depuis la tonique
-const ROOT = 220;                      // La3
+// Minor pentatonic: 5 degrees per octave, no dissonant interval possible
+const SCALE = [0, 3, 5, 7, 10];       // semitones from the root
+const ROOT = 220;                      // A3
 const OCTAVES = 3;
 
 function pitchFromY(y: number): number {
@@ -1167,120 +1148,114 @@ function pitchFromY(y: number): number {
 }
 ```
 
-C'est une décision **esthétique**, pas technique — et elle est défendable comme telle :
-sur un produit de l'IRCAM, assumer un parti pris musical et savoir l'expliquer vaut mieux
-qu'un mapping neutre choisi par défaut.
+It is an **aesthetic** decision, not a technical one — and it is defensible as such: on an IRCAM
+product, owning a musical stance and being able to explain it is worth more than a neutral
+mapping chosen by default.
 
-### Les trois pièges de la Web Audio API
+### The three Web Audio API traps
 
-1. **`AudioContext` ne démarre pas sans geste utilisateur.** Les navigateurs bloquent
-   l'audio automatique. Le contexte est créé — ou repris par `ctx.resume()` — au premier
-   clic sur « Écouter », jamais au montage du composant.
-2. **Un `OscillatorNode` ne se réutilise pas.** Il est à usage unique : `start()`, `stop()`,
-   jeté. Une note = un oscillateur créé à la volée, et on le déconnecte à la fin pour ne pas
-   accumuler des nœuds morts.
-3. **Une enveloppe est obligatoire.** Couper un oscillateur net produit un clic audible.
-   Une attaque et une extinction courtes — `setValueAtTime` puis
-   `exponentialRampToValueAtTime` sur le gain — suffisent à rendre le tout écoutable.
+1. **`AudioContext` does not start without a user gesture.** Browsers block automatic audio. The
+   context is created — or resumed with `ctx.resume()` — on the first click of "Listen", never
+   when the component mounts.
+2. **An `OscillatorNode` cannot be reused.** It is single-use: `start()`, `stop()`, discard. One
+   note = one oscillator created on the fly, and we disconnect it at the end so dead nodes do
+   not accumulate.
+3. **An envelope is mandatory.** Cutting an oscillator dead produces an audible click. A short
+   attack and release — `setValueAtTime` then `exponentialRampToValueAtTime` on the gain — is
+   enough to make the whole thing listenable.
 
-### Ce qu'on ne fait pas
+### What we do not do
 
-Pas de réverbération ni d'effets · pas de polyphonie non bornée (limite dure au nombre de
-notes simultanées, sinon un dessin dense sature) · pas de synchronisation à l'échantillon
-près — un `requestAnimationFrame` pilotant la tête de lecture visuelle et un ordonnancement
-audio à ~100 ms d'avance suffisent largement · pas d'export audio.
+No reverb or effects · no unbounded polyphony (a hard cap on simultaneous notes, or a dense
+drawing saturates) · no sample-accurate synchronisation — a `requestAnimationFrame` driving the
+visual playhead and audio scheduled ~100 ms ahead is plenty · no audio export.
 
 ---
 
 ## 15. UI/UX & design tokens
 
-### Principes
+### Principles
 
-Clair, sobre, l'interface disparaît derrière le dessin. **Mode clair uniquement**, pas de variante sombre.
+Light, sober, the interface disappearing behind the drawing. **Light mode only**, no dark
+variant.
 
-**Tailwind 4 + DaisyUI 5, avec un thème sur mesure.** Deux dépendances de développement, aucun
-runtime, aucun composant JavaScript.
+**Tailwind 4 + DaisyUI 5, with a custom theme.** Two development dependencies, no runtime, no
+JavaScript components.
 
-| Zone                                                  | Traitement                                                              |
+| Area                                                  | Treatment                                                               |
 | ----------------------------------------------------- | ----------------------------------------------------------------------- |
-| Boutons, champs, cartes, modale, badges, alertes      | **DaisyUI** — du générique, aucune raison de le réécrire                |
-| Canvas, barre d'outils, palette, vue de lecture       | **CSS écrit à la main** — c'est là que vit l'identité du produit         |
+| Buttons, fields, cards, modal, badges, alerts         | **DaisyUI** — generic work, no reason to rewrite it                     |
+| Canvas, toolbar, palette, reading view                | **Hand-written CSS** — this is where the product's identity lives       |
 
-> **Ce partage est la décision, pas le choix de l'outil.** DaisyUI là où le travail est
-> générique, du CSS à la main là où il porte le produit. Adopter une bibliothèque en bloc
-> donnerait une application de gestion ; la refuser en bloc ferait réécrire des états de focus
-> et des styles de champ sans rien y gagner.
+> **That split is the decision, not the choice of tool.** DaisyUI where the work is generic,
+> hand-written CSS where it carries the product. Adopting a library wholesale would give an
+> admin dashboard; refusing one wholesale would mean rewriting focus states and field styles for
+> nothing.
 
-**Pourquoi Tailwind plutôt que du CSS écrit entièrement à la main.** Tailwind n'est pas une
-bibliothèque de composants, c'est une méthode d'écriture du CSS : aucun runtime, et la sortie
-ne contient que les classes réellement utilisées. En v4 la configuration vit dans le CSS via
-`@theme` — les tokens sont à un seul endroit, et l'espacement comme les couleurs deviennent
-cohérents par construction plutôt que par discipline.
+**Why Tailwind rather than entirely hand-written CSS.** Tailwind is not a component library, it
+is a way of writing CSS: no runtime, and the output contains only the classes actually used. In
+v4 the configuration lives in the CSS through `@theme` — the tokens are in one place, and
+spacing and colours become consistent by construction rather than by discipline.
 
-**Pourquoi DaisyUI plutôt qu'une bibliothèque de composants Vue.** DaisyUI est un plugin
-Tailwind qui émet du CSS : zéro JavaScript, rien à importer, aucune API de composant à
-apprendre. Les templates restent du Vue ordinaire. Une bibliothèque JS demanderait de savoir
-expliquer son cycle de vie et ses props — un plugin CSS s'explique en une phrase, ce qui
-compte vu le critère d'évaluation.
+**Why DaisyUI rather than a Vue component library.** DaisyUI is a Tailwind plugin that emits
+CSS: zero JavaScript, nothing to import, no component API to learn. The templates stay ordinary
+Vue. A JS library would require being able to explain its lifecycle and its props — a CSS plugin
+is explained in one sentence, which matters given the grading criterion.
 
-**Pourquoi un thème sur mesure et pas un thème fourni.** Livrer l'apparence par défaut d'un
-outil, c'est livrer l'apparence de personne. DaisyUI 5 permet de définir un thème directement
-dans le CSS (`@plugin "daisyui/theme"`) avec ses propres couleurs sémantiques : on garde les
-composants, on change l'identité. C'est précisément ce qu'une bibliothèque JS lourde ne
-laisserait pas faire à ce coût.
+**Why a custom theme and not a shipped one.** Shipping a tool's default appearance is shipping
+nobody's. DaisyUI 5 lets a theme be defined directly in the CSS (`@plugin "daisyui/theme"`) with
+its own semantic colours: you keep the components, you change the identity. That is precisely
+what a heavy JS library would not let you do at this cost.
 
-> **Écartés, et pourquoi :** PrimeVue (familier venant de PrimeNG, mais look d'application de
-> gestion, et PrimeTek a fait passer PrimeNG en licence commerciale à partir de la v22 — à
-> vérifier côté Vue avant tout engagement) ; Vuetify et Quasar (surdimensionnés d'un ordre de
-> grandeur) ; shadcn-vue (le meilleur compromis si l'on veut posséder le code de ses
-> composants, mais Tailwind + Reka UI + un CLI, plus de mise en place que de gain sur cinq
-> écrans).
+> **Rejected, and why:** PrimeVue (familiar coming from PrimeNG, but with an admin-dashboard
+> look, and PrimeTek moved PrimeNG to a commercial licence from v22 — to be checked on the Vue
+> side before any commitment); Vuetify and Quasar (oversized by an order of magnitude);
+> shadcn-vue (the best compromise if you want to own your component code, but Tailwind + Reka UI
+> + a CLI is more setup than gain across five screens).
 
-### Parti pris & références
+### Stance & references
 
-Aucune maquette n'a été fournie. Sur ce terrain, le jury évalue la **cohérence**, pas la
-beauté — et le moyen le plus sûr d'en produire une est de tenir **une seule contrainte forte**
-de bout en bout :
+No mockup was provided. On that ground, the panel grades **coherence**, not beauty — and the
+surest way to produce coherence is to hold **one strong constraint** from end to end:
 
-> **Rien n'est coloré à l'écran, sauf le dessin.** Toute l'interface est en niveaux de gris,
-> plus un accent unique. Les seules couleurs saturées de l'application sont celles des traits.
+> **Nothing on screen is coloured except the drawing.** The whole interface is greyscale, plus a
+> single accent. The only saturated colours in the application are the stroke colours.
 >
-> **L'exception : les notifications.** Un toast de succès est vert, un toast d'erreur est
-> rouge — l'issue d'une action doit se voir sans se lire. L'exception est bornée aux toasts
-> et au rouge des boutons de suppression ; elle ne s'étend ni au chrome ni aux états.
+> **The exception: notifications.** A success toast is green, an error toast is red — the
+> outcome of an action must be seen without being read. The exception is bounded to toasts and
+> to the red of delete buttons; it extends neither to the chrome nor to states.
 
-Cette règle est perceptible par un relecteur, se justifie en une phrase, et tranche
-automatiquement les cent micro-décisions qu'on n'a pas le temps d'arbitrer une par une. Trois
-corollaires en découlent :
+That rule is perceptible to a reviewer, justifies itself in one sentence, and automatically
+settles the hundred micro-decisions there is no time to arbitrate one by one. Three corollaries
+follow:
 
-- **Rien ne flotte au-dessus du canvas.** Aucun panneau, aucune infobulle, aucune barre
-  d'outils par-dessus la zone de dessin.
-- **Le monospace est réservé au technique et au méta** — compteurs, noms d'événements,
-  horodatages. Le reste est en sans-serif.
-- **La seule animation du produit est le rejeu**, parce qu'elle signifie quelque chose. Tout le
-  reste est immobile.
+- **Nothing floats above the canvas.** No panel, no tooltip, no toolbar over the drawing area.
+- **Monospace is reserved for the technical and the meta** — counters, event names, timestamps.
+  The rest is sans-serif.
+- **The product's only animation is the replay**, because it means something. Everything else is
+  still.
 
-**Références, et ce qu'on prend à chacune :**
+**References, and what we take from each:**
 
-| Référence                                                                       | Ce qu'on en tire                                                                                   |
+| Reference                                                                       | What we take from it                                                                               |
 | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| [Kandinsky](https://musiclab.chromeexperiments.com/Kandinsky/) (Chrome Music Lab) | **La référence centrale** — dessin → son, tête de lecture, lecture immédiate sans réglage ([§14](#14-sonification-bonus)) |
-| [Chrome Music Lab](https://musiclab.chromeexperiments.com/Experiments), *Song Maker* | On entend quelque chose avant d'avoir rien configuré. Zéro écran de paramètres              |
-| [Ableton Learning Synths](https://learningsynths.ableton.com/)                    | Le pôle **instrument** : manipulation directe, cibles généreuses, aucun chrome — pour l'écran de dessin |
-| [Padlet](https://padlet.com/) · [Are.na](https://www.are.na/)                     | Le pôle **tableau** : grille calme, le contenu porte tout — pour la galerie et la vue admin        |
-| [tldraw](https://tldraw.com/) · [Excalidraw](https://excalidraw.com/)             | L'UX de canvas : traitement de la barre d'outils, chrome qui s'efface pendant le tracé             |
-| [Teenage Engineering](https://teenage.engineering/)                              | Le vocabulaire visuel : étiquettes en monospace, retenue extrême, objets qui ressemblent à des instruments |
+| [Kandinsky](https://musiclab.chromeexperiments.com/Kandinsky/) (Chrome Music Lab) | **The central reference** — drawing → sound, a playhead, immediate playback with no settings ([§14](#14-sonification-bonus)) |
+| [Chrome Music Lab](https://musiclab.chromeexperiments.com/Experiments), *Song Maker* | You hear something before configuring anything. Zero settings screens                         |
+| [Ableton Learning Synths](https://learningsynths.ableton.com/)                    | The **instrument** pole: direct manipulation, generous targets, no chrome — for the drawing screen |
+| [Padlet](https://padlet.com/) · [Are.na](https://www.are.na/)                     | The **board** pole: a calm grid, the content carrying everything — for the gallery and the admin view |
+| [tldraw](https://tldraw.com/) · [Excalidraw](https://excalidraw.com/)             | Canvas UX: how the toolbar is treated, chrome that fades while drawing                             |
+| [Teenage Engineering](https://teenage.engineering/)                              | The visual vocabulary: monospace labels, extreme restraint, objects that look like instruments     |
 
-> Les deux premières références tirent vers l'**instrument**, les deux suivantes vers le
-> **tableau**. Ce n'est pas une contradiction mais une répartition : l'écran de dessin suit le
-> premier pôle, la galerie et l'admin suivent le second. Savoir nommer cette répartition est
-> une réponse d'entretien à part entière.
+> The first two references pull towards the **instrument**, the next two towards the **board**.
+> That is not a contradiction but a division of labour: the drawing screen follows the first
+> pole, the gallery and the admin view follow the second. Being able to name that division is an
+> interview answer in itself.
 
 ### Layout
 
 ```
 ┌────────────────────────────────────────────────────────────┐
-│  ◈ SonicLight        Dessiner   Mon dessin    Admin    👤  │
+│  ◈ SonicLight        Draw    My drawing    Admin       👤  │
 ├────────────────────────────────────────────────────────────┤
 │                                                            │
 │     ┌────────────────────────────────────────────────┐     │
@@ -1289,200 +1264,193 @@ corollaires en découlent :
 │     │                                                │     │
 │     └────────────────────────────────────────────────┘     │
 │                                                            │
-│   ● ● ● ● ● ●      ▁▂▃▅      ↶ Annuler   ✕ Effacer         │
-│   couleurs       épaisseur                    [ Enregistrer ]│
+│   ● ● ● ● ● ●      ▁▂▃▅      ↶ Undo      ✕ Clear           │
+│   colours        width                          [ Save ]   │
 └────────────────────────────────────────────────────────────┘
 ```
 
-- **Barre d'outils sous le canvas**, jamais par-dessus : un outil flottant finit toujours
-  sous le curseur au moment où l'on dessine.
-- **Palette fermée de six couleurs**, pas de sélecteur libre. Une palette restreinte donne
-  une cohérence visuelle à la galerie admin, et rend le mapping teinte → timbre
-  ([§14](#14-sonification-bonus)) lisible plutôt qu'aléatoire.
-- **Enregistrer ouvre une modale** demandant le titre. Pas de champ de titre permanent qui
-  encombre l'écran de dessin.
-- **Galerie en grille de cartes**, chacune rendant le dessin sur un petit canvas.
-- **Vue admin = la même grille**, plus le nom de l'auteur sur chaque carte et un tri par date.
-  Réutiliser le composant de carte est la bonne réponse : l'admin ne mérite pas une seconde
-  interface.
+- **The toolbar sits below the canvas**, never over it: a floating control always ends up under
+  the cursor at the moment you are drawing.
+- **A closed palette of six colours**, no free picker. A restricted palette gives the admin
+  gallery visual coherence, and makes the hue → timbre mapping
+  ([§14](#14-sonification-bonus)) legible rather than arbitrary.
+- **Saving opens a modal** asking for the title. No permanent title field cluttering the drawing
+  screen.
+- **The gallery is a grid of cards**, each rendering the drawing on a small canvas.
+- **The admin view is the same grid**, plus the author's name on each card and a date sort.
+  Reusing the card component is the right answer: the admin does not deserve a second interface.
 
-### La modale repose sur `<dialog>`, pas sur une div
+### The modal is built on `<dialog>`, not on a div
 
-La modale de DaisyUI s'appuie sur l'élément **`<dialog>` natif**, ouvert par `showModal()`.
-C'est ce qui règle gratuitement le seul vrai problème d'accessibilité du projet : piège à
-focus, restitution du focus à la fermeture, touche `Échap`, fond semi-opaque — tout est
-assuré par le navigateur.
+DaisyUI's modal is built on the **native `<dialog>` element**, opened with `showModal()`. That
+settles, for free, the project's only real accessibility problem: focus trap, focus restoration
+on close, the `Escape` key, the semi-opaque backdrop — the browser handles all of it.
 
-Réécrire ça à la main, c'est quatre-vingts lignes qu'on rate subtilement. C'est aussi la
-raison pour laquelle DaisyUI et le choix « pas de bibliothèque JS » se renforcent au lieu de
-se concurrencer.
+Rewriting that by hand is eighty lines you get subtly wrong. It is also why DaisyUI and the "no
+JS library" rule reinforce each other rather than compete.
 
-### Six décisions d'UX qui pèsent plus que le choix de l'outil
+### Six UX decisions that weigh more than the choice of tool
 
-1. **Le rejeu se déclenche à l'ouverture d'un dessin, pas au clic.** Le dessin se reconstruit
-   trait par trait, automatiquement, en deux secondes. C'est l'effet marquant du projet, et il
-   démontre à lui seul qu'on a stocké de la géométrie et non une image. Le cacher derrière un
-   bouton, c'est le perdre.
-2. **Clair, et seulement clair.** Choix du porteur du projet : une seule apparence à concevoir
-   et à vérifier. Conséquence à traiter au lot dessin : sur fond blanc, les teintes claires de
-   la palette de traits (jaune `#eab308` à 1,9:1, vert, cyan) ressortent mal — la palette sera
-   ajustée pour atteindre au moins 3:1, le minimum WCAG pour un élément graphique.
-3. **Barre d'outils sous le canvas**, jamais par-dessus (voir plus haut).
-4. **Raccourcis clavier** : `Cmd/Ctrl+Z` annule, `Échap` ferme la modale, `Entrée` valide le
-   titre. Trois lignes de code, et c'est ce qui sépare une démonstration d'un outil.
-5. **États vides travaillés.** « Mon dessin » pour un nouvel utilisateur, et la liste admin
-   sans aucun dessin, sont des écrans réellement vus. Un cadre en pointillés avec « Aucun
-   dessin — commencez à dessiner » vaut mieux qu'une page vide.
-6. **Pas de scintillement au chargement.** Les vignettes se rendent depuis les traits : prévoir
-   un squelette à la hauteur finale, sinon la grille saute quand les données arrivent.
+1. **Replay starts when a drawing is opened, not on a click.** The drawing rebuilds stroke by
+   stroke, automatically, in two seconds. It is the project's striking effect, and on its own it
+   demonstrates that geometry was stored rather than an image. Hiding it behind a button loses
+   it.
+2. **Light, and light only.** The project owner's choice: one appearance to design and to check.
+   A consequence to handle in the drawing lot: on a white background, the light hues of the
+   stroke palette (yellow `#eab308` at 1.9:1, green, cyan) stand out poorly — the palette will be
+   adjusted to reach at least 3:1, the WCAG minimum for a graphical element.
+3. **The toolbar sits below the canvas**, never over it (see above).
+4. **Keyboard shortcuts**: `Cmd/Ctrl+Z` undoes, `Escape` closes the modal, `Enter` submits the
+   title. Three lines of code, and that is what separates a demo from a tool.
+5. **Empty states are worked on.** "My drawing" for a new user, and the admin list with no
+   drawings, are screens that will genuinely be seen. A dashed frame saying "No drawing — start
+   drawing" beats an empty page.
+6. **No flicker on load.** Thumbnails render from the strokes: plan a skeleton at the final
+   height, or the grid jumps when the data lands.
 
 ### Design tokens
 
-Un seul fichier, `frontend/src/style.css`, sans fichier de configuration JavaScript :
+One single file, `frontend/src/style.css`, with no JavaScript configuration file:
 
 ```css
 @import "tailwindcss";
-@plugin "daisyui" { themes: false; }   /* aucun thème fourni, aucune variante sombre */
+@plugin "daisyui" { themes: false; }   /* no shipped theme, no dark variant */
 
-/* Thème DaisyUI sur mesure — ce qui évite de livrer l'apparence par défaut de l'outil. */
+/* A custom DaisyUI theme — which is what avoids shipping the tool's default look. */
 @plugin "daisyui/theme" {
   name: "soniclight";
   default: true;
   color-scheme: light;
 
-  --color-base-100:  #ffffff;   /* cartes, modale */
-  --color-base-200:  #f4f4f5;   /* fond de page */
-  --color-base-300:  #e4e4e7;   /* bordures */
-  --color-base-content: #18181b; /* 17,7:1 sur blanc */
-  --color-primary:   #6d4aff;   /* l'unique accent — 5,2:1 avec du texte blanc */
+  --color-base-100:  #ffffff;   /* cards, modal */
+  --color-base-200:  #f4f4f5;   /* page background */
+  --color-base-300:  #e4e4e7;   /* borders */
+  --color-base-content: #18181b; /* 17.7:1 on white */
+  --color-primary:   #6d4aff;   /* the single accent — 5.2:1 with white text */
   --color-primary-content: #ffffff;
-  --color-success:   #15803d;   /* toast de succès — 5,0:1 avec du texte blanc */
-  --color-error:     #b91c1c;   /* une erreur doit se voir */
-  /* secondary, accent, neutral, info, warning : niveaux de gris */
+  --color-success:   #15803d;   /* success toast — 5.0:1 with white text */
+  --color-error:     #b91c1c;   /* an error has to be seen */
+  /* secondary, accent, neutral, info, warning: greys */
 }
 ```
 
-> **Le violet est assombri par rapport à la première version** (`#7c5cff` → `#6d4aff`) : sur
-> fond clair, du texte blanc sur `#7c5cff` ne donne que 4,35:1, sous le seuil AA de 4,5:1.
-> Les ratios sont calculés, pas estimés à l'œil.
+> **The violet was darkened from the first version** (`#7c5cff` → `#6d4aff`): on a light
+> background, white text on `#7c5cff` only reaches 4.35:1, below the AA threshold of 4.5:1. The
+> ratios are calculated, not eyeballed.
 
-> **Les couleurs de trait ne sont pas des tokens de thème.** Elles sont **des données** : elles
-> arrivent du `jsonb` d'un dessin et se posent en variable CSS en ligne
-> (`:style="{ '--stroke': stroke.color }"`), jamais en classe générée dynamiquement — une
-> classe construite à l'exécution n'existe pas dans la sortie de Tailwind, qui ne connaît que
-> ce qu'il a lu dans les fichiers source. C'est le piège classique, et il est silencieux : la
-> couleur disparaît en production sans erreur.
+> **Stroke colours are not theme tokens.** They are **data**: they arrive from a drawing's
+> `jsonb` and are applied through an inline CSS variable
+> (`:style="{ '--stroke': stroke.color }"`), never as a dynamically generated class — a class
+> built at runtime does not exist in Tailwind's output, which only knows what it read in the
+> source files. It is the classic trap, and it is silent: the colour disappears in production
+> with no error.
 
-Palette de dessin — six teintes réparties sur le cercle chromatique, pour que le mapping
-teinte → timbre distingue clairement les quatre formes d'onde :
+Drawing palette — six hues spread around the colour wheel, so that the hue → timbre mapping
+clearly distinguishes the four waveforms:
 
-| Couleur | Hex       | Forme d'onde associée |
+| Colour  | Hex       | Associated waveform   |
 | ------- | --------- | --------------------- |
-| Rouge   | `#e11d48` | `sawtooth`            |
+| Red     | `#e11d48` | `sawtooth`            |
 | Orange  | `#f97316` | `sawtooth`            |
-| Jaune   | `#eab308` | `square`              |
-| Vert    | `#22c55e` | `triangle`            |
+| Yellow  | `#eab308` | `square`              |
+| Green   | `#22c55e` | `triangle`            |
 | Cyan    | `#06b6d4` | `sine`                |
 | Violet  | `#8b5cf6` | `sine`                |
 
-### Accessibilité
+### Accessibility
 
-Le minimum, mais fait : focus visible sur tous les contrôles, `aria-label` sur chaque bouton
-icône seul, palette de couleurs annoncée par son nom et non par sa seule pastille, contraste
-du texte vérifié sur fond clair (ratios WCAG AA calculés, voir les tokens).
+The minimum, but done: visible focus on every control, an `aria-label` on every icon-only
+button, the colour palette announced by name rather than by its swatch alone, text contrast
+checked on a light background (WCAG AA ratios calculated, see the tokens).
 
-Le canvas lui-même n'est pas accessible au clavier — c'est une limite réelle du produit, à
-citer honnêtement en entretien plutôt qu'à masquer.
+The canvas itself is not keyboard-accessible — a real limit of the product, to be named honestly
+in the interview rather than hidden.
 
 ---
 
-## 16. Docker, déploiement & variables d'environnement
+## 16. Docker, deployment & environment variables
 
-### `docker compose` — trois services
+### `docker compose` — three services
 
 ```yaml
 services:
-  db:      # postgres:16-alpine, volume nommé, healthcheck pg_isready
-  server:  # build ./backend, depends_on db (condition: service_healthy), migrate deploy + seed (dev uniquement)
-  client:  # build ./frontend, VITE_API_URL en build arg, vite preview sur 5173
+  db:      # postgres:16-alpine, named volume, pg_isready healthcheck
+  server:  # build ./backend, depends_on db (condition: service_healthy), migrate deploy + seed (dev only)
+  client:  # build ./frontend, VITE_API_URL as a build arg, vite preview on 5173
 ```
 
-**Le client est containerisé pour la démonstration locale, pas pour le déploiement.** La
-distinction est toute la décision : `docker compose up --build` doit donner une application
-qui marche, pas les deux tiers d'une ; mais le front continue de partir en `dist/` sur un CDN,
-et l'image client ne sera **jamais** déployée.
+**The client is containerised for local demonstration, not for deployment.** That distinction is
+the whole decision: `docker compose up --build` has to give a working application, not two
+thirds of one; but the front still ships as a `dist/` on a CDN, and the client image will
+**never** be deployed.
 
-La preuve que ce n'est pas un artefact de déploiement est dans l'image elle-même : on y
-retrouve `http://localhost:3000` en dur dans le bundle JavaScript.
+The proof that it is not a deployment artifact is in the image itself: `http://localhost:3000`
+is hard-coded in the JavaScript bundle.
 
-Ce que ça coûte, et qu'il faut savoir énoncer :
+What that costs, and what has to be stated:
 
-- **`VITE_*` est inliné au build, jamais lu à l'exécution.** L'URL de l'API passe donc en
-  `build arg`, et l'image est liée à une API précise. On ne peut plus promouvoir un artefact
-  d'un environnement à l'autre — il faudrait injecter la configuration au démarrage
-  (`envsubst` sur un gabarit d'`index.html`) pour redonner à l'image son indépendance.
-- **Ça fait une troisième topologie.** Développement = serveur Vite ; production = CDN ;
-  Docker = `vite preview`. Trois façons de servir les mêmes fichiers, assumées parce que la
-  troisième ne sert qu'à démarrer le projet en une commande.
-- **`vite preview` n'est pas un serveur de production**, Vite le dit lui-même. C'est
-  acceptable ici précisément parce que cette image ne quitte pas la machine du relecteur.
+- **`VITE_*` is inlined at build time, never read at runtime.** The API URL therefore goes in as
+  a `build arg`, and the image is tied to one specific API. An artifact can no longer be
+  promoted from one environment to another — the configuration would have to be injected at
+  startup (`envsubst` on an `index.html` template) to give the image its independence back.
+- **It makes a third topology.** Development = the Vite server; production = a CDN; Docker =
+  `vite preview`. Three ways of serving the same files, owned because the third only exists to
+  start the project in one command.
+- **`vite preview` is not a production server**, as Vite says itself. It is acceptable here
+  precisely because this image never leaves the reviewer's machine.
 
-> **Ce qui ferait basculer la décision dans l'autre sens** : une infrastructure déjà en
-> Kubernetes, ou le besoin de servir le front derrière le même domaine que l'API pour
-> supprimer le CORS. L'image client deviendrait alors l'artefact de déploiement, et la
-> configuration à l'exécution deviendrait obligatoire.
+> **What would flip the decision the other way**: an infrastructure already on Kubernetes, or
+> the need to serve the front behind the same domain as the API to remove CORS. The client image
+> would then become the deployment artifact, and runtime configuration would become mandatory.
 
-Docker garde donc son utilité là où elle est réelle : reproduire **Postgres**, qu'un relecteur
-n'a pas forcément installé en version 16, et empaqueter l'API telle qu'elle sera déployée. Le
-bonus Docker de l'énoncé reste coché — un `docker compose up` qui donne une API fonctionnelle
-avec sa base, c'est du Docker.
+Docker therefore keeps its usefulness where it is real: reproducing **Postgres**, which a
+reviewer has not necessarily installed in version 16, and packaging the API as it will be
+deployed. The brief's Docker bonus is still ticked — a `docker compose up` that gives a working
+API with its database is Docker.
 
-| Point d'attention                                         | Pourquoi                                                                                              |
+| Point to watch                                            | Why                                                                                                   |
 | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `healthcheck` sur `db` + `condition: service_healthy`      | `depends_on` seul attend que le conteneur démarre, pas que Postgres accepte les connexions — l'API planterait au premier démarrage |
-| `prisma migrate deploy` au lancement du serveur, pas `dev` | `deploy` applique les migrations existantes sans jamais en générer ni réinitialiser la base           |
-| En production, le seed ne crée que les comptes `USER`      | Leurs mots de passe sont publics mais sans privilège ; l'`ADMIN`, lui, peut supprimer le travail de tous et se crée à la main |
-| En production, les migrations passent par le hook de release de l'hébergeur, pas par le démarrage du conteneur | Une migration qui échoue doit annuler le déploiement, pas mettre l'application en boucle de redémarrage |
-| Image serveur en une seule étape                           | Le plus simple qui marche, et la CLI Prisma reste dans l'image — c'est ce qui permet au hook de release d'y lancer `migrate deploy`. Le prix est la taille, qu'un build multi-étapes diviserait |
-| Volume nommé pour les données Postgres                     | `docker compose down` ne perd pas les dessins ; `down -v` les efface volontairement                   |
-| `.dockerignore` dans `backend/`                             | Sans lui, `node_modules` part dans le contexte de build et le rend dix fois plus lent                  |
+| `healthcheck` on `db` + `condition: service_healthy`       | `depends_on` alone waits for the container to start, not for Postgres to accept connections — the API would crash on first start |
+| `prisma migrate deploy` when the server starts, not `dev`  | `deploy` applies existing migrations without ever generating one or resetting the database            |
+| In production the seed only creates the `USER` accounts    | Their passwords are public but carry no privilege; the `ADMIN` can delete everybody's work and is created by hand |
+| In production, migrations go through the host's release hook, not the container start | A failed migration must abort the deployment, not put the application in a restart loop |
+| A single-stage server image                                | The simplest thing that works, and the Prisma CLI stays in the image — which is what lets the release hook run `migrate deploy` there. The price is size, which a multi-stage build would divide |
+| A named volume for the Postgres data                       | `docker compose down` does not lose the drawings; `down -v` erases them on purpose                    |
+| A `.dockerignore` in `backend/`                            | Without it, `node_modules` goes into the build context and makes it ten times slower                  |
 
-### Déploiement — front et API séparés
+### Deployment — front and API separate
 
-| Brique      | Cible                                                  | Mécanisme                                                    |
+| Piece       | Target                                                 | Mechanism                                                    |
 | ----------- | ------------------------------------------------------ | ------------------------------------------------------------ |
-| **Front**   | CDN statique (Vercel, Netlify ou GitHub Pages)         | Build Vite → `dist/` publié                                  |
-| **API**     | Hébergeur de conteneurs (Railway, Render, Fly.io)      | Le `Dockerfile` de `backend/`                                 |
-| **Base**    | Postgres managé (celui de l'hébergeur, ou Neon)        | `DATABASE_URL` fournie par l'hébergeur                       |
+| **Front**   | A static CDN (Vercel, Netlify or GitHub Pages)         | Vite build → `dist/` published                               |
+| **API**     | A container host (Railway, Render, Fly.io)             | The `Dockerfile` in `backend/`                                |
+| **Database**| Managed Postgres (the host's own, or Neon)             | `DATABASE_URL` provided by the host                          |
 
-Deux domaines distincts, donc **un vrai cross-origin en production** — ce que la configuration
-de développement reproduit déjà à l'identique ([§12](#12-authentification)).
+Two distinct domains, therefore **real cross-origin in production** — which the development
+configuration already reproduces identically ([§12](#12-authentication)).
 
-**Les trois pièges du déploiement, dans l'ordre où ils se présentent :**
+**The three deployment traps, in the order they appear:**
 
-1. **`VITE_API_URL` est inliné au build, pas lu à l'exécution.** Le définir dans les variables
-   d'environnement du service après coup ne change rien : il faut rebuilder. C'est l'erreur
-   la plus fréquente de ce montage, et elle se manifeste par un front qui appelle
-   `undefined/api/drawing`.
-2. **GitHub Pages demande deux réglages que Vercel et Netlify font seuls.** Le site est servi
-   depuis un sous-chemin (`/nom-du-depot/`), donc `base` doit être renseigné dans
-   `vite.config.ts`, sinon aucun asset ne se charge. Et une SPA a besoin d'un repli pour les
-   routes profondes : sur Pages, ça se règle en copiant `index.html` en `404.html` ; Vercel et
-   Netlify ont un réglage natif (`rewrites` / `_redirects`). **Recommandation : Vercel ou
-   Netlify**, qui suppriment les deux problèmes et déploient sur simple `git push`.
-3. **`CLIENT_ORIGINS` doit contenir l'origine exacte** du front déployé — schéma compris, sans
-   slash final. Une liste, pas une valeur unique : l'origine de développement et celle de
-   production y coexistent.
+1. **`VITE_API_URL` is inlined at build time, not read at runtime.** Setting it in the service's
+   environment variables afterwards changes nothing: it needs a rebuild. It is the most frequent
+   mistake in this setup, and it shows up as a front calling `undefined/api/drawing`.
+2. **GitHub Pages needs two settings that Vercel and Netlify handle alone.** The site is served
+   from a sub-path (`/repo-name/`), so `base` must be set in `vite.config.ts`, or no asset
+   loads. And a SPA needs a fallback for deep routes: on Pages that means copying `index.html`
+   to `404.html`; Vercel and Netlify have a native setting (`rewrites` / `_redirects`).
+   **Recommendation: Vercel or Netlify**, which remove both problems and deploy on a plain
+   `git push`.
+3. **`CLIENT_ORIGINS` must hold the exact origin** of the deployed front — scheme included, no
+   trailing slash. A list, not a single value: the development origin and the production one
+   coexist there.
 
-Sur les paliers gratuits, le service API et la base managée se mettent en veille après
-inactivité : le premier appel après une pause prend quelques secondes. Sans conséquence
-fonctionnelle, mais à mentionner dans le README pour qu'un relecteur ne prenne pas la latence
-initiale pour un défaut.
+On free tiers, the API service and the managed database go to sleep after inactivity: the first
+call after a pause takes a few seconds. No functional consequence, but worth mentioning in the
+README so a reviewer does not read the initial latency as a defect.
 
 ### CI — GitHub Actions
 
-Un workflow, `.github/workflows/ci.yml`, déclenché sur chaque `push` et chaque
-`pull_request` :
+One workflow, `.github/workflows/ci.yml`, triggered on every `push` and every `pull_request`:
 
 ```yaml
 jobs:
@@ -1490,61 +1458,59 @@ jobs:
   client:   # npm ci → npm run type-check → npm run build
 ```
 
-| Point d'attention                                | Pourquoi                                                                                     |
+| Point to watch                                   | Why                                                                                          |
 | ------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
-| `npx prisma generate` avant le typecheck serveur | Sans le client généré, `tsc` échoue sur des types absents — l'erreur n'indique jamais la cause  |
-| `npm ci`, jamais `npm install`                   | `ci` respecte le lockfile à la lettre ; `install` peut le réécrire et masquer une dérive        |
-| `package-lock.json` généré sur la même plateforme| Un lockfile produit sur macOS peut omettre des résolutions Linux et faire échouer `npm ci` en CI |
-| Cache npm via `actions/setup-node`               | `cache: "npm"` avec le chemin du lockfile — quelques secondes par run, gratuit                   |
-| Matrice inutile ici                              | Une seule version de Node (22 LTS). Tester trois versions sur un exercice serait de la cérémonie |
+| `npx prisma generate` before the server typecheck | Without the generated client, `tsc` fails on missing types — and the error never names the cause |
+| `npm ci`, never `npm install`                     | `ci` honours the lockfile to the letter; `install` can rewrite it and hide a drift              |
+| A `package-lock.json` generated on the same platform | A lockfile produced on macOS can omit Linux-only resolutions and break `npm ci` in CI        |
+| An npm cache through `actions/setup-node`         | `cache: "npm"` with the lockfile path — a few seconds per run, for free                         |
+| No matrix here                                    | A single Node version (22 LTS). Testing three versions on an exercise would be ceremony         |
 
-### CD — le déploiement de l'API et les migrations
+### CD — deploying the API, and migrations
 
-Le CD du backend pose une question que le front n'a pas : **où tournent les migrations de
-base de données ?** C'est le cœur du sujet, bien avant le choix de l'outil qui déclenche le
-déploiement.
+The backend's CD raises a question the front does not: **where do database migrations run?**
+That is the heart of the matter, well before the choice of the tool that triggers the deployment.
 
-#### Où tournent `prisma migrate deploy` — trois emplacements, un seul recommandé
+#### Where `prisma migrate deploy` runs — three places, one recommendation
 
-| Emplacement                               | Verdict | Pourquoi                                                                                                                                                                  |
-| ----------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Au **démarrage du conteneur**             | ❌       | Tourne à chaque redémarrage et sur chaque réplique. Surtout : une migration qui échoue fait planter l'application **en boucle**, au lieu d'échouer une fois, proprement       |
-| Dans un **job GitHub Actions**            | ⚠️       | Marche, mais oblige à exposer la base de production aux plages d'adresses de GitHub et à stocker `DATABASE_URL` en secret de dépôt. Une surface d'exposition pour rien        |
-| Dans le **hook de release de l'hébergeur**| ✅       | `release_command` chez Fly.io, *pre-deploy command* chez Render, équivalent chez Railway. Tourne une fois, dans le réseau de l'hébergeur, **et fait échouer le déploiement** si la migration échoue — l'ancienne version reste en ligne |
+| Place                                     | Verdict | Why                                                                                                                                                                       |
+| ----------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| At **container start**                    | ❌       | Runs on every restart and on every replica. Above all: a failed migration crashes the application **in a loop**, instead of failing once, cleanly                           |
+| In a **GitHub Actions job**               | ⚠️       | Works, but forces the production database to accept GitHub's address ranges and `DATABASE_URL` to live in repository secrets. Exposure for nothing                          |
+| In the **host's release hook**            | ✅       | `release_command` on Fly.io, a *pre-deploy command* on Render, the equivalent on Railway. Runs once, inside the host's network, **and fails the deployment** if the migration fails — the previous version stays online |
 
-Le troisième est le bon, et l'argument tient en une phrase : **une migration qui échoue doit
-annuler le déploiement, pas mettre l'application en boucle de redémarrage.**
+The third is the right one, and the argument fits in one sentence: **a failed migration must
+abort the deployment, not put the application in a restart loop.**
 
-> `prisma migrate deploy` est idempotent et prend un verrou consultatif Postgres, donc deux
-> exécutions concurrentes ne se marchent pas dessus. Ce n'est pas la concurrence le problème
-> du démarrage-conteneur, c'est le mode d'échec.
+> `prisma migrate deploy` is idempotent and takes a Postgres advisory lock, so two concurrent
+> runs do not step on each other. Concurrency is not the problem with running at container
+> start; the failure mode is.
 
-#### Le seed ne crée **jamais** d'administrateur en production
+#### The seed **never** creates an administrator in production
 
-Le `docker-compose` local lance `migrate deploy` **puis** le seed complet. Le déploiement
-lance `migrate deploy`, et le seed n'y crée que les comptes `USER` et leurs dessins.
+The local `docker-compose` runs `migrate deploy` **then** the full seed. The deployment runs
+`migrate deploy`, and there the seed only creates the `USER` accounts and their drawings.
 
-La distinction se joue sur le rôle, pas sur l'environnement : ces mots de passe sont dans un
-dépôt public, mais un utilisateur n'atteint que son propre dessin — l'inscription est ouverte,
-n'importe qui obtiendrait le même accès — alors que l'administrateur peut supprimer le travail
-de tous. Le premier est une commodité de démonstration, le second serait une porte d'entrée.
+The distinction turns on the role, not on the environment: those passwords are in a public
+repository, but a user reaches nothing but their own drawing — registration is open, anyone
+would get the same access — whereas the administrator can delete everybody's work. The first is
+a demonstration convenience, the second would be a way in.
 
-En production, l'`ADMIN` est donc **retiré de la liste des comptes** plutôt que sauté par une
-condition dans la boucle : il ne peut pas être créé par un `if` oublié. Le compte
-d'administration de la démonstration est créé à la main, et son mot de passe n'existe nulle
-part dans le dépôt.
+In production the `ADMIN` is therefore **removed from the account list** rather than skipped by a
+condition inside the loop: it cannot be created by a forgotten `if`. The demonstration's admin
+account is created by hand, and its password exists nowhere in the repository.
 
-#### Ce qui déclenche le déploiement
+#### What triggers the deployment
 
-Même arbitrage que pour le front, et il dépend de l'hébergeur :
+The same arbitration as for the front, and it depends on the host:
 
-| Hébergeur de l'API   | Intégration Git native | Workflow Actions de déploiement |
+| API host             | Native Git integration | Actions deploy workflow           |
 | -------------------- | ---------------------- | --------------------------------- |
-| Render, Railway      | Oui                    | **Inutile** — ce serait dupliquer |
-| Fly.io               | Non                    | **Nécessaire** — `flyctl deploy`  |
+| Render, Railway      | Yes                    | **Pointless** — it would duplicate |
+| Fly.io               | No                     | **Needed** — `flyctl deploy`      |
 
-Avec Render ou Railway, la CI reste le seul workflow, et le déploiement suit le `push` sur
-`main`. Avec Fly.io, un second workflow devient légitime :
+With Render or Railway, CI stays the only workflow, and deployment follows a `push` to `main`.
+With Fly.io, a second workflow becomes legitimate:
 
 ```yaml
 # .github/workflows/deploy-api.yml
@@ -1553,216 +1519,213 @@ on:
     branches: [main]
     paths: ["backend/**", ".github/workflows/deploy-api.yml"]
 concurrency:
-  group: deploy-api          # jamais deux déploiements en vol en même temps
-  cancel-in-progress: false  # on laisse finir, on n'interrompt pas un déploiement
+  group: deploy-api          # never two deployments in flight at once
+  cancel-in-progress: false  # let one finish, do not interrupt a deployment
 jobs:
   deploy:
-    needs: [server]          # ne déploie que si la CI est verte
-    # flyctl deploy — la migration tourne dans le release_command de fly.toml
+    needs: [server]          # only deploy if CI is green
+    # flyctl deploy — the migration runs in fly.toml's release_command
 ```
 
-**Recommandation : Render ou Railway**, pour la même raison que Vercel côté front — moins de
-mécanique à écrire, et un workflow Actions de déploiement qui n'apporterait rien. Fly.io reste
-un choix valable si tu préfères piloter le déploiement depuis le dépôt.
+**Recommendation: Render or Railway**, for the same reason as Vercel on the front — less
+machinery to write, and an Actions deploy workflow that would add nothing. Fly.io remains a
+valid choice if you would rather drive deployment from the repository.
 
-> **Les paliers gratuits changent souvent** — durée de vie d'une base offerte, crédits
-> mensuels, mise en veille. Vérifier les conditions du jour sur le site de l'hébergeur plutôt
-> que de se fier à une comparaison écrite il y a six mois.
+> **Free tiers change often** — how long a free database lives, monthly credits, sleep
+> behaviour. Check today's terms on the host's site rather than trusting a comparison written
+> six months ago.
 
-#### Ce qu'on n'écrit pas
+#### What we do not write
 
-Pas d'environnement de préproduction, pas de déploiement bleu-vert, pas de rollback
-automatique, pas de migration réversible (`down`). Sur un exercice d'une semaine, la
-réversibilité, c'est « redéployer le commit précédent » — et savoir dire que le vrai sujet en
-production serait la **migration expand/contract** (ajouter une colonne, la remplir, basculer
-le code, puis seulement supprimer l'ancienne) vaut mieux que de l'implémenter ici pour deux
-tables.
+No staging environment, no blue-green deployment, no automatic rollback, no reversible (`down`)
+migrations. On a one-week exercise, reversibility means "redeploy the previous commit" — and
+being able to say that the real production subject would be **expand/contract migrations** (add
+a column, backfill it, switch the code, only then drop the old one) is worth more than
+implementing it here for two tables.
 
-### Variables d'environnement
+### Environment variables
 
 ```bash
-# backend/.env — jamais commité ; backend/.env.example l'est
+# backend/.env — never committed; backend/.env.example is
 DATABASE_URL="postgresql://soniclight:soniclight@localhost:5433/soniclight"
-JWT_SECRET=""              # généré : openssl rand -base64 32
+JWT_SECRET=""              # generated with: openssl rand -base64 32
 PORT="3000"
 NODE_ENV="development"
-CLIENT_ORIGINS="http://localhost:5173"   # liste d'origines autorisées par CORS, séparées par des virgules
+CLIENT_ORIGINS="http://localhost:5173"   # comma-separated list of origins allowed by CORS
 ```
 
 ```bash
-# frontend/.env — jamais commité ; frontend/.env.example l'est
-VITE_API_URL="http://localhost:3000"     # inliné au build (voir les pièges ci-dessus)
+# frontend/.env — never committed; frontend/.env.example is
+VITE_API_URL="http://localhost:3000"     # inlined at build time (see the traps above)
 ```
 
-Le client a donc **une** variable d'environnement, et une seule. C'est le prix du déploiement
-séparé, assumé au même titre que la configuration CORS.
+The client therefore has **one** environment variable, and one only. That is the price of
+separate deployment, owned in the same way as the CORS configuration.
 
-La configuration serveur est validée au démarrage par un schéma Zod dans `lib/env.ts` : une
-variable manquante fait échouer le boot avec un message clair, plutôt que de produire un
-`undefined` qui se manifestera en `JWT_SECRET` vide et en jetons signés avec une clé vide.
+The server configuration is validated at startup by a Zod schema in `lib/env.ts`: a missing
+variable fails the boot with a clear message, rather than producing an `undefined` that will
+surface as an empty `JWT_SECRET` and tokens signed with an empty key.
 
 ---
 
-## 17. Plan de commits
+## 17. Commit plan
 
-Git est un critère d'évaluation. L'historique cible, dans l'ordre :
+Git is a grading criterion. The target history, in order:
 
-| #   | Commit                                                        | Contenu                                           |
+| #   | Commit                                                        | Content                                           |
 | --- | ------------------------------------------------------------- | ------------------------------------------------- |
-| 1   | `chore: init repo, gitignore, readme skeleton`                | Le squelette. **Premier commit dès l'heure 1**    |
-| 2   | `chore(server): scaffold express + typescript`                | Le serveur répond sur `/api/health`               |
-| 3   | `chore(db): add docker compose with postgres`                 | La base démarre                                   |
-| 4   | `feat(db): add user and drawing models`                       | Schéma Prisma + première migration                |
-| 5   | `feat(auth): register, login, logout with httpOnly jwt`       | Backend d'authentification                        |
-| 6   | `feat(auth): require auth and admin middlewares`              | Les gardes                                        |
-| 7   | `chore(client): scaffold vue 3 + router + pinia`              | Le front démarre, `VITE_API_URL` et CORS câblés   |
-| 8   | `feat(client): login and register screens`                    | Le cycle d'authentification est bouclé de bout en bout |
-| 9   | `feat(drawing): canvas capture with normalised coordinates`   | **Le cœur du projet**                             |
-| 10  | `feat(drawing): color, width, undo and clear controls`        | La barre d'outils                                 |
-| 11  | `feat(drawing): save or replace the user's single drawing`    | API `PUT/GET/DELETE /api/drawing`                 |
-| 12  | `feat(drawing): open and render a saved drawing`              | « Retrouver son dessin »                          |
-| 13  | `feat(admin): list and moderate all drawings`                 | Liste, lecture, suppression — **le P0 est complet** |
-| 14  | `test(server): cover ownership isolation in drawing service`  | Les tests qui comptent                            |
-| 15  | `feat(db): seed demo users and drawings`                      | Le jeu de démonstration                           |
+| 1   | `chore: init repo, gitignore, readme skeleton`                | The skeleton. **First commit within hour 1**      |
+| 2   | `chore(server): scaffold express + typescript`                | The server answers on `/api/health`               |
+| 3   | `chore(db): add docker compose with postgres`                 | The database starts                               |
+| 4   | `feat(db): add user and drawing models`                       | Prisma schema + first migration                   |
+| 5   | `feat(auth): register, login, logout with httpOnly jwt`       | Authentication backend                            |
+| 6   | `feat(auth): require auth and admin middlewares`              | The guards                                        |
+| 7   | `chore(client): scaffold vue 3 + router + pinia`              | The front starts, `VITE_API_URL` and CORS wired   |
+| 8   | `feat(client): login and register screens`                    | The authentication cycle closes end to end        |
+| 9   | `feat(drawing): canvas capture with normalised coordinates`   | **The heart of the project**                      |
+| 10  | `feat(drawing): color, width, undo and clear controls`        | The toolbar                                       |
+| 11  | `feat(drawing): save or replace the user's single drawing`    | `PUT/GET/DELETE /api/drawing`                     |
+| 12  | `feat(drawing): open and render a saved drawing`              | "Finding your drawing again"                      |
+| 13  | `feat(admin): list and moderate all drawings`                 | List, read, delete — **P0 is complete**           |
+| 14  | `test(server): cover ownership isolation in drawing service`  | The tests that matter                             |
+| 15  | `feat(db): seed demo users and drawings`                      | The demo dataset                                  |
 | 16  | `feat(drawing): animate stroke-by-stroke replay`              | P1                                                |
-| 17  | `chore(docker): containerise the api and its database`        | P1 — le bonus Docker, puis le client pour un `up` complet |
+| 17  | `chore(docker): containerise the api and its database`        | P1 — the Docker bonus, then the client for a full `up` |
 | 18  | `ci: typecheck, test and build both packages on push`         | P1b — GitHub Actions                              |
-| 19  | `chore(db): gate the seed behind a non-production check`      | Avant tout déploiement, jamais après              |
-| 20  | `chore(deploy): configure api, database and static front`     | P1c — migrations dans le hook de release          |
+| 19  | `chore(db): gate the seed behind a non-production check`      | Before any deployment, never after                |
+| 20  | `chore(deploy): configure api, database and static front`     | P1c — migrations in the release hook              |
 | 21  | `feat(audio): sonify drawings with the web audio api`         | P2                                                |
-| 22  | `docs: document architecture choices and trade-offs`          | Le README final, avec le lien de la démo          |
+| 22  | `docs: document architecture choices and trade-offs`          | The final README, with the demo link              |
 
-> **Le commit 1 part le premier jour, pas le dernier.** Un `git log` dont tous les commits
-> portent la même date à trois minutes d'intervalle contredit l'énoncé de façon visible, quelle
-> que soit la qualité du code. Committer au fil de l'eau n'est pas une performance : c'est une
-> trace.
+> **Commit 1 goes out on day one, not on the last day.** A `git log` whose commits all carry the
+> same date three minutes apart contradicts the brief visibly, whatever the quality of the code.
+> Committing as you go is not a performance: it is a trace.
 
-> Les commits 16 à 22 sautent sans dommage si le temps manque. Les commits 1 à 15 forment un
-> livrable cohérent et suffisant. Si un seul devait être sauvé parmi les bonus, ce serait le
-> 20 : un lien cliquable change la façon dont le projet est reçu. Le 19 n'est pas optionnel
-> dès lors que le 20 existe.
+> Commits 16 to 22 can be dropped without damage if time runs short. Commits 1 to 15 form a
+> coherent and sufficient deliverable. If one bonus had to be saved, it would be 20: a clickable
+> link changes how the project is received. And 19 stops being optional as soon as 20 exists.
 
 ---
 
-## 18. Règles d'ingénierie
+## 18. Engineering rules
 
 ### Collaboration
 
-| #   | Règle                                                                                       |
+| #   | Rule                                                                                        |
 | --- | ------------------------------------------------------------------------------------------- |
-| 1   | Annoncer le plan avant toute étape non triviale, et attendre l'accord.                      |
-| 2   | Aucun fichier que Quentin ne puisse relire d'une traite. Pas de génération en masse.        |
-| 3   | Un commit par étape cohérente qui compile. Jamais de `wip`, jamais de dump final.           |
-| 4   | Pas de nouvelle dépendance sans validation. La liste du [§5](#5-architecture-système) est figée. |
-| 5   | `tsc --noEmit`, `npm run type-check`, `npm test`, `npm run build` passent avant de rendre la main. |
-| 6   | Aucune ligne de P1 avant la fin du P0, aucune ligne de P2 avant la fin du P1.               |
+| 1   | Announce the plan before any non-trivial step, and wait for agreement.                      |
+| 2   | No file Quentin cannot read in one pass. No mass generation.                                |
+| 3   | One commit per coherent step that compiles. Never `wip`, never a final dump.                |
+| 4   | No new dependency without approval. The list in [§5](#5-system-architecture) is frozen.     |
+| 5   | `tsc --noEmit`, `npm run type-check`, `npm test`, `npm run build` all pass before handing back. |
+| 6   | Not a line of P1 before P0 is finished, not a line of P2 before P1 is.                      |
 
 ### Architecture
 
-| #   | Règle                                                                                         |
+| #   | Rule                                                                                          |
 | --- | --------------------------------------------------------------------------------------------- |
-| 7   | Couches à sens unique : Route → Controller → Service → Prisma.                                |
-| 8   | Seul un service importe `prisma`. Un controller qui l'importe est un bug.                     |
-| 9   | Un service ne connaît ni `req` ni `res` ; il lève une `AppError`, qui porte son statut.       |
-| 10  | Pas de couche repository par-dessus Prisma.                                                   |
-| 11  | On abstrait au troisième cas réel, pas au premier.                                            |
-| 12  | Une fonction de rendu des traits, partagée par l'édition, la lecture et la vignette.          |
+| 7   | One-way layering: Route → Controller → Service → Prisma.                                      |
+| 8   | Only a service imports `prisma`. A controller that imports it is a bug.                       |
+| 9   | A service knows neither `req` nor `res`; it throws an `AppError`, which carries its status.   |
+| 10  | No repository layer on top of Prisma.                                                         |
+| 11  | Abstract on the third real case, not the first.                                               |
+| 12  | One stroke-rendering function, shared by editing, reading and the thumbnail.                  |
 
-### Données & sécurité
+### Data & security
 
-| #   | Règle                                                                                              |
+| #   | Rule                                                                                               |
 | --- | -------------------------------------------------------------------------------------------------- |
-| 13  | Toute lecture ou écriture d'un dessin prend le `userId` en paramètre. Sans exception.              |
-| 14  | L'accès admin passe par une fonction de service distincte, jamais par un `userId?` optionnel.      |
-| 15  | Une ressource appartenant à un autre utilisateur renvoie **404**, jamais 403.                      |
-| 16  | Tout corps de requête est validé par un schéma Zod avant d'atteindre un service.                   |
-| 17  | Le `data` d'un dessin est parsé par `DrawingDataSchema`, jamais casté avec `as`.                    |
-| 18  | Les coordonnées sont normalisées dans `[0, 1]`. Aucun pixel ne franchit jamais la frontière réseau. |
-| 19  | `passwordHash` ne sort jamais d'un service. Les DTO de sortie sont construits explicitement.        |
-| 20  | Tout changement de schéma passe par une migration Prisma générée. Jamais `db push`.                |
-| 21  | `.env` n'est jamais commité. `.env.example` l'est, avec des valeurs factices.                       |
-| 30  | Le seed ne crée **jamais** d'`ADMIN` en production : le rôle est retiré de la liste, pas sauté par un `if`. |
-| 31  | En production, les migrations tournent dans le hook de release de l'hébergeur, jamais au démarrage du conteneur. |
+| 13  | Every read or write of a drawing takes the `userId` as a parameter. No exception.                  |
+| 14  | Admin access goes through a distinct service function, never an optional `userId?`.                |
+| 15  | A resource belonging to another user returns **404**, never 403.                                   |
+| 16  | Every request body is validated by a Zod schema before reaching a service.                         |
+| 17  | A drawing's `data` is parsed by `DrawingDataSchema`, never cast with `as`.                          |
+| 18  | Coordinates are normalised within `[0, 1]`. No pixel ever crosses the network boundary.            |
+| 19  | `passwordHash` never leaves a service. Output DTOs are built explicitly.                            |
+| 20  | Every schema change goes through a generated Prisma migration. Never `db push`.                     |
+| 21  | `.env` is never committed. `.env.example` is, with placeholder values.                              |
+| 30  | The seed **never** creates an `ADMIN` in production: the role is removed from the list, not skipped by an `if`. |
+| 31  | In production, migrations run in the host's release hook, never at container start.                 |
 
 ### Frontend
 
-| #   | Règle                                                                                       |
+| #   | Rule                                                                                        |
 | --- | ------------------------------------------------------------------------------------------- |
-| 22  | Les appels API passent tous par `api/http.ts`, qui préfixe `VITE_API_URL`. Aucune URL d'API en dur ailleurs. |
-| 23  | Le canvas utilise `pointer*`, jamais `mouse*` ni `touch*`.                                  |
-| 24  | Le backing store du canvas est dimensionné avec `devicePixelRatio`.                         |
-| 25  | La garde de route Vue est un confort d'interface ; la sécurité est le middleware serveur.   |
-| 26  | `AudioContext` n'est créé ou repris que dans un gestionnaire d'événement utilisateur.       |
-| 27  | **Aucun `v-html`, nulle part.** Le jeton vit en `localStorage` : le XSS est le risque n°1 ([§12](#12-authentification)). |
-| 28  | Le store `auth` possède le jeton (seul accès à `localStorage`) ; `api/http.ts` est le seul à l'envoyer. Le client HTTP ne navigue pas. |
-| 29  | Le rôle affiché vient de `GET /api/auth/me`, jamais du payload du JWT décodé côté client.   |
+| 22  | API calls all go through `api/http.ts`, which prefixes `VITE_API_URL`. No hard-coded API URL anywhere else. |
+| 23  | The canvas uses `pointer*`, never `mouse*` or `touch*`.                                     |
+| 24  | The canvas backing store is sized with `devicePixelRatio`.                                  |
+| 25  | The Vue route guard is interface comfort; security is the server middleware.                |
+| 26  | `AudioContext` is only created or resumed inside a user event handler.                      |
+| 27  | **No `v-html`, anywhere.** The token lives in `localStorage`: XSS is risk number one ([§12](#12-authentication)). |
+| 28  | The `auth` store owns the token (the only access to `localStorage`); `api/http.ts` is the only code that sends it. The HTTP client does not navigate. |
+| 29  | The displayed role comes from `GET /api/auth/me`, never from a JWT payload decoded client-side. |
 
 ---
 
-## 19. Questions ouvertes
+## 19. Open questions
 
-### À poser à l'IRCAM avant de développer
+### To ask IRCAM before developing
 
-| #   | Question                                                                            | Hypothèse retenue en attendant                                                                                        |
+| #   | Question                                                                            | Working assumption meanwhile                                                                                          |
 | --- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Q1  | Le compte administrateur est-il attribué (seed / variable d'environnement) ou un utilisateur peut-il s'inscrire comme admin ? | Attribué au seed. Aucune escalade possible depuis l'interface                                                          |
-| Q2  | Un utilisateur a-t-il **un** dessin ou **plusieurs** ? L'énoncé dit « son dessin » au singulier, puis « les dessins enregistrés par les différents utilisateurs » au pluriel | ~~Plusieurs~~ → **Un seul, remplaçable** (réponse IRCAM). `userId` unique, `PUT /api/drawing` |
-| Q3  | L'admin doit-il pouvoir supprimer ou modérer, ou seulement consulter ?              | ~~Consulter seulement~~ → **Il peut modérer, notamment supprimer** (réponse IRCAM) |
-| Q4  | Les dessins doivent-ils être publics entre utilisateurs, ou strictement privés hors admin ? | **Strictement privés** — hypothèse confirmée par l'IRCAM                                  |
+| Q1  | Is the administrator account assigned (seed / environment variable), or can a user register as an admin? | Assigned at seed time. No escalation possible from the interface                                  |
+| Q2  | Does a user have **one** drawing or **several**? The brief says "their drawing" in the singular, then "the drawings saved by the different users" in the plural | ~~Several~~ → **One, replaceable** (IRCAM's answer). `userId` unique, `PUT /api/drawing` |
+| Q3  | Should the admin be able to delete or moderate, or only to review?                  | ~~Review only~~ → **They can moderate, deletion included** (IRCAM's answer) |
+| Q4  | Should drawings be public between users, or strictly private outside the admin?     | **Strictly private** — assumption confirmed by IRCAM                                      |
 
-**Réponses reçues le 17 septembre 2026** (reprises dans `@context/exercise-brief.md`). Deux
-hypothèses sur trois étaient fausses : c'est exactement pour ça que la question devait être
-posée avant d'écrire le code métier. Le coût du changement s'est limité à une migration,
-parce qu'aucun service ni écran n'existait encore. L'IRCAM a aussi précisé que l'application
-doit être **responsive** (desktop et mobile) et laissé **le mapping de sonification libre**.
+**Answers received on 17 September 2026.** Two assumptions out of three were wrong: that is
+exactly why the question had to be asked before writing any business code. The cost of the
+change was limited to one migration, because no service and no screen existed yet. IRCAM also
+specified that the application must be **responsive** (desktop and mobile) and left the
+**sonification mapping free**.
 
-### Tranchées unilatéralement — sujets d'entretien
+### Settled unilaterally — interview material
 
-| #   | Question                                                          | Décision                                                                                                                                       |
+| #   | Question                                                          | Decision                                                                                                                                       |
 | --- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Q5  | Simplifier les trajectoires avec Ramer–Douglas–Peucker ?          | Non. Un filtre par distance minimale suffit et tient en cinq lignes. RDP serait la bonne évolution si le volume devenait un problème            |
-| Q6  | Package partagé pour les types entre client et serveur ?          | Non. Vingt lignes dupliquées avec un en-tête explicite, plutôt qu'un workspace npm. Premier chantier si le projet grossissait                   |
-| Q7  | Stocker un horodatage par point pour rejouer au tempo réel ?      | Non en P0. Le rejeu est à vitesse constante. C'est l'évolution la plus séduisante du format — et elle ne coûterait qu'un champ (`t`) de plus     |
-| Q8  | Vignette PNG pré-calculée en base ?                               | Non. Rendue côté client depuis les traits. Dupliquer la source de vérité pour vingt cartes ne se justifie pas                                   |
-| Q9  | Édition d'un dessin déjà enregistré ?                             | Hors périmètre. On crée, on consulte, on supprime. L'édition ouvrirait la question du versionnement, sans rapport avec ce qui est évalué        |
-| Q15 | Bibliothèque de composants pour l'interface ?                     | Tailwind 4 + DaisyUI 5 avec un **thème sur mesure**, et rien d'autre. DaisyUI est un plugin purement CSS : aucun JavaScript, aucune API de composant à apprendre. Il couvre le générique (boutons, champs, cartes, modale) ; le canvas, la barre d'outils et la palette sont écrits à la main, parce que c'est là que vit l'identité du produit ([§15](#15-uiux--design-tokens)) |
-| Q10 | Tests end-to-end (Playwright) ?                                   | Non. Les tests unitaires sur l'isolation par utilisateur couvrent le risque réel ; un E2E coûterait deux heures pour une couverture superficielle |
-| Q11 | Déploiement en ligne d'une démonstration ?                        | **Oui.** Front statique sur CDN, API en conteneur, base managée — trois briques déployées séparément ([§16](#16-docker-déploiement--variables-denvironnement)). Un lien cliquable change la façon dont le projet est reçu : un relecteur voit le produit avant de lire le code. Budgété à 3 h, coupable en dernier recours |
-| Q13 | Pipeline CI/CD complète en GitHub Actions ?                       | **CI oui, CD selon l'hébergeur.** La CI vérifie types, tests et build à chaque push — rien d'autre ne le fait. Le déclenchement du déploiement passe par l'intégration Git de l'hébergeur quand il en a une (Vercel, Render, Railway) ; un workflow Actions n'est écrit que chez Fly.io, qui n'en a pas ([§16](#16-docker-déploiement--variables-denvironnement)) |
-| Q14 | Où tournent les migrations au déploiement ?                       | Dans le **hook de release de l'hébergeur**, jamais au démarrage du conteneur ni depuis un runner Actions. Au démarrage, une migration ratée fait boucler l'application ; dans un hook de release, elle échoue une fois et annule le déploiement, l'ancienne version restant en ligne. Depuis un runner, il faudrait exposer la base de production aux adresses de GitHub ([§16](#16-docker-déploiement--variables-denvironnement)) |
-| Q12 | Jeton en `localStorage` ou en cookie `httpOnly` ?                 | `localStorage` + en-tête `Bearer`. Pattern standard d'une SPA devant une API sans état, maîtrisé, et qui garde l'API indépendante du navigateur. **Le risque XSS est assumé**, compensé par l'absence totale de `v-html` et de dépendance frontend tierce, et par le fait qu'aucune donnée sensible n'est manipulée. Bascule vers le cookie `httpOnly` dès que l'un de ces trois points changerait ([§12](#12-authentification)) |
+| Q5  | Simplify paths with Ramer–Douglas–Peucker?                        | No. A minimum-distance filter is enough and fits in five lines. RDP would be the right evolution if volume became a problem                     |
+| Q6  | A shared package for the types between client and server?         | No. Twenty duplicated lines with an explicit header, rather than an npm workspace. The first thing to tackle if the project grew                |
+| Q7  | Store a timestamp per point to replay at the real tempo?          | Not in P0. Replay runs at constant speed. It is the most seductive evolution of the format — and it would cost one extra field (`t`)            |
+| Q8  | A pre-computed PNG thumbnail in the database?                     | No. Rendered client-side from the strokes. Duplicating the source of truth for twenty cards is not justified                                   |
+| Q9  | Editing an already-saved drawing?                                 | Out of scope. You create, you review, you delete. Editing would open the versioning question, unrelated to what is being graded                |
+| Q15 | A component library for the interface?                            | Tailwind 4 + DaisyUI 5 with a **custom theme**, and nothing else. DaisyUI is a purely CSS plugin: no JavaScript, no component API to learn. It covers the generic parts (buttons, fields, cards, modal); the canvas, the toolbar and the palette are hand-written, because that is where the product's identity lives ([§15](#15-uiux--design-tokens)) |
+| Q10 | End-to-end tests (Playwright)?                                    | No. Unit tests on per-user isolation cover the real risk; an E2E suite would cost two hours for shallow coverage                                |
+| Q11 | Deploying a live demonstration?                                   | **Yes.** A static front on a CDN, the API in a container, a managed database — three pieces deployed separately ([§16](#16-docker-deployment--environment-variables)). A clickable link changes how the project is received: a reviewer sees the product before reading the code. Budgeted at 3 h, cut only as a last resort |
+| Q13 | A full CI/CD pipeline in GitHub Actions?                          | **CI yes, CD depending on the host.** CI checks types, tests and build on every push — nothing else does. Triggering the deployment goes through the host's Git integration when it has one (Vercel, Render, Railway); an Actions workflow is only written for Fly.io, which has none ([§16](#16-docker-deployment--environment-variables)) |
+| Q14 | Where do migrations run at deployment time?                       | In the **host's release hook**, never at container start and never from an Actions runner. At startup, a failed migration loops the application; in a release hook it fails once and aborts the deployment, leaving the previous version online. From a runner, the production database would have to be exposed to GitHub's addresses ([§16](#16-docker-deployment--environment-variables)) |
+| Q12 | Token in `localStorage` or in an `httpOnly` cookie?               | `localStorage` + the `Bearer` header. The standard pattern for a SPA in front of a stateless API, familiar, and one that keeps the API browser-independent. **The XSS risk is owned**, offset by the total absence of `v-html` and of third-party frontend dependencies, and by the fact that no sensitive data is handled. It flips to the `httpOnly` cookie as soon as any of those three points changes ([§12](#12-authentication)) |
 
 ---
 
-## 20. Liens de référence
+## 20. Reference links
 
 ### Stack
 
 - [Vue 3](https://vuejs.org/) · [`<script setup>`](https://vuejs.org/api/sfc-script-setup.html) · [Pinia](https://pinia.vuejs.org/) · [Vue Router](https://router.vuejs.org/)
-- [Vite](https://vite.dev/) · [Variables d'environnement et modes](https://vite.dev/guide/env-and-mode) · [Déploiement d'un site statique](https://vite.dev/guide/static-deploy)
+- [Vite](https://vite.dev/) · [Environment variables and modes](https://vite.dev/guide/env-and-mode) · [Static site deployment](https://vite.dev/guide/static-deploy)
 - [GitHub Actions](https://docs.github.com/actions) · [`actions/setup-node`](https://github.com/actions/setup-node)
-- [CORS sur MDN](https://developer.mozilla.org/docs/Web/HTTP/CORS) · [Requêtes préliminaires](https://developer.mozilla.org/docs/Web/HTTP/CORS#preflighted_requests)
-- [Express 5](https://expressjs.com/) · [Migration 4 → 5](https://expressjs.com/en/guide/migrating-5.html)
-- [Prisma](https://www.prisma.io/docs) · [Champs `Json`](https://www.prisma.io/docs/orm/prisma-client/special-fields-and-types/working-with-json-fields) · [Migrations](https://www.prisma.io/docs/orm/prisma-migrate)
+- [CORS on MDN](https://developer.mozilla.org/docs/Web/HTTP/CORS) · [Preflight requests](https://developer.mozilla.org/docs/Web/HTTP/CORS#preflighted_requests)
+- [Express 5](https://expressjs.com/) · [Migrating 4 → 5](https://expressjs.com/en/guide/migrating-5.html)
+- [Prisma](https://www.prisma.io/docs) · [`Json` fields](https://www.prisma.io/docs/orm/prisma-client/special-fields-and-types/working-with-json-fields) · [Migrations](https://www.prisma.io/docs/orm/prisma-migrate)
 - [Zod](https://zod.dev/)
 
 ### Interface
 
-- [Tailwind CSS 4](https://tailwindcss.com/docs) · [Configuration en CSS (`@theme`)](https://tailwindcss.com/docs/theme) · [Plugin Vite](https://tailwindcss.com/docs/installation/using-vite)
-- [DaisyUI](https://daisyui.com/) · [Thèmes sur mesure](https://daisyui.com/docs/themes/) · [Modale](https://daisyui.com/components/modal/)
-- [`<dialog>` sur MDN](https://developer.mozilla.org/docs/Web/HTML/Element/dialog) · [`showModal()`](https://developer.mozilla.org/docs/Web/API/HTMLDialogElement/showModal)
+- [Tailwind CSS 4](https://tailwindcss.com/docs) · [CSS-based configuration (`@theme`)](https://tailwindcss.com/docs/theme) · [Vite plugin](https://tailwindcss.com/docs/installation/using-vite)
+- [DaisyUI](https://daisyui.com/) · [Custom themes](https://daisyui.com/docs/themes/) · [Modal](https://daisyui.com/components/modal/)
+- [`<dialog>` on MDN](https://developer.mozilla.org/docs/Web/HTML/Element/dialog) · [`showModal()`](https://developer.mozilla.org/docs/Web/API/HTMLDialogElement/showModal)
 
 ### Canvas & audio
 
-- [Canvas API](https://developer.mozilla.org/docs/Web/API/Canvas_API) · [Tutoriel de dessin](https://developer.mozilla.org/docs/Web/API/Canvas_API/Tutorial)
+- [Canvas API](https://developer.mozilla.org/docs/Web/API/Canvas_API) · [Drawing tutorial](https://developer.mozilla.org/docs/Web/API/Canvas_API/Tutorial)
 - [Pointer Events](https://developer.mozilla.org/docs/Web/API/Pointer_events) · [`setPointerCapture`](https://developer.mozilla.org/docs/Web/API/Element/setPointerCapture)
-- [Web Audio API](https://developer.mozilla.org/docs/Web/API/Web_Audio_API) · [Bonnes pratiques](https://developer.mozilla.org/docs/Web/API/Web_Audio_API/Best_practices) · [`OscillatorNode`](https://developer.mozilla.org/docs/Web/API/OscillatorNode) · [Politique d'autoplay](https://developer.mozilla.org/docs/Web/Media/Autoplay_guide)
+- [Web Audio API](https://developer.mozilla.org/docs/Web/API/Web_Audio_API) · [Best practices](https://developer.mozilla.org/docs/Web/API/Web_Audio_API/Best_practices) · [`OscillatorNode`](https://developer.mozilla.org/docs/Web/API/OscillatorNode) · [Autoplay policy](https://developer.mozilla.org/docs/Web/Media/Autoplay_guide)
 
-### Sécurité
+### Security
 
 - [OWASP — Broken Access Control](https://owasp.org/Top10/A01_2021-Broken_Access_Control/)
 - [OWASP — JWT Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html)
-- [MDN — Cookies `SameSite`](https://developer.mozilla.org/docs/Web/HTTP/Headers/Set-Cookie/SameSite)
+- [MDN — `SameSite` cookies](https://developer.mozilla.org/docs/Web/HTTP/Headers/Set-Cookie/SameSite)
 
 ### Git
 
@@ -1770,5 +1733,5 @@ doit être **responsive** (desktop et mobile) et laissé **le mapping de sonific
 
 ---
 
-_Document vivant — à mettre à jour quand une décision change, en notant le changement en
-[§19](#19-questions-ouvertes)._
+_A living document — to be updated when a decision changes, noting the change in
+[§19](#19-open-questions)._

@@ -12,7 +12,6 @@ PostgreSQL, TypeScript end to end. Auth is a JWT in `localStorage`, sent as a Be
 
 Read the following to get the full context of the project:
 
-- @context/exercise-brief.md
 - @context/project-overview.md
 - @context/coding-standards.md
 - @context/ai-interaction.md
@@ -150,10 +149,10 @@ deployed admin is created by hand, with a password that exists nowhere in this r
 - **The client's image is for local demonstration, not for deployment.** It bakes
   `VITE_API_URL=http://localhost:3000` into the bundle, so it only ever works on the machine
   that built it. The deployed front stays a `dist/` on a CDN.
-- **One drawing per user** (IRCAM answer, `context/exercise-brief.md`). `Drawing.userId` is
-  unique; user routes are singular (`/api/drawing`) and take no drawing id — the token
-  names the resource. Saving is an `upsert` on `userId`. Only `/api/admin/*` addresses a
-  drawing by id, and the admin can delete it.
+- **One drawing per user** (IRCAM's answer to the questions sent before development).
+  `Drawing.userId` is unique; user routes are singular (`/api/drawing`) and take no drawing
+  id — the token names the resource. Saving is an `upsert` on `userId`. Only `/api/admin/*`
+  addresses a drawing by id, and the admin can delete it.
 - **`prisma migrate dev` refuses non-interactive shells when it has a warning to confirm**
   (e.g. adding a unique constraint). From an agent shell, generate the SQL with
   `npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script`
@@ -196,7 +195,7 @@ push` silently diverges the schema from the migration history; it is not used in
 - **In CI, `npx prisma generate` runs before the server typecheck**, or `tsc` fails on
   missing types with an error that never names the cause. `npm ci`, never `npm install`.
 - **Commit early and often.** Regular, atomic commits are an explicit evaluation
-  criterion for this exercise (see `@context/exercise-brief.md`). One commit per coherent
+  criterion for this exercise, stated as such in the brief. One commit per coherent
   step, imperative subject line, no `wip` dumps at the end.
 - A test that was already failing before a task started is reported, not silently fixed.
 

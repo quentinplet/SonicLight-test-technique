@@ -1,8 +1,8 @@
 # AI Interaction Guidelines
 
 > **The deliverable is not the code — it is the ability to defend it out loud.** The brief
-> allows AI tools and sets one condition in exchange: *« il est important que vous compreniez
-> le code que vous produisez et soyez capable d'expliquer vos choix lors de l'entretien. »*
+> allows AI tools and sets one condition in exchange: *"it is important that you understand
+> the code you produce and are able to explain your choices during the interview."*
 > A file Quentin would discover during the interview is a liability, whatever its quality.
 > Every rule below follows from that.
 
@@ -42,7 +42,7 @@ Do NOT commit without permission, and never while the build fails. Fix first.
 P0 before P1, P1 before P2. No line of Web Audio before the MVP is finished and committed; no
 `Dockerfile` before the app runs locally. The real risk on this exercise is not lack of
 ambition — it is a half-wired bonus that prevents shipping a finished MVP, which is exactly
-what the *« capacité à prioriser »* criterion measures.
+what the *"ability to prioritise"* criterion measures.
 
 ## Branching
 

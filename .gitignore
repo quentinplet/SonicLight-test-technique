@@ -26,3 +26,6 @@ coverage/
 .claude/
 # Local interview notes — never committed
 interview-prep.md
+
+# Enonce de l exercice : contenu de l IRCAM, gardé en local mais pas republié.
+context/exercise-brief.md

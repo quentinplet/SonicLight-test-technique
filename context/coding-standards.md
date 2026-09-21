@@ -2,7 +2,7 @@
 
 Stack: Vue 3 (`<script setup>`, Vite, Pinia) on the frontend, Express 5 + TypeScript /
 Prisma 7 (PostgreSQL 16) on the backend. See `context/project-overview.md` for the full
-spec and `context/exercise-brief.md` for the constraints this exercise is graded on.
+spec, which also restates the constraints this exercise is graded on.
 
 This is a one-week technical exercise. Where a rule below trades rigour for speed, that is
 deliberate and documented — but the trade is stated, never silently taken.
