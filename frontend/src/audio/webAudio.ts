@@ -29,8 +29,13 @@ export class WebAudioEngine implements AudioEngine {
   #bus: AudioNode[] = [];
 
   async start(): Promise<void> {
+    // Safari only, and set before the context exists. iOS plays Web Audio in its "ambient"
+    // category, which the ring/silent switch mutes outright; "playback" is the category
+    // that ignores it. The price is that it pauses whatever else the phone was playing.
+    if (navigator.audioSession) navigator.audioSession.type = "playback";
+
     const context = (this.#context ??= new AudioContext());
-    if (context.state === "suspended") await context.resume();
+    if (context.state !== "running") await context.resume();
 
     const input = context.createGain();
     const master = context.createGain();
