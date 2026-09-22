@@ -281,9 +281,15 @@ backend/src/
 ├── middleware/   requireAuth, requireAdmin, errorHandler
 ├── lib/          prisma.ts, jwt.ts, env.ts
 └── types/        drawing.ts (canonical copy)
+
+e2e/
+├── pages/        LoginPage, DrawPage, AdminPage — locators and gestures, one per screen
+├── tests/        user.spec.ts, admin.spec.ts — one file per role
+├── fixtures.ts   newUser, userWithDrawing, asUser, asAdmin
+└── playwright.config.ts
 ```
 
-- Two independent npm packages, no workspace. `npm install` in each
+- Three independent npm packages, no workspace. `npm install` in each
 - No new top-level folder without updating this document and `project-overview.md`
 - No `utils/` or `helpers/`. A file named after what it cannot classify is a file whose
   contents have no home
@@ -343,7 +349,7 @@ components. The split is the decision, not the tool:
 
 ## Testing
 
-- Vitest on both packages
+- Vitest on the backend, Playwright end to end. Nothing unit-tested on the frontend
 - The tests that matter are the **ownership tests**: a user's calls only ever reach their
   own drawing, saving twice replaces rather than duplicates, and a non-admin cannot reach an
   admin route — including `DELETE /api/admin/drawings/:id`. These are the tests to
@@ -353,8 +359,23 @@ components. The split is the decision, not the tool:
 - Plus one auth test that matters given the storage choice: a token with a tampered payload
   (role flipped to `ADMIN`) is rejected by signature verification. It proves the role comes
   from the verified token and not from what the client sent
-- No end-to-end tests. Two hours for shallow coverage, on an exercise measured in hours, is a
-  bad trade — stated as a decision, not an omission
+- **Five end-to-end tests, in Playwright**, added on 22 September after the rest was shipped —
+  a reversal of the "no E2E" decision, and the argument that lost was the cost one. They cover
+  the two journeys and nothing else: a user draws, saves, reloads and finds their drawing
+  again, and cannot reach `/admin`; an admin sees every drawing and deletes one after
+  confirming. The backend isolation tests still carry the real risk; these carry the wiring
+- The e2e suite is a **third npm package, `e2e/`**, not a folder inside `frontend/`. It drives
+  the API as much as the interface, and `@playwright/test` is neither side's dependency
+- **Page Object Model**: one class per screen (`LoginPage`, `DrawPage`, `AdminPage`) holding
+  the locators and the gestures. A test reads as a journey; no selector appears in a spec
+- **Fixtures create their own data through the API** (`newUser`, `userWithDrawing`): a fresh
+  account per test, and its drawing deleted on teardown. No test leans on data another left
+  behind, and the admin grid — where the tests count cards — stays as the seed made it
+- The canvas is exercised with `page.mouse`, which fires the pointer events the app listens to
+- `locale: "en-US"` is pinned in the config: the interface follows the browser language, so
+  the selectors would otherwise read French on a French machine
+- The suite is **not** in CI. Running it there means Postgres, the API and Vite on the runner —
+  worth doing, not done, and said so rather than implied
 
 ## Deployment & CI
 

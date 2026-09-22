@@ -203,7 +203,7 @@ unilaterally, documented here, and become interview material.
 | **CI**         | GitHub Actions: types, tests and build checked on every push                |
 | **Deployment** | Front on a CDN, API in a container, managed database — a clickable link     |
 | **Visual replay** | The drawing rebuilds stroke by stroke when opened, instead of appearing at once |
-| **Tests**      | Unit tests on the backend services (per-user isolation, drawing format validation) |
+| **Tests**      | Unit tests on the backend services (per-user isolation, drawing format validation), plus a short Playwright suite over the user and admin journeys ([§19](#19-open-questions) Q10) |
 | **Seed**       | A demo dataset: 1 admin, 2 users, a few drawings — the admin view has something to show without manual input |
 
 ### P2 — the bonus that gives the product its name
@@ -223,10 +223,14 @@ pagination · offline mode.
 > reused as-is in the README and serves as the backbone of the interview.
 >
 > **Internationalisation left this list on 22 September**, after the rest was shipped. It is
-> the one decision that was reversed, so it is the one worth stating plainly: the interface is
+> one of the two decisions that were reversed, so it is worth stating plainly: the interface is
 > now English and French, at the cost of the thirteenth dependency
 > ([§5](#5-system-architecture)) and of the "no frontend dependency beyond Vue" argument that
 > backed the `localStorage` token ([§12](#12-authentication)).
+>
+> **End-to-end tests left it the same day**, for the opposite kind of reason: the argument
+> against them was their cost, and five tests over the two journeys took well under the two
+> hours that had been feared ([§19](#19-open-questions) Q10).
 
 ---
 
@@ -383,7 +387,7 @@ flowchart TB
 | Auth           | Signed JWT, stored in `localStorage`, `Bearer` header  | The standard pattern for a SPA in front of a stateless API, and a familiar one. The XSS risk is owned and offset ([§12](#12-authentication))    |
 | Validation     | Zod, on every request body                             | A Zod schema is **both** a runtime validator and a TypeScript type — one single source of truth                                                 |
 | Tests          | Vitest on both sides                                   | The same runner for both packages, zero configuration on the Vite side                                                                         |
-| Repo           | Two independent npm packages (`frontend/`, `backend/`) | No workspace: the overhead is not justified for two packages, and `npm install` in each stays trivial to document                              |
+| Repo           | Three independent npm packages (`frontend/`, `backend/`, `e2e/`) | No workspace: the overhead is not justified at this size, and `npm install` in each stays trivial to document. The e2e suite is its own package because it drives the API as much as the interface, and its dependencies are neither side's |
 
 ### Dependencies — the frozen list
 
@@ -394,7 +398,8 @@ flowchart TB
 | `vite`, `@vitejs/plugin-vue`, `vue-tsc` | client | Build and typecheck                           |
 | `tailwindcss`, `@tailwindcss/vite` | client | A way of writing CSS, tokens in `@theme` — no runtime |
 | `daisyui`                 | client | A purely CSS Tailwind plugin: generic components, custom theme |
-| `vitest`                  | client, server | Tests                                               |
+| `vitest`                  | server | Tests                                                       |
+| `@playwright/test`        | e2e    | End-to-end tests — its own package, not the client's        |
 | `express`, `@types/express` | server | The HTTP server                                           |
 | `@prisma/client`, `prisma`, `@prisma/adapter-pg`, `pg` | server | ORM and migrations — Prisma 7 requires a driver adapter |
 | `zod`                     | server | Input validation + type inference                           |
@@ -1713,7 +1718,7 @@ specified that the application must be **responsive** (desktop and mobile) and l
 | Q8  | A pre-computed PNG thumbnail in the database?                     | No. Rendered client-side from the strokes. Duplicating the source of truth for twenty cards is not justified                                   |
 | Q9  | Editing an already-saved drawing?                                 | Out of scope. You create, you review, you delete. Editing would open the versioning question, unrelated to what is being graded                |
 | Q15 | A component library for the interface?                            | Tailwind 4 + DaisyUI 5 with a **custom theme**, and nothing else. DaisyUI is a purely CSS plugin: no JavaScript, no component API to learn. It covers the generic parts (buttons, fields, cards, modal); the canvas, the toolbar and the palette are hand-written, because that is where the product's identity lives ([§15](#15-uiux--design-tokens)) |
-| Q10 | End-to-end tests (Playwright)?                                    | No. Unit tests on per-user isolation cover the real risk; an E2E suite would cost two hours for shallow coverage                                |
+| Q10 | End-to-end tests (Playwright)?                                    | ~~No~~ → **Yes, five of them**, reversed on 22 September once the rest was shipped. The original argument was cost — "two hours for shallow coverage" — and it did not survive contact: the two journeys that matter (a user draws, saves and finds their drawing again; an admin sees everybody's and deletes one) took far less. They live in a third package, `e2e/`, with a Page Object Model and fixtures that register a throwaway account through the API. They run against the seeded dev database and are **not** wired into CI, which would mean starting Postgres, the API and Vite on the runner. The backend isolation tests remain the ones that cover the real risk |
 | Q11 | Deploying a live demonstration?                                   | **Yes.** A static front on a CDN, the API in a container, a managed database — three pieces deployed separately ([§16](#16-docker-deployment--environment-variables)). A clickable link changes how the project is received: a reviewer sees the product before reading the code. Budgeted at 3 h, cut only as a last resort |
 | Q13 | A full CI/CD pipeline in GitHub Actions?                          | **CI yes, CD depending on the host.** CI checks types, tests and build on every push — nothing else does. Triggering the deployment goes through the host's Git integration when it has one (Vercel, Render, Railway); an Actions workflow is only written for Fly.io, which has none ([§16](#16-docker-deployment--environment-variables)) |
 | Q14 | Where do migrations run at deployment time?                       | In the **host's release hook**, never at container start and never from an Actions runner. At startup, a failed migration loops the application; in a release hook it fails once and aborts the deployment, leaving the previous version online. From a runner, the production database would have to be exposed to GitHub's addresses ([§16](#16-docker-deployment--environment-variables)) |

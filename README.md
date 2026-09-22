@@ -64,6 +64,7 @@ l'inscription est également possible pour créer un compte utilisateur (nom d'u
 | **Zod**                        | Validation des données et des variables d'environnement |
 | **jsonwebtoken + bcryptjs**    | Authentification                                        |
 | **Vitest**                     | Tests du backend                                        |
+| **Playwright**                 | Tests end-to-end, côté utilisateur et administrateur    |
 | **Docker Compose**             | Lancement de PostgreSQL, de l'API et du frontend        |
 
 Les dessins sont stockés dans PostgreSQL sous forme de `jsonb`. Ils contiennent les traits, leurs points, leurs couleurs et leurs épaisseurs. Stockés sous forme vectorielle, ils sont indépendants de la taille du canvas et peuvent être utilisés pour la lecture sonore.
@@ -135,12 +136,13 @@ Le frontend et le backend sont volontairement indépendants et ne sont pas organ
 
 ## Architecture
 
-Le projet est organisé en deux applications indépendantes :
+Le projet est organisé en trois paquets npm indépendants :
 
 ```text
 sonic-light/
 ├── frontend/    # Vue 3 + Vite
 ├── backend/     # Express + Prisma
+├── e2e/         # Tests end-to-end Playwright
 ├── context/     # Documentation du projet
 └── docker-compose.yml
 ```
@@ -218,11 +220,14 @@ La gomme supprime un trait complet. Une gomme basée sur des pixels ou sur une p
 
 ## Tests
 
+### API — Vitest
+
 Les tests de l'API utilisent une vraie base PostgreSQL.
 
 Initialiser la base de test une première fois :
 
 ```bash
+cd backend
 npm run test:db
 ```
 
@@ -234,7 +239,40 @@ npm test
 
 Le projet contient actuellement **64 tests**.
 
-Une GitHub Action exécute les vérifications de types, les tests et le build à chaque push.
+### End-to-end — Playwright
+
+Ils s'exécutent contre la vraie pile en local — Vite, l'API et la base de développement seedée — et suivent le Page Object Model, avec des fixtures qui créent un compte jetable par l'API et suppriment son dessin à la fin du test.
+
+| Rôle            | Ce qui est vérifié                                            |
+| --------------- | ------------------------------------------------------------- |
+| Utilisateur     | Un mauvais mot de passe est refusé avec un message lisible    |
+| Utilisateur     | Il dessine, enregistre, recharge la page, retrouve son dessin |
+| Utilisateur     | Il n'atteint pas la vue d'administration                      |
+| Administrateur  | Il voit les dessins de tous les utilisateurs                  |
+| Administrateur  | Il supprime le dessin d'un utilisateur après confirmation     |
+
+La base doit être démarrée et seedée, puis :
+
+```bash
+cd e2e
+npm install
+npx playwright install chromium
+npm test
+```
+
+Playwright réutilise l'API et le frontend s'ils tournent déjà, et les démarre lui-même sinon.
+
+Quelques variantes utiles :
+
+```bash
+npm run test:ui                   # interface Playwright, pas à pas
+npx playwright test --headed      # voir le navigateur
+npx playwright test -g "reload"   # un seul test, par son nom
+```
+
+### Intégration continue
+
+Une GitHub Action exécute les vérifications de types, les tests de l'API et le build à chaque push. Les tests end-to-end ne sont pour l'instant pas dans cette pipeline : ils demandent de démarrer les trois services sur le runner.
 
 ## Hors périmètre
 
@@ -253,14 +291,14 @@ Les fonctionnalités suivantes ne sont pas implémentées dans le cadre de l'exe
 * réinitialisation de mot de passe
 * pagination
 * mode hors ligne
-* tests end-to-end
 
 Ces fonctionnalités pourraient être ajoutées ultérieurement.
 
 ## Limites connues
 
 * **Pas de limitation de débit sur `/api/auth/login`** : l'endpoint pourrait être soumis à des tentatives répétées de connexion.
-* **Pas encore de tests côté frontend** : les tests actuels se concentrent sur l'API et notamment sur l'isolation entre utilisateurs.
+* **Pas de tests unitaires côté frontend** : les composants et les composables ne sont pas testés unitairement. Les tests portent sur l'API — notamment l'isolation entre utilisateurs — et sur les parcours complets avec Playwright.
+* **Les tests end-to-end s'appuient sur la base de développement seedée** et ne sont pas exécutés en intégration continue. Chaque exécution y laisse un compte `e2e-<timestamp>`, sans dessin : aucune route ne permet de supprimer un compte.
 * **Canvas non accessible au clavier**.
 * **La gomme supprime un trait entier** plutôt qu'une partie du trait.
 * **Les messages de validation restent en anglais** : ils sont rédigés par Zod côté serveur et transmis sous un seul code d'erreur, `request.invalidBody`. Les autres messages, adossés à des codes stables, sont traduits par le client.
