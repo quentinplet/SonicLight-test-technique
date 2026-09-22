@@ -32,7 +32,7 @@ export const DrawingDataSchema: z.ZodType<DrawingData> = z.object({
 
 export const SaveDrawingSchema = z.object({
   // Optional: the service falls back to the owner's user name.
-  title: z.string().trim().max(80).optional(),
+  title: z.string().trim().max(50).optional(),
   data: DrawingDataSchema,
 });
 

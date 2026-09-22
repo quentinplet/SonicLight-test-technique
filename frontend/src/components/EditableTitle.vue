@@ -33,7 +33,7 @@ function stopEditing(): void {
       v-model="title"
       class="input input-sm input-ghost w-auto min-w-0 max-w-full px-0 text-xl font-semibold"
       type="text"
-      maxlength="80"
+      maxlength="50"
       :size="size"
       :placeholder="props.placeholder"
       aria-label="Drawing title"

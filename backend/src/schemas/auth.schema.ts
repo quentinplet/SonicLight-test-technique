@@ -18,8 +18,8 @@ export const RegisterSchema = z.object({
     .string({ error: "Password is required" })
     .min(1, { error: "Password is required", abort: true })
     .min(8, { error: "Password must be at least 8 characters", abort: true })
-    // bcrypt silently ignores anything beyond 72 bytes.
-    .max(72, "Password must be at most 72 characters"),
+    // Well under bcrypt's 72-byte limit, so no truncation to worry about.
+    .max(30, "Password must be at most 30 characters"),
 });
 
 /**
