@@ -107,7 +107,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
         <button
           class="btn btn-primary h-11 shrink-0 cursor-pointer gap-2 px-6"
           type="button"
-          :disabled="drawing.isEmpty.value"
+          :disabled="drawing.isEmpty.value && !audio.playing.value"
           :aria-pressed="audio.playing.value"
           @click="audio.toggle(() => drawing.data.value)"
         >
@@ -157,7 +157,9 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
         <template v-else>
           {{ t("draw.strokes", { count: strokeCount }, strokeCount) }} ·
           {{ t("draw.points", { count: pointCount }, pointCount) }}
-          <span v-if="savedAt"> · {{ t("draw.savedAt", { date: d(new Date(savedAt), "long") }) }}</span>
+          <span v-if="savedAt">
+            · {{ t("draw.savedAt", { date: d(new Date(savedAt), "long") }) }}</span
+          >
           <span v-else> · {{ t("draw.neverSaved") }}</span>
         </template>
       </p>
