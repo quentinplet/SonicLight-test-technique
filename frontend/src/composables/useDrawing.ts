@@ -35,6 +35,9 @@ export function useDrawing(
   // One snapshot per gesture, so a whole eraser swipe is undone in a single step.
   let gestureSnapshot = false;
   let erasing = false;
+  // One finger at a time: without it, a second touch steals `current` mid-stroke and its
+  // points get appended to the first finger's stroke, drawing a line between the two.
+  let activePointerId: number | null = null;
 
   function remember(): void {
     history.value.push(strokes.value.slice());
@@ -98,6 +101,9 @@ export function useDrawing(
   }
 
   function onPointerDown(event: PointerEvent): void {
+    if (activePointerId !== null) return;
+    activePointerId = event.pointerId;
+
     // The stroke survives the cursor leaving the canvas, and pointerup always fires.
     canvas.value?.setPointerCapture(event.pointerId);
     const point = pointFrom(event);
@@ -113,6 +119,7 @@ export function useDrawing(
   }
 
   function onPointerMove(event: PointerEvent): void {
+    if (event.pointerId !== activePointerId) return;
     if (erasing) return erase(pointFrom(event));
 
     const stroke = current.value;
@@ -124,7 +131,9 @@ export function useDrawing(
     draw();
   }
 
-  function onPointerUp(): void {
+  function onPointerUp(event: PointerEvent): void {
+    if (event.pointerId !== activePointerId) return;
+    activePointerId = null;
     erasing = false;
     gestureSnapshot = false;
     if (!current.value) return;
