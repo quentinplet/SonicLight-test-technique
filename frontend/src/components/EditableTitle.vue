@@ -31,7 +31,7 @@ function stopEditing(): void {
       v-if="editing"
       ref="input"
       v-model="title"
-      class="input input-sm input-ghost w-auto px-0 text-xl font-semibold"
+      class="input input-sm input-ghost w-auto min-w-0 max-w-full px-0 text-xl font-semibold"
       type="text"
       maxlength="80"
       :size="size"
