@@ -20,8 +20,7 @@ async function onSubmit(credentials: Credentials): Promise<void> {
   try {
     // Registration signs the user in: straight to the app.
     await auth.register(credentials);
-    // The name as the server answered it: it trims and lowercases what was typed.
-    notify(`Welcome, ${auth.user?.userName ?? credentials.userName}`);
+    notify("Registration successful !");
     await router.replace("/");
   } catch (err) {
     error.value = errorMessage(err);

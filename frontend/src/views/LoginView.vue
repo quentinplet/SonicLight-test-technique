@@ -15,8 +15,6 @@ const router = useRouter();
 const pending = ref(false);
 const error = ref<string | null>(null);
 
-// Only an in-app path: a crafted ?redirect=https://… must not send the user off-site.
-// Without one, an admin lands on what concerns them: the drawings of everybody.
 function redirectTarget(): string {
   const target = route.query.redirect;
   if (typeof target === "string" && target.startsWith("/") && !target.startsWith("//"))
@@ -29,9 +27,7 @@ async function onSubmit(credentials: Credentials): Promise<void> {
   error.value = null;
   try {
     await auth.login(credentials);
-    // The name as the server answered it: it trims and lowercases what was typed.
-    // The toast outlives this view, so it is still there after the redirect.
-    notify(`Welcome back, ${auth.user?.userName ?? credentials.userName}`);
+    notify("Authentication successful !");
     await router.replace(redirectTarget());
   } catch (err) {
     error.value = errorMessage(err);
