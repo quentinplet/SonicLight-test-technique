@@ -217,10 +217,16 @@ unilaterally, documented here, and become interview material.
 Several drawings per user · editing of a drawing by the admin · roles beyond `USER`/`ADMIN` ·
 public sharing of a drawing by link · editing an already-saved drawing · layers · geometric
 shapes, fill, text · PNG/SVG export · real-time collaboration · OAuth · password reset · email ·
-pagination · internationalisation · offline mode.
+pagination · offline mode.
 
 > This list is not a list of regrets: it is the proof that an arbitration took place. It is
 > reused as-is in the README and serves as the backbone of the interview.
+>
+> **Internationalisation left this list on 22 September**, after the rest was shipped. It is
+> the one decision that was reversed, so it is the one worth stating plainly: the interface is
+> now English and French, at the cost of the thirteenth dependency
+> ([§5](#5-system-architecture)) and of the "no frontend dependency beyond Vue" argument that
+> backed the `localStorage` token ([§12](#12-authentication)).
 
 ---
 
@@ -384,6 +390,7 @@ flowchart TB
 | Package                   | Side   | Why                                                         |
 | ------------------------- | ------ | ----------------------------------------------------------- |
 | `vue`, `vue-router`, `pinia` | client | The Vue 3 foundation                                     |
+| `vue-i18n`                | client | The thirteenth line, added last (see below)                 |
 | `vite`, `@vitejs/plugin-vue`, `vue-tsc` | client | Build and typecheck                           |
 | `tailwindcss`, `@tailwindcss/vite` | client | A way of writing CSS, tokens in `@theme` — no runtime |
 | `daisyui`                 | client | A purely CSS Tailwind plugin: generic components, custom theme |
@@ -396,8 +403,23 @@ flowchart TB
 | `cors`                    | server | Allows the client's origin for a direct call to the API     |
 | `tsx`                     | server | Running TypeScript in development, with no build step       |
 
-Twelve lines, three of them for styling, and not one shipping JavaScript at runtime. Any
-thirteenth has to justify itself ([§4 rule 4](#rule-4--no-new-dependency-without-asking)).
+Twelve of these, three of them for styling, ship no JavaScript at runtime. `vue-i18n` is the
+thirteenth line, and the only one that does — so here is its justification, as
+[§4 rule 4](#rule-4--no-new-dependency-without-asking) demands.
+
+**A hand-written module came first**: two dictionaries, a `locale` ref and a `t()` — fifty
+lines, `+1.9 kB` gzipped, and it typed its own keys. It was replaced because of **plurals**:
+`"{count} strokes"` renders "1 strokes", and getting that right per locale means
+reimplementing `Intl.PluralRules`, which is exactly what vue-i18n already wraps.
+
+**The price is measured, not guessed: `+18.5 kB` gzipped**, around 38% more JavaScript, for
+62 strings. And it costs the "no frontend dependency beyond Vue" argument that backed the
+`localStorage` token ([§12](#12-authentication)) — one more library now runs in the page.
+
+**What it does not buy**, and this surprised us: strict key checking. Neither the
+`DefineLocaleMessage` augmentation nor `useI18n<{ message: Messages }>()` rejects a misspelt
+key, because `t()` carries a `string` overload — verified, not assumed. The only compile-time
+guarantee is `const fr: Messages`, which is our own type, not the library's.
 
 ---
 
@@ -695,7 +717,7 @@ export const DrawingDataSchema = z.object({
 });
 
 export const CreateDrawingSchema = z.object({
-  title: z.string().trim().min(1).max(80),
+  title: z.string().trim().min(1).max(50),
   data: DrawingDataSchema,
 });
 ```
@@ -753,7 +775,7 @@ model User {
 
 model Drawing {
   id        String   @id @default(uuid()) @db.Uuid
-  title     String   @db.VarChar(80)
+  title     String   @db.VarChar(50)
 
   /// Vector strokes, conforming to DrawingDataSchema (§9).
   /// A document read and written whole — never queried stroke by stroke.
@@ -927,9 +949,11 @@ from running are not optional:
   precisely the XSS door. The project contains none, and it is a rule that can be checked in
   review ([§18](#18-engineering-rules) rule 27).
 - **No user content rendered as HTML.** A drawing title is text, displayed as text. The
-  application's only free-text field is that title, capped at 80 characters.
-- **No frontend dependency beyond the Vue foundation** ([§5](#5-system-architecture)). Every
-  third-party library is JavaScript executed in the page, therefore one more surface.
+  application's only free-text field is that title, capped at 50 characters.
+- **Almost no frontend dependency beyond the Vue foundation** ([§5](#5-system-architecture)).
+  Every third-party library is JavaScript executed in the page, therefore one more surface.
+  This argument was absolute until `vue-i18n` was added; it is now one library wide, and
+  saying so is more useful than pretending the rule held.
 - **A seven-day token lifetime**, no more, and `logout` erases it.
 
 ### Why a JWT and not a server session
@@ -1657,7 +1681,7 @@ Git is a grading criterion. The target history, in order:
 | 25  | The Vue route guard is interface comfort; security is the server middleware.                |
 | 26  | `AudioContext` is only created or resumed inside a user event handler.                      |
 | 27  | **No `v-html`, anywhere.** The token lives in `localStorage`: XSS is risk number one ([§12](#12-authentication)). |
-| 28  | The `auth` store owns the token (the only access to `localStorage`); `api/http.ts` is the only code that sends it. The HTTP client does not navigate. |
+| 28  | The `auth` store owns the token and is the only code that stores it; `src/i18n` is the only other writer to `localStorage`, for the chosen language. `api/http.ts` is the only code that sends the token. The HTTP client does not navigate. |
 | 29  | The displayed role comes from `GET /api/auth/me`, never from a JWT payload decoded client-side. |
 
 ---
@@ -1693,7 +1717,7 @@ specified that the application must be **responsive** (desktop and mobile) and l
 | Q11 | Deploying a live demonstration?                                   | **Yes.** A static front on a CDN, the API in a container, a managed database — three pieces deployed separately ([§16](#16-docker-deployment--environment-variables)). A clickable link changes how the project is received: a reviewer sees the product before reading the code. Budgeted at 3 h, cut only as a last resort |
 | Q13 | A full CI/CD pipeline in GitHub Actions?                          | **CI yes, CD depending on the host.** CI checks types, tests and build on every push — nothing else does. Triggering the deployment goes through the host's Git integration when it has one (Vercel, Render, Railway); an Actions workflow is only written for Fly.io, which has none ([§16](#16-docker-deployment--environment-variables)) |
 | Q14 | Where do migrations run at deployment time?                       | In the **host's release hook**, never at container start and never from an Actions runner. At startup, a failed migration loops the application; in a release hook it fails once and aborts the deployment, leaving the previous version online. From a runner, the production database would have to be exposed to GitHub's addresses ([§16](#16-docker-deployment--environment-variables)) |
-| Q12 | Token in `localStorage` or in an `httpOnly` cookie?               | `localStorage` + the `Bearer` header. The standard pattern for a SPA in front of a stateless API, familiar, and one that keeps the API browser-independent. **The XSS risk is owned**, offset by the total absence of `v-html` and of third-party frontend dependencies, and by the fact that no sensitive data is handled. It flips to the `httpOnly` cookie as soon as any of those three points changes ([§12](#12-authentication)) |
+| Q12 | Token in `localStorage` or in an `httpOnly` cookie?               | `localStorage` + the `Bearer` header. The standard pattern for a SPA in front of a stateless API, familiar, and one that keeps the API browser-independent. **The XSS risk is owned**, offset by the total absence of `v-html`, by a frontend dependency list of thirteen lines that is otherwise frozen, and by the fact that no sensitive data is handled. It flips to the `httpOnly` cookie as soon as any of those three points changes ([§12](#12-authentication)) |
 
 ---
 

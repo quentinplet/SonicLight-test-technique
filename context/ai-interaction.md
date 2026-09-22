@@ -92,7 +92,7 @@ risks:
   comparison afterwards.
   Admin access is a separate named function, never an optional `userId?`
 - **XSS** — the JWT lives in `localStorage`, so this is risk number one. No `v-html` anywhere,
-  no user content rendered as HTML, frontend dependency list frozen
+  no user content rendered as HTML, frontend dependency list frozen at thirteen lines
 - **Input validation** — every request body goes through a Zod schema before reaching a
   service, bounds included. `drawing.data` is parsed by `DrawingDataSchema`, never cast with
   `as`

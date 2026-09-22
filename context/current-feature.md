@@ -22,7 +22,9 @@ the repository link. The deadline is 23 September.
   delete it.
 - Decide on rate limiting for `POST /api/auth/login`. It is the only real security gap: the
   hand-made admin account is brute-forceable. The cost is one dependency and five lines,
-  against a frozen dependency list — so it is an arbitration, not an obvious win.
+  against a dependency list that has already grown by one for i18n — so it is an arbitration,
+  not an obvious win.
+- Merge `feature/i18n` and push, so the bilingual interface reaches the deployed demo.
 - Send the repository link.
 
 ## Notes
@@ -325,3 +327,41 @@ Traps that still bite:
   Tethering is faster than debugging it.
 - **Two credential helpers fight**: Homebrew's gitconfig sets `osxkeychain` ahead of the user's
   `store`, so the keychain prompt blocks the credential that would have worked.
+
+### 22/09 — Bilingual interface ✅
+
+The whole interface in English and French, with a toggle in the header, the choice kept in
+`localStorage` and the browser language as the default. 62 strings, two dictionaries, plural
+forms on the stroke and point counters. Branch `feature/i18n`.
+
+Departures from the plan, and why:
+
+- **Internationalisation was listed as out of scope**, in the README and in the overview §3.
+  It was reversed deliberately, and both documents now say so rather than quietly dropping the
+  line — a scope list that edits itself without a word is worth less than one that records the
+  reversal.
+- **A hand-written module came first**, and was thrown away. Fifty lines, `+1.9 kB` gzipped, and
+  it typed its own keys. It lost on **plurals**: `"{count} strokes"` renders "1 strokes", and
+  doing it properly per locale means reimplementing `Intl.PluralRules`.
+- **`vue-i18n` is the thirteenth dependency**, and the only frontend one that ships JavaScript
+  at runtime. It costs `+18.5 kB` gzipped, about 38% more script, for 62 strings — and it costs
+  the "no frontend dependency beyond Vue" argument that backed the `localStorage` token.
+- **Used plainly**: `useI18n()` in components, `i18n.global` in `api/errors.ts`, which is not
+  one. A typed wrapper composable was written, then removed — a layer over a library, to
+  restore what the library should have given, was one indirection too many.
+
+Traps that still bite:
+
+- **vue-i18n does not type its keys.** Neither the `DefineLocaleMessage` augmentation nor
+  `useI18n<{ message: Messages }>()` rejects a misspelt key: `t()` carries a `string` overload,
+  so an unknown key renders as itself. Verified by breaking it on purpose, twice. The only
+  compile-time guarantee left is `const fr: Messages`, which is ours, not the library's.
+- **The same illusion already existed** in `router/index.ts`: augmenting `RouteMeta` constrains
+  nothing, because vue-router's `RouteMeta` extends `Record<string, unknown>`. It documents the
+  three flags honestly, so it stays — but it protects nothing.
+- **Translated labels are not the same length.** Switching language resized the header and
+  moved the toggle out from under the finger that tapped it; "Width" against "Épaisseur"
+  changed where the toolbar row wrapped. Layout sized by content is layout that moves.
+- **Zod messages are the limit of the design.** They are prose built by the server under one
+  generic `request.invalidBody` code, so they stay in the server's language. Business errors,
+  which carry stable codes, were a dictionary entry each.

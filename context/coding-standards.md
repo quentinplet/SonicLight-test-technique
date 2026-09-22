@@ -169,12 +169,14 @@ optional:
 - **No `v-html`. Anywhere.** Vue escapes `{{ }}` by default; `v-html` is the XSS door. This is
   grep-able in review, and it is the single most important rule in this file
 - **No user-generated content is ever rendered as HTML.** A drawing title is text, displayed as
-  text. It is the only free-text field in the app, capped at 80 characters
-- **No frontend dependency beyond the Vue core.** Every third-party library is more script
-  running in the page, which is more XSS surface. This is why the dependency list is frozen
-- The auth store owns the token and is the only code that reads or writes `localStorage`;
-  `src/api/http.ts` is the only code that sends it. No component or view builds an
-  `Authorization` header by hand
+  text. It is the only free-text field in the app, capped at 50 characters
+- **One frontend dependency beyond the Vue core, `vue-i18n`, and no more.** Every third-party
+  library is more script running in the page, which is more XSS surface. The list stays frozen;
+  what changed is that it is now thirteen lines rather than twelve, and the reasoning for that
+  one is written out in `project-overview.md` §5
+- The auth store owns the token; `src/i18n` also writes to `localStorage`, for the chosen
+  language. Those two, and nothing else. `src/api/http.ts` is the only code that sends the
+  token — no component or view builds an `Authorization` header by hand
 - **Keep the HTTP client small**: fetch, headers, `ApiError` on non-2xx, `auth.logout()` on a
   401 that carried a token. It does not navigate — route guards do. No `try/catch` around
   `localStorage`: a deliberate simplification (it only throws when site data is blocked)

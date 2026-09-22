@@ -55,6 +55,7 @@ l'inscription est également possible pour créer un compte utilisateur (nom d'u
 | **Vite**                       | Serveur de développement et build du frontend           |
 | **Pinia**                      | Gestion de l'état d'authentification                    |
 | **Vue Router**                 | Navigation et protection des routes côté client         |
+| **vue-i18n**                   | Interface en français et en anglais                     |
 | **Tailwind CSS 4 + DaisyUI 5** | Styles et composants d'interface                        |
 | **Express 5**                  | API REST                                                |
 | **TypeScript**                 | Typage du frontend et du backend                        |
@@ -251,7 +252,6 @@ Les fonctionnalités suivantes ne sont pas implémentées dans le cadre de l'exe
 * OAuth
 * réinitialisation de mot de passe
 * pagination
-* internationalisation
 * mode hors ligne
 * tests end-to-end
 
@@ -263,6 +263,7 @@ Ces fonctionnalités pourraient être ajoutées ultérieurement.
 * **Pas encore de tests côté frontend** : les tests actuels se concentrent sur l'API et notamment sur l'isolation entre utilisateurs.
 * **Canvas non accessible au clavier**.
 * **La gomme supprime un trait entier** plutôt qu'une partie du trait.
+* **Les messages de validation restent en anglais** : ils sont rédigés par Zod côté serveur et transmis sous un seul code d'erreur, `request.invalidBody`. Les autres messages, adossés à des codes stables, sont traduits par le client.
 * **Le JWT est stocké dans `localStorage`**, ce qui est simple pour une SPA mais présente des limites en cas de compromission XSS.
 
 ## Documentation

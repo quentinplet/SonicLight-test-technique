@@ -20,11 +20,12 @@ Read the following to get the full context of the project:
 ## Layout
 
 ```text
-frontend/  Vue 3 SPA (Vite, <script setup>, TypeScript, Pinia, Vue Router)
-           Tailwind 4 + DaisyUI 5, custom theme in src/style.css — no JS component library (not yet)
+frontend/  Vue 3 SPA (Vite, <script setup>, TypeScript, Pinia, Vue Router, vue-i18n)
+           Tailwind 4 + DaisyUI 5, custom theme in src/style.css — no JS component library
            src/views/ src/components/ src/stores/ src/api/ src/composables/ src/types/
            src/canvas/ — stroke rendering · src/audio/ — sonification (sonify, webAudio,
            interfaces/engine — the port every engine implements)
+           src/i18n/ — en.ts, fr.ts (typed by en), index.ts (createI18n, setLocale)
 backend/   Express 5 API — TypeScript, single package
            prisma/schema.prisma, prisma/migrations/, prisma/seed.ts
            src/routes/ src/controllers/ src/services/ src/middleware/ src/schemas/ src/lib/
@@ -128,8 +129,9 @@ deployed admin is created by hand, with a password that exists nowhere in this r
   `v-html` anywhere in this codebase, no user content is rendered as HTML, and the frontend
   dependency list stays frozen. These are not style preferences — they are what makes the
   storage choice acceptable.
-- **The auth store owns the token** (`frontend/src/stores/auth.ts`, the only code touching
-  `localStorage`); **`frontend/src/api/http.ts` is the only code that sends it**, reading
+- **The auth store owns the token** (`frontend/src/stores/auth.ts`); `frontend/src/i18n` is
+  the only other code touching `localStorage`, for the chosen language.
+  **`frontend/src/api/http.ts` is the only code that sends it**, reading
   `auth.token`. No component or view builds an `Authorization` header. A 401 on a request
   that carried a token calls `auth.logout()` — no redirect from the HTTP module; the route
   guards send the user to `/login` on the next navigation.
