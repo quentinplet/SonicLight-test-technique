@@ -1,6 +1,10 @@
 <script setup lang="ts">
+import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import type { DrawingWithAuthor } from "@/api/admin";
 import DrawingPreview from "@/components/DrawingPreview.vue";
+
+const { t, d } = useI18n();
 
 const props = defineProps<{
   drawing: DrawingWithAuthor;
@@ -11,7 +15,9 @@ const props = defineProps<{
 
 const emit = defineEmits<{ open: []; listen: []; remove: [] }>();
 
-const who = `${props.drawing.title} by ${props.drawing.userName}`;
+const who = computed(() =>
+  t("admin.by", { title: props.drawing.title, user: props.drawing.userName }),
+);
 </script>
 
 <template>
@@ -26,7 +32,7 @@ const who = `${props.drawing.title} by ${props.drawing.userName}`;
       <div class="card-body gap-0 border-t border-base-300 p-3">
         <p class="truncate pr-20 font-semibold">{{ drawing.title }}</p>
         <p class="truncate pr-20 font-mono text-xs text-base-content/70">
-          {{ drawing.userName }} · {{ new Date(drawing.updatedAt).toLocaleDateString() }}
+          {{ drawing.userName }} · {{ d(new Date(drawing.updatedAt), "short") }}
         </p>
       </div>
     </button>
@@ -36,7 +42,7 @@ const who = `${props.drawing.title} by ${props.drawing.userName}`;
       type="button"
       class="btn btn-sm btn-circle absolute right-12 bottom-2 cursor-pointer border-primary bg-base-100 text-primary hover:border-primary hover:bg-primary hover:text-primary-content"
       :aria-pressed="playing"
-      :aria-label="playing ? `Stop ${who}` : `Play ${who}`"
+      :aria-label="playing ? t('admin.stopCard', { what: who }) : t('admin.playCard', { what: who })"
       @click="emit('listen')"
     >
       <svg class="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -52,7 +58,7 @@ const who = `${props.drawing.title} by ${props.drawing.userName}`;
     <button
       type="button"
       class="btn btn-sm btn-circle absolute right-2 bottom-2 cursor-pointer border-error bg-base-100 text-error hover:border-error hover:bg-error hover:text-error-content"
-      :aria-label="`Delete ${who}`"
+      :aria-label="t('admin.deleteCard', { what: who })"
       @click="emit('remove')"
     >
       <svg

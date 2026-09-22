@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { PALETTE, WIDTHS, type Tool } from "@/canvas/tools";
+
+const { t } = useI18n();
 
 const tool = defineModel<Tool>({ required: true });
 
@@ -18,7 +21,7 @@ function pick(colour: string): void {
 <template>
   <div class="mt-3 grid justify-center items-center gap-3 xl:flex xl:justify-between xl:gap-6">
     <div class="flex flex-wrap items-center justify-center gap-3">
-      <div class="flex items-center gap-2" role="group" aria-label="Colour">
+      <div class="flex items-center gap-2" role="group" :aria-label="t('tool.colour')">
         <button
           v-for="colour in PALETTE"
           :key="colour.hex"
@@ -30,7 +33,7 @@ function pick(colour: string): void {
               : 'border-base-300'
           "
           :style="{ '--swatch': colour.hex }"
-          :aria-label="colour.name"
+          :aria-label="t(colour.key)"
           :aria-pressed="tool.color === colour.hex && tool.mode === 'draw'"
           @click="pick(colour.hex)"
         />
@@ -39,21 +42,21 @@ function pick(colour: string): void {
       <!-- Dropped when the row wraps: a rule at the start of a line separates nothing. -->
       <span class="hidden h-6 w-px bg-base-300 sm:block" aria-hidden="true" />
 
-      <div class="flex items-center gap-3" role="group" aria-label="Stroke width and eraser">
-        <label class="flex items-center gap-1 text-sm">
-          <span class="sr-only sm:not-sr-only">Width</span>
+      <div class="flex items-center gap-3" role="group" :aria-label="t('tool.widthAndEraser')">
+        <label class="flex items-center gap-1 text-xs">
+          <span class="sr-only sm:not-sr-only">{{ t("tool.width") }}</span>
           <select
             v-model="tool.width"
             class="select select-sm w-28 cursor-pointer border-base-300 bg-base-100"
-            aria-label="Stroke width"
+            :aria-label="t('tool.widthLabel')"
           >
             <option v-for="width in WIDTHS" :key="width.value" :value="width.value">
-              {{ width.glyph }}&nbsp; {{ width.name }}
+              {{ width.glyph }}&nbsp; {{ t(width.key) }}
             </option>
           </select>
         </label>
-        <div class="flex items-center gap-1 text-sm">
-          <span class="sr-only sm:not-sr-only" aria-hidden="true">Eraser</span>
+        <div class="flex items-center gap-1 text-xs">
+          <span class="sr-only sm:not-sr-only" aria-hidden="true">{{ t("tool.eraser") }}</span>
           <button
             class="btn btn-square btn-sm cursor-pointer"
             :class="
@@ -62,8 +65,8 @@ function pick(colour: string): void {
                 : 'border-base-300 bg-base-100 hover:bg-base-300'
             "
             type="button"
-            aria-label="Eraser"
-            title="Eraser — removes whole strokes"
+            :aria-label="t('tool.eraser')"
+            :title="t('tool.eraserHint')"
             :aria-pressed="tool.mode === 'erase'"
             @click="tool.mode = tool.mode === 'erase' ? 'draw' : 'erase'"
           >
@@ -85,7 +88,7 @@ function pick(colour: string): void {
         :disabled="!canUndo"
         @click="emit('undo')"
       >
-        Undo
+        {{ t("tool.undo") }}
       </button>
       <button
         class="btn btn-sm min-w-24 cursor-pointer border-base-300 bg-base-100 hover:bg-base-300"
@@ -93,7 +96,7 @@ function pick(colour: string): void {
         :disabled="isEmpty"
         @click="emit('clear')"
       >
-        Clear
+        {{ t("tool.clear") }}
       </button>
       <button
         class="btn btn-sm btn-primary min-w-24 cursor-pointer"
@@ -102,7 +105,7 @@ function pick(colour: string): void {
         @click="emit('save')"
       >
         <span v-if="saving" class="loading loading-spinner loading-xs" aria-hidden="true" />
-        Save
+        {{ t("tool.save") }}
       </button>
     </div>
   </div>

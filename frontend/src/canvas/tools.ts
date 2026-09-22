@@ -2,7 +2,6 @@
  * What a drawing is made with: the fixed canvas shape, the closed palette, the widths, and
  * the tool the user is holding. Data and types only — no Vue, like the rest of canvas/.
  */
-
 /** Fixed shape, so every drawing shares one aspect ratio. */
 export const ASPECT_RATIO = 1.5;
 export const BACKGROUND = "#ffffff";
@@ -24,11 +23,11 @@ export interface Tool {
  * like something.
  */
 export const PALETTE = [
-  { name: "Ink", hex: "#18181b" },
-  { name: "Red", hex: "#e11d48" },
-  { name: "Yellow", hex: "#a16207" },
-  { name: "Green", hex: "#15803d" },
-  { name: "Violet", hex: "#7c3aed" },
+  { key: "palette.ink", hex: "#18181b" },
+  { key: "palette.red", hex: "#e11d48" },
+  { key: "palette.yellow", hex: "#a16207" },
+  { key: "palette.green", hex: "#15803d" },
+  { key: "palette.violet", hex: "#7c3aed" },
 ] as const;
 
 /**
@@ -36,7 +35,7 @@ export const PALETTE = [
  * The glyph is the only visual cue a native <option> can carry: it holds text, never markup.
  */
 export const WIDTHS = [
-  { name: "Thin", glyph: "•", value: 0.002 },
-  { name: "Medium", glyph: "●", value: 0.005 },
-  { name: "Thick", glyph: "⬤", value: 0.012 },
+  { key: "width.thin", glyph: "•", value: 0.002 },
+  { key: "width.medium", glyph: "●", value: 0.005 },
+  { key: "width.thick", glyph: "⬤", value: 0.012 },
 ] as const;

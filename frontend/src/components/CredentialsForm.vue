@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { reactive } from "vue";
+import { useI18n } from "vue-i18n";
 import type { Credentials } from "@/api/auth";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   mode: "login" | "register";
@@ -19,7 +22,7 @@ const isRegister = props.mode === "register";
 <template>
   <form class="flex flex-col gap-4" @submit.prevent="emit('submit', { ...form })">
     <fieldset class="fieldset">
-      <label class="label" for="userName">User name</label>
+      <label class="label" for="userName">{{ t("auth.userName") }}</label>
       <input
         id="userName"
         v-model="form.userName"
@@ -30,7 +33,7 @@ const isRegister = props.mode === "register";
         required
       />
 
-      <label class="label mt-2" for="password">Password</label>
+      <label class="label mt-2" for="password">{{ t("auth.password") }}</label>
       <input
         id="password"
         v-model="form.password"
@@ -45,7 +48,7 @@ const isRegister = props.mode === "register";
 
     <button class="btn btn-primary w-full" type="submit" :disabled="pending">
       <span v-if="pending" class="loading loading-spinner loading-sm" aria-hidden="true" />
-      {{ isRegister ? "Create account" : "Log in" }}
+      {{ isRegister ? t("auth.createAccount") : t("auth.logIn") }}
     </button>
   </form>
 </template>

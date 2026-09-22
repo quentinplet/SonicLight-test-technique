@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { RouterLink, useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
+import LocaleSwitcher from "@/components/LocaleSwitcher.vue";
 import { useAuthStore } from "@/stores/auth";
+
+const { t } = useI18n();
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -18,11 +22,20 @@ async function logOut(): Promise<void> {
       <RouterLink to="/" class="text-lg font-semibold">SonicLight</RouterLink>
     </div>
 
-    <nav v-if="auth.user" class="flex items-center gap-2 sm:gap-4">
-      <!-- Hiding the link is UI comfort: requireAdmin on the server is the real check. -->
-      <RouterLink v-if="auth.isAdmin" to="/admin" class="btn btn-ghost btn-sm">Admin</RouterLink>
-      <span class="hidden font-mono text-sm sm:inline">{{ auth.user.userName }}</span>
-      <button class="btn btn-ghost btn-sm" type="button" @click="logOut">Log out</button>
-    </nav>
+    <div class="flex items-center gap-2 sm:gap-4">
+      <!-- Outside the v-if: the language is switchable before signing in too. -->
+      <LocaleSwitcher />
+
+      <nav v-if="auth.user" class="flex items-center gap-2 sm:gap-4">
+        <!-- Hiding the link is UI comfort: requireAdmin on the server is the real check. -->
+        <RouterLink v-if="auth.isAdmin" to="/admin" class="btn btn-ghost btn-sm">
+          {{ t("nav.admin") }}
+        </RouterLink>
+        <span class="hidden font-mono text-sm sm:inline">{{ auth.user.userName }}</span>
+        <button class="btn btn-ghost btn-sm" type="button" @click="logOut">
+          {{ t("nav.logOut") }}
+        </button>
+      </nav>
+    </div>
   </header>
 </template>

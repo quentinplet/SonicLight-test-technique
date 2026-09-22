@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import * as drawingApi from "@/api/drawing";
 import { errorMessage } from "@/api/errors";
 import { ApiError } from "@/api/http";
@@ -10,6 +11,8 @@ import { PALETTE, WIDTHS, type Tool } from "@/canvas/tools";
 import { useDrawing } from "@/composables/useDrawing";
 import { useSonification } from "@/composables/useSonification";
 import { useToast } from "@/composables/useToast";
+
+const { t, d } = useI18n();
 
 const { notify } = useToast();
 
@@ -24,6 +27,9 @@ const title = ref("");
 const savedTitle = ref("");
 const savedAt = ref<string | null>(null);
 const savedRevision = ref(0);
+
+const strokeCount = computed(() => drawing.data.value.strokes.length);
+const pointCount = computed(() => countPoints(drawing.data.value));
 
 const strokesChanged = computed(() => drawing.revision.value !== savedRevision.value);
 // A renamed drawing is worth saving on its own, strokes untouched.
@@ -64,7 +70,7 @@ async function save(): Promise<void> {
     savedTitle.value = saved.title;
     savedAt.value = saved.updatedAt;
     savedRevision.value = drawing.revision.value;
-    notify("Drawing saved successfully !", "success");
+    notify(t("draw.saved"), "success");
   } catch (err) {
     notify(errorMessage(err), "error");
   } finally {
@@ -97,7 +103,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
       <!-- The title takes the room it needs and truncates; the button never moves. -->
       <div class="flex items-center justify-between gap-3">
         <!-- Click the title to rename. Left blank, the server keeps the one already saved. -->
-        <EditableTitle v-model="title" placeholder="Enter a title" class="min-w-0" />
+        <EditableTitle v-model="title" placeholder="draw.titlePlaceholder" class="min-w-0" />
         <button
           class="btn btn-primary h-11 shrink-0 cursor-pointer gap-2 px-6"
           type="button"
@@ -112,7 +118,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
               d="M8 5.5v13a1 1 0 0 0 1.53.85l10-6.5a1 1 0 0 0 0-1.7l-10-6.5A1 1 0 0 0 8 5.5z"
             />
           </svg>
-          {{ audio.playing.value ? "Stop" : "Play Sound" }}
+          {{ audio.playing.value ? t("draw.stop") : t("draw.play") }}
         </button>
       </div>
       <!-- touch-none: without touch-action, drawing with a finger scrolls the page instead. -->
@@ -146,13 +152,13 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
       <p class="mt-2 font-mono text-xs text-base-content/70">
         <template v-if="loading">
           <span class="loading loading-spinner loading-xs mr-1 align-middle" aria-hidden="true" />
-          Loading your drawing…
+          {{ t("draw.loading") }}
         </template>
         <template v-else>
-          {{ drawing.data.value.strokes.length }} strokes ·
-          {{ countPoints(drawing.data.value) }} points
-          <span v-if="savedAt"> · saved {{ new Date(savedAt).toLocaleString() }}</span>
-          <span v-else> · not saved yet</span>
+          {{ t("draw.strokes", { count: strokeCount }, strokeCount) }} ·
+          {{ t("draw.points", { count: pointCount }, pointCount) }}
+          <span v-if="savedAt"> · {{ t("draw.savedAt", { date: d(new Date(savedAt), "long") }) }}</span>
+          <span v-else> · {{ t("draw.neverSaved") }}</span>
         </template>
       </p>
     </div>

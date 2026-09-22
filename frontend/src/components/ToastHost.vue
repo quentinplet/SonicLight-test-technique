@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { useToast } from "@/composables/useToast";
+
+const { t } = useI18n();
 
 const { toasts, dismiss } = useToast();
 </script>
@@ -29,7 +32,7 @@ const { toasts, dismiss } = useToast();
       <button
         type="button"
         class="shrink-0 cursor-pointer p-1 leading-none opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
-        aria-label="Dismiss notification"
+        :aria-label="t('toast.dismiss')"
         @click="dismiss(toast.id)"
       >
         ✕

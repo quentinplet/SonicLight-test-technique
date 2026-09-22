@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const title = defineModel<string>({ required: true });
+// The placeholder travels as a message key, so it follows the language like the rest.
 const props = defineProps<{ placeholder: string }>();
 
 const editing = ref(false);
@@ -9,7 +13,7 @@ const input = ref<HTMLInputElement | null>(null);
 
 // `size` is in characters: the field fits its text instead of the canvas width.
 const size = computed(() =>
-  Math.min(40, Math.max(12, (title.value || props.placeholder).length + 1)),
+  Math.min(40, Math.max(12, (title.value || t(props.placeholder)).length + 1)),
 );
 
 async function edit(): Promise<void> {
@@ -35,8 +39,8 @@ function stopEditing(): void {
       type="text"
       maxlength="50"
       :size="size"
-      :placeholder="props.placeholder"
-      aria-label="Drawing title"
+      :placeholder="t(props.placeholder)"
+      :aria-label="t('draw.titleLabel')"
       @blur="stopEditing"
       @keydown.enter="stopEditing"
       @keydown.esc="stopEditing"
@@ -47,10 +51,10 @@ function stopEditing(): void {
       v-else
       class="group flex max-w-full cursor-text items-center gap-1.5 pr-2 text-xl font-semibold hover:opacity-70"
       type="button"
-      :aria-label="`Rename drawing, currently ${title || props.placeholder}`"
+      :aria-label="t('draw.rename', { title: title || t(props.placeholder) })"
       @click="edit"
     >
-      <span class="truncate">{{ title || props.placeholder }}</span>
+      <span class="truncate">{{ title || t(props.placeholder) }}</span>
       <svg
         class="size-4 shrink-0 opacity-50 transition-opacity group-hover:opacity-100"
         viewBox="0 0 24 24"

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import * as adminApi from "@/api/admin";
 import { errorMessage } from "@/api/errors";
 import { ApiError } from "@/api/http";
@@ -7,6 +8,8 @@ import DrawingCard from "@/components/DrawingCard.vue";
 import DrawingPreview from "@/components/DrawingPreview.vue";
 import { useSonification } from "@/composables/useSonification";
 import { useToast } from "@/composables/useToast";
+
+const { t, d } = useI18n();
 
 const { notify } = useToast();
 
@@ -67,7 +70,7 @@ function forget(drawing: adminApi.DrawingWithAuthor): void {
     listening.value = null;
   }
   drawings.value = drawings.value.filter((other) => other.id !== drawing.id);
-  notify(`“${drawing.title}” by ${drawing.userName} was deleted successfully.`);
+  notify(t("admin.deleted", { title: drawing.title, user: drawing.userName }));
 }
 
 async function remove(): Promise<void> {
@@ -93,7 +96,7 @@ onMounted(load);
 
 <template>
   <main class="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
-    <h1 class="text-xl font-semibold">Drawings</h1>
+    <h1 class="text-xl font-semibold">{{ t("admin.title") }}</h1>
 
     <div v-if="error" role="alert" class="alert alert-error alert-soft mt-4">
       {{ error }}
@@ -105,14 +108,14 @@ onMounted(load);
       role="status"
     >
       <span class="loading loading-spinner loading-lg" aria-hidden="true" />
-      Loading drawings…
+      {{ t("admin.loading") }}
     </div>
 
     <div
       v-else-if="drawings.length === 0"
       class="mt-4 rounded-box border border-dashed border-base-300 p-10 text-center text-base-content/70"
     >
-      Nobody has saved a drawing yet.
+      {{ t("admin.empty") }}
     </div>
 
     <ul v-else class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -132,8 +135,8 @@ onMounted(load);
       <div v-if="opened" class="modal-box max-w-3xl">
         <h2 class="text-lg font-semibold">{{ opened.title }}</h2>
         <p class="font-mono text-xs text-base-content/70">
-          {{ opened.userName }} · saved
-          {{ new Date(opened.updatedAt).toLocaleString() }}
+          {{ opened.userName }} ·
+          {{ t("draw.savedAt", { date: d(new Date(opened.updatedAt), "long") }) }}
         </p>
         <DrawingPreview
           class="mt-3 rounded-box border border-base-300"
@@ -155,31 +158,32 @@ onMounted(load);
                 d="M8 5.5v13a1 1 0 0 0 1.53.85l10-6.5a1 1 0 0 0 0-1.7l-10-6.5A1 1 0 0 0 8 5.5z"
               />
             </svg>
-            {{ listening === opened.id ? "Stop" : "Play Sound" }}
+            {{ listening === opened.id ? t("draw.stop") : t("draw.play") }}
           </button>
           <button
             class="btn btn-sm btn-error cursor-pointer"
             type="button"
             @click="askDeletion(opened)"
           >
-            Delete
+            {{ t("admin.delete") }}
           </button>
           <form method="dialog">
             <button class="btn btn-sm cursor-pointer border-base-300 bg-base-100 hover:bg-base-300">
-              Close
+              {{ t("admin.close") }}
             </button>
           </form>
         </div>
       </div>
-      <form method="dialog" class="modal-backdrop"><button>Close</button></form>
+      <form method="dialog" class="modal-backdrop">
+        <button>{{ t("admin.close") }}</button>
+      </form>
     </dialog>
 
     <dialog ref="confirmDialog" class="modal">
       <div v-if="doomed" class="modal-box max-w-md">
-        <h2 class="text-lg font-semibold">Delete this drawing?</h2>
+        <h2 class="text-lg font-semibold">{{ t("admin.confirmTitle") }}</h2>
         <p class="mt-2 text-sm text-base-content/70">
-          “{{ doomed.title }}” by {{ doomed.userName }} will be removed for good. This cannot be
-          undone.
+          {{ t("admin.confirmBody", { title: doomed.title, user: doomed.userName }) }}
         </p>
 
         <div class="modal-action">
@@ -190,17 +194,17 @@ onMounted(load);
             @click="remove"
           >
             <span v-if="deleting" class="loading loading-spinner loading-xs" aria-hidden="true" />
-            Delete
+            {{ t("admin.delete") }}
           </button>
           <form method="dialog">
             <button class="btn btn-sm cursor-pointer border-base-300 bg-base-100 hover:bg-base-300">
-              Cancel
+              {{ t("admin.cancel") }}
             </button>
           </form>
         </div>
       </div>
       <form method="dialog" class="modal-backdrop">
-        <button>Cancel</button>
+        <button>{{ t("admin.cancel") }}</button>
       </form>
     </dialog>
   </main>
