@@ -79,7 +79,7 @@ is not housekeeping.
 
 - After 2–3 failed attempts, stop and explain the problem
 - Don't try random fixes
-- Ask when a requirement is unclear — `@context/project-overview.md` §19 lists what is already
+- Ask when a requirement is unclear — `@context/project-overview.md` §17 lists what is already
   decided and what is still open
 
 ## Code Review

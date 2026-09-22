@@ -2,29 +2,22 @@
 
 > **Draw, then listen to your drawing: a stroke becomes a musical phrase.**
 
-![Status](https://img.shields.io/badge/status-technical%20exercise-blue)
-![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vuedotjs&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
-![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)
-![Prisma](https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma&logoColor=white)
-![Postgres](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white)
-
-|                 |                                                            |
-| --------------- | ---------------------------------------------------------- |
-| **Product**     | SonicLight — simplified version                            |
-| **Type**        | Recruitment technical exercise — IRCAM, Web Department     |
-| **Owner**       | Quentin Plet                                               |
-| **Doc version** | 1.0 — 16 September 2026                                    |
-| **Deadline**    | **Wednesday 23 September 2026**                            |
-| **Status**      | **Starting from zero** — not a line of code written        |
+|             |                                                        |
+| ----------- | ------------------------------------------------------ |
+| **Product** | SonicLight — simplified version                        |
+| **Type**    | Recruitment technical exercise — IRCAM, Web Department |
+| **Owner**   | Quentin Plet                                           |
+| **Status**  | Delivered and deployed, 22 September 2026              |
 
 > **⚠️ This project is graded on the ability to explain its choices, not on its completeness.**
 > The brief says so explicitly: *"it is important that you understand the code you produce and
 > are able to explain your choices during the interview"*, and *"the interview matters more
-> than whether the project is finished"*. [§4](#4-working-on-this-project-with-claude-code)
-> turns that constraint into working rules. **Read it before touching the code.**
+> than whether the project is finished"*. `ai-interaction.md` turns that constraint into
+> working rules. **Read it before touching the code.**
+
+> **This document records decisions, not a plan.** Everything in it was built. Where a
+> decision was later reversed, the reversal is written down rather than the line quietly
+> edited — §3 and §17 hold the two that happened.
 
 ---
 
@@ -46,10 +39,8 @@
 14. [Sonification (bonus)](#14-sonification-bonus)
 15. [UI/UX & design tokens](#15-uiux--design-tokens)
 16. [Docker, deployment & environment variables](#16-docker-deployment--environment-variables)
-17. [Commit plan](#17-commit-plan)
-18. [Engineering rules](#18-engineering-rules)
-19. [Open questions](#19-open-questions)
-20. [Reference links](#20-reference-links)
+17. [Open questions](#17-open-questions)
+18. [Reference links](#18-reference-links)
 
 ---
 
@@ -93,7 +84,7 @@ it. Authentication is therefore not over-scope, it is the direct consequence of 
 
 **C. One drawing per user, and the admin moderates.** The initial assumption — several drawings
 per user, an admin who reviews without managing — was **invalidated by IRCAM's answers**
-([§19](#19-open-questions)): each user has **one** drawing, which they can replace or delete,
+([§17](#17-open-questions)): each user has **one** drawing, which they can replace or delete,
 and the admin sees every drawing and can **delete** them. They do not edit them. The "one
 drawing only" constraint is carried by the database (`userId` unique), not by the code alone.
 
@@ -137,9 +128,9 @@ in four decisions, and that is exactly where the grading happens:
 | Criterion (in the brief's order)                            | Concrete translation in this document                                      |
 | ------------------------------------------------------------ | -------------------------------------------------------------------------- |
 | Code quality and technical choices                           | [§6](#6-layered-backend-architecture) · [§7](#7-code-principles)            |
-| Understanding of the need, and relevant decisions            | [§1](#1-the-need-and-how-we-read-it) · [§19](#19-open-questions)            |
+| Understanding of the need, and relevant decisions            | [§1](#1-the-need-and-how-we-read-it) · [§17](#17-open-questions)            |
 | The ability to prioritise and produce a coherent result      | [§3](#3-functional-scope--prioritisation)                                   |
-| The way Git is used                                          | [§17](#17-commit-plan)                                                      |
+| The way Git is used                                          | The history itself: one commit per coherent step, `git log --oneline`       |
 
 ### Bonuses named explicitly
 
@@ -147,36 +138,11 @@ Docker · audio generation and playback with the Web Audio API · any other rele
 **"These remain entirely optional and must not come at the expense of the rest."** This document
 therefore treats Docker and audio as P1/P2 tiers, never as P0.
 
-### Time budget
-
-The brief estimates "a few hours" for a first version. This document plans for **~20 useful
-hours spread from 16 to 22 September**, with submission on the evening of the 22nd to keep a
-day of margin. Target split:
-
-| Tier                                   | Budget | Total |
-| -------------------------------------- | ------ | ----- |
-| P0 — a complete, finished MVP          | 8 h    | 8 h   |
-| P1 — Docker + visual replay + tests    | 4 h    | 12 h  |
-| P1b — GitHub Actions CI                | 1 h    | 13 h  |
-| P1c — front + API + database deployment| 3 h    | 16 h  |
-| P2 — Web Audio sonification            | 3 h    | 19 h  |
-| Finishing — README, proofreading        | 1 h    | 20 h  |
-
-> **Stopping rule.** If P0 runs past 10 h, cut P2 without hesitating and ship a clean, deployed
-> MVP. A coherent, finished project beats an ambitious half-wired one — that is literally
-> criterion 3.
-
-> **Deployment is budgeted at 3 h, and that is not pessimistic.** The code is ready in fifteen
-> minutes; what takes time is the first CORS failure, the `VITE_API_URL` forgotten at build
-> time, the managed database whose connection URL demands `?sslmode=require`, and the free
-> service that falls asleep. Planning that margin avoids having to choose between deploying and
-> finishing the canvas.
-
 ### What the brief allows, and what must not be wasted
 
 > "You can and **must** ask us any question you deem necessary before starting development."
 
-The word **must** is not decorative. [§19](#19-open-questions) lists the real grey areas; the
+The word **must** is not decorative. [§17](#17-open-questions) lists the real grey areas; the
 most structuring ones go out by email before development starts. The others are settled
 unilaterally, documented here, and become interview material.
 
@@ -203,7 +169,7 @@ unilaterally, documented here, and become interview material.
 | **CI**         | GitHub Actions: types, tests and build checked on every push                |
 | **Deployment** | Front on a CDN, API in a container, managed database — a clickable link     |
 | **Visual replay** | The drawing rebuilds stroke by stroke when opened, instead of appearing at once |
-| **Tests**      | Unit tests on the backend services (per-user isolation, drawing format validation), plus a short Playwright suite over the user and admin journeys ([§19](#19-open-questions) Q10) |
+| **Tests**      | Unit tests on the backend services (per-user isolation, drawing format validation), plus a short Playwright suite over the user and admin journeys ([§17](#17-open-questions) Q10) |
 | **Seed**       | A demo dataset: 1 admin, 2 users, a few drawings — the admin view has something to show without manual input |
 
 ### P2 — the bonus that gives the product its name
@@ -230,116 +196,20 @@ pagination · offline mode.
 >
 > **End-to-end tests left it the same day**, for the opposite kind of reason: the argument
 > against them was their cost, and five tests over the two journeys took well under the two
-> hours that had been feared ([§19](#19-open-questions) Q10).
+> hours that had been feared ([§17](#17-open-questions) Q10).
 
 ---
 
 ## 4. Working on this project with Claude Code
 
-> This section takes precedence over all the others. The following ones describe a **target**;
-> this one describes how it is permitted to be reached.
+The deliverable is not the code: it is the ability to defend it out loud. The brief allows AI
+tools and sets one condition in exchange — understanding what is produced. A file its author
+would discover during the interview is a liability, whatever its quality.
 
-### The context
-
-Unlike an ordinary project, **the deliverable is not the code: it is the ability to defend it
-out loud**. The brief explicitly allows AI tools, and sets one condition in exchange —
-understanding what is produced. A file Quentin would discover during the interview is a
-liability, whatever its quality.
-
-Every rule that follows comes from there.
-
-### Rule 1 — Explain before writing
-
-For any non-trivial step (a new module, an algorithm, a library choice), announce the plan
-**first**, in five lines at most, and wait for agreement:
-
-```
-What I am going to do : capture strokes in a useDrawing() composable
-Files touched         : frontend/src/composables/useDrawing.ts (new)
-Structuring decision  : normalised [0,1] coordinates, no pixels
-Alternative discarded : store pixels + a scale factor (breaks on resize)
-Verification          : npm run type-check
-```
-
-A trivial step (adding a field, fixing an import, writing an obvious test) does not need this.
-The test: *would Quentin be able to justify this choice tomorrow without rereading the code?*
-If not, announce it.
-
-### Rule 2 — No code Quentin cannot read in one pass
-
-A file over ~150 lines, a function over ~40 lines, or an abstraction that requires jumping
-between three files to be understood: that is a signal, not an achievement. Split, or simplify.
-
-Corollary: **no mass generation**. Build one piece, read it, commit it, move to the next.
-Dumping the whole MVP in a single message produces code nobody has read.
-
-### Rule 3 — One commit = one coherent step
-
-Regular commits are an **explicit grading criterion**. Concretely:
-
-- One commit per finished functional step that compiles. Never `wip`, never "the whole backend"
-  in one commit.
-- Messages in English, imperative, _Conventional Commits_ style:
-  `feat(drawing): capture strokes in normalised coordinates`.
-- The message body documents a decision when it deserves it — it is free, and it reads well in
-  an interview.
-- The history must read like the story of the project. A reviewer running `git log --oneline`
-  should understand the order in which the problems were attacked.
-
-The target commit plan is at [§17](#17-commit-plan).
-
-### Rule 4 — No new dependency without asking
-
-The dependency list is **frozen** ([§5](#5-system-architecture)). Every addition is proposed
-first, with its justification and the dependency-free alternative. On a project this size, every
-line of `package.json` is a potential interview question: "why that one?". There has to be an
-answer for each.
-
-Barred outright: a drawing library (Fabric.js, Konva, Paper.js) — the native canvas **is** the
-exercise; an audio library (Tone.js) — the raw Web Audio API **is** the bonus; a heavy UI
-framework on a project with five screens.
-
-### Rule 5 — The simplest thing that works
-
-See [§7](#7-code-principles). Between two solutions, the one that fits in fewer files wins. A
-few-hours exercise that is over-architected turns against its author: it demonstrates the
-opposite of the "ability to prioritise" criterion.
-
-### Rule 6 — Verify before handing back
-
-At the end of any task that touches code:
-
-```bash
-# Backend
-cd backend && npx tsc --noEmit && npm test
-
-# Frontend
-cd frontend && npm run type-check && npm run build
-```
-
-Do not announce a task as finished if any of the four fails. A test that was already failing
-before the intervention is reported, not silently fixed.
-
-### Rule 7 — Do not run ahead of the tiers
-
-Not a line of sonification code until P0 is finished and committed. No `Dockerfile` until the
-application runs locally. The real risk of this exercise is not a lack of ambition, it is a
-half-finished P2 that prevents shipping a finished P0.
-
-### What is done without asking
-
-- Writing a P0 feature in a new file, following the conventions.
-- Adding a test.
-- Fixing a bug identified within the scope of the current task.
-- Answering a question, explaining code, proposing a plan.
-
-### What requires prior agreement
-
-- Adding a dependency.
-- Changing the Prisma schema.
-- Changing a convention (folder layout, naming, API response shape).
-- Starting a P1 or P2 tier.
-- Touching a file outside the scope of the current task.
+The working rules that follow from that — announce before writing, no file that cannot be read
+in one pass, one commit per coherent step, no dependency without asking, the simplest thing
+that works, verify before handing back, and never run ahead of the tiers — live in
+**`ai-interaction.md`**, which is the single copy. They are not repeated here.
 
 ---
 
@@ -410,7 +280,7 @@ flowchart TB
 
 Twelve of these, three of them for styling, ship no JavaScript at runtime. `vue-i18n` is the
 thirteenth line, and the only one that does — so here is its justification, as
-[§4 rule 4](#rule-4--no-new-dependency-without-asking) demands.
+`ai-interaction.md` demands.
 
 **A hand-written module came first**: two dictionaries, a `locale` ref and a `t()` — fifty
 lines, `+1.9 kB` gzipped, and it typed its own keys. It was replaced because of **plurals**:
@@ -560,7 +430,7 @@ place:
 The `DrawingData` type, on the other hand, is **deliberately duplicated** between
 `frontend/src/types/` and `backend/src/types/`, with a header comment saying so. Twenty copied
 lines cost less than a shared package and its build configuration, on a project this size. It is
-the first thing to change if the project grew ([§19](#19-open-questions) Q6).
+the first thing to change if the project grew ([§17](#17-open-questions) Q6).
 
 ### KISS & YAGNI — the list of what we do not write
 
@@ -624,7 +494,7 @@ Two tables. That is all, and it is deliberate.
 | 1   | **Strokes as `jsonb`, not a `Stroke` table**         | A drawing is read and written **whole, always**. We never query "the red strokes", we never update a single point. A `Stroke` + `Point` table pair would produce thousands of rows per drawing for an aggregate that is never split — a pure join cost, with no benefit |
 | 2   | `role` on `User`, no `Role` table                   | Two values, no granular permissions. An enum is enough; a role table would be an abstraction with no second case                                                                                                            |
 | 3   | A single `userName`, no email                       | No feature needs an email (neither reset nor notification). One unique name serves as both the sign-in identifier and the author name shown in the admin view — one field fewer, one piece of personal data fewer            |
-| 4   | No `thumbnail` column                               | The thumbnail renders client-side by replaying the strokes on a small canvas. Storing a derived PNG would duplicate the source of truth for a gain that is invisible at this scale ([§19](#19-open-questions) Q4)           |
+| 4   | No `thumbnail` column                               | The thumbnail renders client-side by replaying the strokes on a small canvas. Storing a derived PNG would duplicate the source of truth for a gain that is invisible at this scale ([§17](#17-open-questions) Q4)           |
 | 5   | `onDelete: Cascade` on `Drawing.userId`             | Deleting an account deletes its drawing. There is no point keeping orphan drawings                                                                                                                                          |
 | 6   | **`userId` unique**, no other index                 | One drawing per user (IRCAM's answer): the database enforces it, two simultaneous saves cannot create two rows, and replacing becomes an `upsert` on that column. The unique index also serves the only user-side query. The admin list is a few dozen rows: a sort index would not even be used |
 | 7   | No soft delete                                      | The brief requires no trash bin. `DELETE` deletes                                                                                                                                                                           |
@@ -741,61 +611,19 @@ normalised coordinates, roughly 2 px on a 1000 px canvas).
 
 The result: a drawing typically goes from ~400 KB to ~40 KB of JSON, replay is smoother, and
 sonification produces fewer spurious notes. The Ramer–Douglas–Peucker algorithm would do better
-— it is listed at [§19](#19-open-questions) Q5 as an evolution, not a prerequisite.
+— it is listed at [§17](#17-open-questions) Q5 as an evolution, not a prerequisite.
 
 ---
 
 ## 10. Prisma schema
 
-```prisma
-// backend/prisma/schema.prisma
+`backend/prisma/schema.prisma` — two models, `User` and `Drawing`, mapped to `users` and
+`drawings`. The fields are the ones drawn at [§8](#8-data-model); what is worth saying about
+them is below rather than transcribed here, where the copy could only drift from the file.
 
-generator client {
-  provider            = "prisma-client"
-  output              = "../src/generated/prisma"   // not committed
-  importFileExtension = "js"                        // resolves under tsx as under node
-}
-
-// Prisma 7: the connection URL lives in prisma.config.ts, no longer in the schema.
-datasource db {
-  provider = "postgresql"
-}
-
-enum Role {
-  USER
-  ADMIN
-}
-
-model User {
-  id           String    @id @default(uuid()) @db.Uuid
-  userName     String    @unique @db.VarChar(60)
-  passwordHash String
-  role         Role      @default(USER)
-  createdAt    DateTime  @default(now())
-
-  drawing      Drawing?
-
-  @@map("users")
-}
-
-model Drawing {
-  id        String   @id @default(uuid()) @db.Uuid
-  title     String   @db.VarChar(50)
-
-  /// Vector strokes, conforming to DrawingDataSchema (§9).
-  /// A document read and written whole — never queried stroke by stroke.
-  data      Json     @db.JsonB
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  /// Unique: one drawing per user, enforced by the database. Replacing = upsert.
-  userId    String   @unique @db.Uuid
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("drawings")
-}
-```
+Prisma 7: the connection URL and the seed command live in `prisma.config.ts`, the client is
+generated into `src/generated/prisma` (git-ignored) with `importFileExtension = "js"`, and the
+`@prisma/adapter-pg` driver adapter is mandatory.
 
 ### Points to watch
 
@@ -812,24 +640,15 @@ model Drawing {
 
 ### Seed
 
-```
-backend/prisma/seed.ts
-```
+`backend/prisma/seed.ts` creates, if absent, an `admin`, three user accounts and their
+programmatically generated drawings (spiral, waves, burst). Every step is an upsert, so it is
+replayable without duplicates. The point is that a reviewer who clones the repository sees a
+**populated** administration interface without creating three accounts and drawing with a
+mouse — a detail that weighs more than it looks on a first impression.
 
-Creates, if absent: an `admin` account (role `ADMIN`), two user accounts, and three or four
-programmatically generated drawings (spirals, waves) spread between them. Every step is guarded
-by an existence check, so it is replayable without duplicates.
-
-The goal: a reviewer who clones the repo and runs `docker compose up` sees a **populated**
-administration interface, without having to create three accounts and draw with a mouse. It is a
-welcome detail that weighs more than it looks on a first impression.
-
-> **In production the seed creates the `USER` accounts but never the `ADMIN`.** Those passwords
-> are written in a public Git repository, and what they cost depends on the role: a user reaches
-> nothing but their own drawing — anyone would get as much by registering — whereas the
-> administrator can delete everybody's work. The first is a demonstration convenience, the
-> second a way in. The online administrator is created by hand, with a password that exists
-> nowhere in the repository, and its identifier is in the README.
+In production it creates the `USER` accounts but **never** the `ADMIN`: the argument, which
+turns on the role rather than the environment, is at
+[§16](#16-docker-deployment--environment-variables).
 
 ---
 
@@ -942,7 +761,7 @@ or medical application.
 > ```
 >
 > We do not write it now — that would be anticipation
-> ([§4 rule 7](#rule-7--do-not-run-ahead-of-the-tiers)) — but knowing it turns "what if this had
+> (no anticipation — see `ai-interaction.md`) — but knowing it turns "what if this had
 > to change?" into a one-sentence answer.
 
 ### What actually reduces the XSS risk
@@ -952,7 +771,7 @@ from running are not optional:
 
 - **No `v-html`, anywhere.** Vue escapes everything by default through `{{ }}`; `v-html` is
   precisely the XSS door. The project contains none, and it is a rule that can be checked in
-  review ([§18](#18-engineering-rules) rule 27).
+  review.
 - **No user content rendered as HTML.** A drawing title is text, displayed as text. The
   application's only free-text field is that title, capped at 50 characters.
 - **Almost no frontend dependency beyond the Vue foundation** ([§5](#5-system-architecture)).
@@ -1105,7 +924,7 @@ rather than stretched.
 ## 14. Sonification (bonus)
 
 > **P2 tier — not a line before P0 is finished and committed**
-> ([§4 rule 7](#rule-7--do-not-run-ahead-of-the-tiers)).
+> (the tiers are not run ahead of — see `ai-interaction.md`).
 
 ### Lineage — Kandinsky
 
@@ -1597,101 +1416,7 @@ surface as an empty `JWT_SECRET` and tokens signed with an empty key.
 
 ---
 
-## 17. Commit plan
-
-Git is a grading criterion. The target history, in order:
-
-| #   | Commit                                                        | Content                                           |
-| --- | ------------------------------------------------------------- | ------------------------------------------------- |
-| 1   | `chore: init repo, gitignore, readme skeleton`                | The skeleton. **First commit within hour 1**      |
-| 2   | `chore(server): scaffold express + typescript`                | The server answers on `/api/health`               |
-| 3   | `chore(db): add docker compose with postgres`                 | The database starts                               |
-| 4   | `feat(db): add user and drawing models`                       | Prisma schema + first migration                   |
-| 5   | `feat(auth): register, login, logout with httpOnly jwt`       | Authentication backend                            |
-| 6   | `feat(auth): require auth and admin middlewares`              | The guards                                        |
-| 7   | `chore(client): scaffold vue 3 + router + pinia`              | The front starts, `VITE_API_URL` and CORS wired   |
-| 8   | `feat(client): login and register screens`                    | The authentication cycle closes end to end        |
-| 9   | `feat(drawing): canvas capture with normalised coordinates`   | **The heart of the project**                      |
-| 10  | `feat(drawing): color, width, undo and clear controls`        | The toolbar                                       |
-| 11  | `feat(drawing): save or replace the user's single drawing`    | `PUT/GET/DELETE /api/drawing`                     |
-| 12  | `feat(drawing): open and render a saved drawing`              | "Finding your drawing again"                      |
-| 13  | `feat(admin): list and moderate all drawings`                 | List, read, delete — **P0 is complete**           |
-| 14  | `test(server): cover ownership isolation in drawing service`  | The tests that matter                             |
-| 15  | `feat(db): seed demo users and drawings`                      | The demo dataset                                  |
-| 16  | `feat(drawing): animate stroke-by-stroke replay`              | P1                                                |
-| 17  | `chore(docker): containerise the api and its database`        | P1 — the Docker bonus, then the client for a full `up` |
-| 18  | `ci: typecheck, test and build both packages on push`         | P1b — GitHub Actions                              |
-| 19  | `chore(db): gate the seed behind a non-production check`      | Before any deployment, never after                |
-| 20  | `chore(deploy): configure api, database and static front`     | P1c — migrations in the release hook              |
-| 21  | `feat(audio): sonify drawings with the web audio api`         | P2                                                |
-| 22  | `docs: document architecture choices and trade-offs`          | The final README, with the demo link              |
-
-> **Commit 1 goes out on day one, not on the last day.** A `git log` whose commits all carry the
-> same date three minutes apart contradicts the brief visibly, whatever the quality of the code.
-> Committing as you go is not a performance: it is a trace.
-
-> Commits 16 to 22 can be dropped without damage if time runs short. Commits 1 to 15 form a
-> coherent and sufficient deliverable. If one bonus had to be saved, it would be 20: a clickable
-> link changes how the project is received. And 19 stops being optional as soon as 20 exists.
-
----
-
-## 18. Engineering rules
-
-### Collaboration
-
-| #   | Rule                                                                                        |
-| --- | ------------------------------------------------------------------------------------------- |
-| 1   | Announce the plan before any non-trivial step, and wait for agreement.                      |
-| 2   | No file Quentin cannot read in one pass. No mass generation.                                |
-| 3   | One commit per coherent step that compiles. Never `wip`, never a final dump.                |
-| 4   | No new dependency without approval. The list in [§5](#5-system-architecture) is frozen.     |
-| 5   | `tsc --noEmit`, `npm run type-check`, `npm test`, `npm run build` all pass before handing back. |
-| 6   | Not a line of P1 before P0 is finished, not a line of P2 before P1 is.                      |
-
-### Architecture
-
-| #   | Rule                                                                                          |
-| --- | --------------------------------------------------------------------------------------------- |
-| 7   | One-way layering: Route → Controller → Service → Prisma.                                      |
-| 8   | Only a service imports `prisma`. A controller that imports it is a bug.                       |
-| 9   | A service knows neither `req` nor `res`; it throws an `AppError`, which carries its status.   |
-| 10  | No repository layer on top of Prisma.                                                         |
-| 11  | Abstract on the third real case, not the first.                                               |
-| 12  | One stroke-rendering function, shared by editing, reading and the thumbnail.                  |
-
-### Data & security
-
-| #   | Rule                                                                                               |
-| --- | -------------------------------------------------------------------------------------------------- |
-| 13  | Every read or write of a drawing takes the `userId` as a parameter. No exception.                  |
-| 14  | Admin access goes through a distinct service function, never an optional `userId?`.                |
-| 15  | A resource belonging to another user returns **404**, never 403.                                   |
-| 16  | Every request body is validated by a Zod schema before reaching a service.                         |
-| 17  | A drawing's `data` is parsed by `DrawingDataSchema`, never cast with `as`.                          |
-| 18  | Coordinates are normalised within `[0, 1]`. No pixel ever crosses the network boundary.            |
-| 19  | `passwordHash` never leaves a service. Output DTOs are built explicitly.                            |
-| 20  | Every schema change goes through a generated Prisma migration. Never `db push`.                     |
-| 21  | `.env` is never committed. `.env.example` is, with placeholder values.                              |
-| 30  | The seed **never** creates an `ADMIN` in production: the role is removed from the list, not skipped by an `if`. |
-| 31  | In production, migrations run in the host's release hook, never at container start.                 |
-
-### Frontend
-
-| #   | Rule                                                                                        |
-| --- | ------------------------------------------------------------------------------------------- |
-| 22  | API calls all go through `api/http.ts`, which prefixes `VITE_API_URL`. No hard-coded API URL anywhere else. |
-| 23  | The canvas uses `pointer*`, never `mouse*` or `touch*`.                                     |
-| 24  | The canvas backing store is sized with `devicePixelRatio`.                                  |
-| 25  | The Vue route guard is interface comfort; security is the server middleware.                |
-| 26  | `AudioContext` is only created or resumed inside a user event handler.                      |
-| 27  | **No `v-html`, anywhere.** The token lives in `localStorage`: XSS is risk number one ([§12](#12-authentication)). |
-| 28  | The `auth` store owns the token and is the only code that stores it; `src/i18n` is the only other writer to `localStorage`, for the chosen language. `api/http.ts` is the only code that sends the token. The HTTP client does not navigate. |
-| 29  | The displayed role comes from `GET /api/auth/me`, never from a JWT payload decoded client-side. |
-
----
-
-## 19. Open questions
+## 17. Open questions
 
 ### To ask IRCAM before developing
 
@@ -1726,7 +1451,7 @@ specified that the application must be **responsive** (desktop and mobile) and l
 
 ---
 
-## 20. Reference links
+## 18. Reference links
 
 ### Stack
 
@@ -1763,4 +1488,4 @@ specified that the application must be **responsive** (desktop and mobile) and l
 ---
 
 _A living document — to be updated when a decision changes, noting the change in
-[§19](#19-open-questions)._
+[§17](#17-open-questions)._

@@ -157,59 +157,35 @@ finished and committed.
 
 ## Auth
 
-JWT (HS256) in `localStorage`, sent as `Authorization: Bearer`. The standard SPA-over-a-
-stateless-API pattern, and the one this developer knows — on an exercise graded on
-understanding the code you produce, a familiar pattern beats a theoretically better unfamiliar
-one. It also keeps the API browser-independent, which a cookie would not.
+JWT (HS256) in `localStorage`, sent as `Authorization: Bearer`. Why that pattern, what the XSS
+exposure costs and what would flip the decision to an `httpOnly` cookie: `project-overview.md`
+§12. The rules that make the storage choice acceptable, and that are checkable in review:
 
-**The XSS exposure is accepted, not overlooked.** A token in `localStorage` is readable by any
-script on the page. The rules below are what keep that acceptable, and none of them is
-optional:
-
-- **No `v-html`. Anywhere.** Vue escapes `{{ }}` by default; `v-html` is the XSS door. This is
-  grep-able in review, and it is the single most important rule in this file
+- **No `v-html`. Anywhere.** Vue escapes `{{ }}` by default; `v-html` is the XSS door. The
+  single most important rule in this file, and a grep away
 - **No user-generated content is ever rendered as HTML.** A drawing title is text, displayed as
-  text. It is the only free-text field in the app, capped at 50 characters
-- **One frontend dependency beyond the Vue core, `vue-i18n`, and no more.** Every third-party
-  library is more script running in the page, which is more XSS surface. The list stays frozen;
-  what changed is that it is now thirteen lines rather than twelve, and the reasoning for that
-  one is written out in `project-overview.md` §5
+  text — the app's only free-text field, capped at 50 characters
+- **The frontend dependency list stays frozen** at thirteen lines. Every library is more script
+  running in the page, therefore more XSS surface
 - The auth store owns the token; `src/i18n` also writes to `localStorage`, for the chosen
-  language. Those two, and nothing else. `src/api/http.ts` is the only code that sends the
-  token — no component or view builds an `Authorization` header by hand
+  language. Those two, and nothing else. `src/api/http.ts` is the only code that sends it — no
+  component or view builds an `Authorization` header by hand
 - **Keep the HTTP client small**: fetch, headers, `ApiError` on non-2xx, `auth.logout()` on a
   401 that carried a token. It does not navigate — route guards do. No `try/catch` around
   `localStorage`: a deliberate simplification (it only throws when site data is blocked)
-- 7-day expiry. `logout` is a `removeItem`; there is deliberately **no `POST /api/auth/logout`**
-  endpoint, because a stateless token cannot be revoked server-side and an endpoint would
-  suggest otherwise
-
-**The client never trusts the token's contents.** A JWT payload is base64, not encrypted —
-readable by anyone, therefore proof of nothing client-side. Reading `exp` to log out cleanly is
-fine; inferring `role === "ADMIN"` from it is not. Identity and role come from
-`GET /api/auth/me` at startup, answered by the server, which is the only holder of the signing
-secret. A `401` on any call clears the store and redirects.
-
+- **The client never trusts the token's contents.** Reading `exp` to log out cleanly is fine;
+  inferring `role === "ADMIN"` from it is not. Identity and role come from `GET /api/auth/me`,
+  answered by the only holder of the signing secret
+- 7-day expiry, no refresh token. `logout` is a `removeItem`, and there is deliberately **no
+  `POST /api/auth/logout`**: a stateless token cannot be revoked server-side
 - bcrypt at cost 10. No plaintext password is ever logged, including inside an error
-- `JWT_SECRET` is validated at boot by the env schema. A missing secret fails startup rather
-  than signing tokens with `undefined`
+- `JWT_SECRET` is validated at boot by the env schema, so a missing secret fails startup
+  rather than signing tokens with `undefined`
 - The role on `req.user` comes from the verified token, never from a client-supplied field
-- **No Vite proxy.** The client calls the API by its absolute URL from `VITE_API_URL`, in
-  development exactly as in production. A proxy would make development same-origin while the
-  deployed app is genuinely cross-origin — front on a CDN, API in a container — and would
-  defer the first CORS failure to deploy day. Developing in the topology you ship costs one
-  CORS config and removes a class of surprises
-- `cors({ origin: env.CLIENT_ORIGINS })` — an explicit list, never `"*"`, and
-  `credentials: true` is deliberately **not** set: no cookie circulates
-- An `Authorization` header makes the request non-simple, so the browser preflights with
-  `OPTIONS`. `cors` answers it, but an origin that does not match **exactly** (missing
-  `https://`, trailing slash) fails as an opaque network error client-side with nothing in the
-  server log. First place to look when a call works in `curl` and fails in the browser
-- No refresh token: a stated trade-off. The 7-day token cannot be revoked before expiry
-- **The condition that flips this decision**, worth being able to state out loud: the day the
-  app renders content authored by other users as HTML, or handles sensitive data, the
-  `httpOnly` cookie becomes the right answer. The migration is cheap — the token is read in one
-  place server-side, and `requireAuth` can accept both transports in three lines
+- **No Vite proxy**, and `cors({ origin: env.CLIENT_ORIGINS })` — an explicit list, never `"*"`,
+  `credentials` unset. Development is cross-origin because production is. An origin that does
+  not match exactly fails as an opaque network error with nothing in the server log: first
+  place to look when a call works in `curl` and fails in the browser
 
 ## Validation
 
@@ -381,26 +357,22 @@ components. The split is the decision, not the tool:
 
 Front and API deploy **separately**: a static `dist/` on a CDN, the API as a container, a
 managed Postgres. Two origins in production, which is why development is cross-origin too.
+The reasoning — why the client image is a local demonstration and never a deployment
+artifact, where migrations run and why, what the seed is allowed to create — is in
+`project-overview.md` §16. What it means while working:
 
-- **The client's image is for local demonstration, never for deployment.** `docker compose up`
-  has to give a working application, not two thirds of one — so `db` + `server` + `client`.
-  But the front still ships as `dist/` on a CDN: the image bakes `VITE_API_URL` into the
-  bundle at build time, which ties it to one API and to one machine. `vite preview` serves it,
-  and Vite says itself that it is not a production server
-- **`VITE_*` variables are inlined at build time, not read at runtime.** Setting `VITE_API_URL`
-  in a service's environment after the fact changes nothing — it needs a rebuild. The symptom
-  is a front calling `undefined/api/drawing`
-- **Prefer Vercel or Netlify over GitHub Pages.** Pages serves from a subpath, so `base` must
-  be set in `vite.config.ts` or no asset loads, and an SPA needs a deep-link fallback
-  (`index.html` copied to `404.html`). The other two handle both natively and deploy on push
-- `CLIENT_ORIGINS` is a list and holds the exact deployed origin — scheme included, no
-  trailing slash
-- Free tiers sleep after inactivity; the first call after a pause takes seconds. Say so in the
-  README so a reviewer does not read latency as a defect
+- **`VITE_*` is inlined at build time, not read at runtime.** Changing `VITE_API_URL` on a
+  deployed service does nothing without a rebuild. The symptom is `undefined/api/drawing`
+- `CLIENT_ORIGINS` holds the exact deployed origin — scheme included, no trailing slash
+- **`prisma migrate deploy` runs in the host's release hook**, never at container start and
+  never from an Actions runner: a failed migration must abort the deploy, not crash-loop the app
+- **The seed never creates an `ADMIN` in production**: the role is filtered out of the account
+  list, never skipped by an `if` inside the loop
+- Free tiers sleep after inactivity; say so in the README, or a reviewer reads latency as a defect
 
 CI is one workflow, `.github/workflows/ci.yml`, on every push and pull request: `npm ci` →
-`prisma generate` → `tsc --noEmit` → `npm test` for the server, `npm ci` → `npm run type-check`
-→ `npm run build` for the client.
+`prisma generate` → `tsc --noEmit` → `npm test` → `npm run build` for the server, `npm ci` →
+`npm run type-check` → `npm run build` for the client. The e2e suite is not in it.
 
 - `npx prisma generate` **before** the server typecheck, or `tsc` fails on missing types with
   an error that never names the cause
@@ -408,36 +380,11 @@ CI is one workflow, `.github/workflows/ci.yml`, on every push and pull request: 
 - Generate `package-lock.json` on the same platform CI runs on; a lockfile written on macOS can
   omit Linux-only resolutions and break `npm ci` in the runner
 - No Node version matrix. One LTS. Testing three versions here would be ceremony
-
-**CD for the API, and where migrations run.** This is the part the frontend does not have, and
-it is the question worth being able to answer.
-
-- **`prisma migrate deploy` runs in the host's release hook** — `release_command` on Fly.io, a
-  pre-deploy command on Render or Railway — never at container startup and never from an
-  Actions runner. At startup, a failed migration crash-loops the app instead of failing once;
-  from a runner, the production database has to accept connections from GitHub's address
-  ranges and `DATABASE_URL` has to live in repository secrets. In a release hook it runs once,
-  inside the host's network, and **a failure aborts the deploy so the previous version stays
-  up**. `migrate deploy` is idempotent and takes a Postgres advisory lock, so concurrency is
-  not the issue — the failure mode is
-- **The seed never creates an admin in production.** What the committed passwords cost
-  depends on the role behind them: a demo user reaches their own drawing and nothing else —
-  anyone could register — while the admin can delete everybody's work. So `NODE_ENV=production`
-  filters the ADMIN out of the account list, and the deployed admin is created by hand with a
-  password that lives nowhere in the repository. Filtering the list rather than branching
-  inside the loop is deliberate: the account cannot be created by a forgotten condition
-- **Whether a deploy workflow exists at all depends on the host.** Render and Railway deploy on
-  push through their own Git integration, so an Actions workflow would duplicate it — same
-  argument as Vercel on the frontend. Fly.io has no Git integration, so `flyctl deploy` in
-  Actions is genuinely needed there
-- A deploy workflow, where one exists, carries `needs:` on the CI job (never deploy a red
-  build), a `paths:` filter on `backend/**`, and a `concurrency` group with
-  `cancel-in-progress: false` — two deploys must not overlap, and one already in flight is
-  allowed to finish
-- No staging environment, no blue-green, no automatic rollback, no `down` migrations. Rollback
-  here is redeploying the previous commit. Knowing that the real production answer is
-  expand/contract migrations — add a column, backfill, switch the code, drop the old one
-  later — is worth more than implementing it for two tables
+- **No deploy workflow**, because Vercel and Railway deploy on push through their own Git
+  integration. One would be needed on a host without it, Fly.io for instance
+- No staging, no blue-green, no automatic rollback, no `down` migrations. Rollback is
+  redeploying the previous commit; the real production answer would be expand/contract
+  migrations, which two tables do not justify
 
 ## Code Quality
 
