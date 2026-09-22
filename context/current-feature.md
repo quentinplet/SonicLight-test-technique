@@ -28,6 +28,10 @@ The deadline is 23 September.
   hand-made admin account is brute-forceable. The cost is one dependency and five lines,
   against a dependency list that has already grown by one for i18n — so it is an arbitration,
   not an obvious win.
+- Merge `feature/e2e`: the Playwright suite and the documentation that follows it.
+- Decide whether the e2e suite goes into CI. A job was drafted — Postgres as a service, a
+  `backend/.env` written on the runner, `reuseExistingServer: !process.env.CI` — and set
+  aside for now.
 - Send the repository link.
 
 ## Notes
@@ -37,10 +41,13 @@ one are done, deployed and demonstrated.
 
 **Still open, to settle or to own:**
 
+- The e2e suite runs against the seeded development database and is not in CI. Each run
+  leaves an `e2e-<timestamp>` account behind — without a drawing, so it shows nowhere.
 - The server image weighs 1.2 GB for want of a multi-stage build — a "simplest thing first"
   choice, to own or to fix. Fixing it would also remove the four `npm audit` highs, which all
   come from `mysql2` pulled in by the Prisma CLI and never loaded on a PostgreSQL project.
-- No frontend tests: Vitest is not installed in `frontend/`.
+- No unit tests on the frontend: Vitest is not installed in `frontend/`. The Playwright suite
+  covers the journeys, not the components.
 - The canvas is not reachable by keyboard. A real limit of the product, named in the README
   rather than hidden.
 
@@ -368,3 +375,38 @@ Traps that still bite:
 - **Zod messages are the limit of the design.** They are prose built by the server under one
   generic `request.invalidBody` code, so they stay in the server's language. Business errors,
   which carry stable codes, were a dictionary entry each.
+
+### 22/09 — End-to-end tests ✅
+
+Five Playwright tests over the two journeys: a user is refused a wrong password, draws, saves,
+reloads and finds the drawing again, and cannot reach `/admin`; an admin sees everybody's
+drawings and deletes one after confirming. Page Object Model, fixtures that register their own
+account through the API. Branch `feature/e2e`.
+
+Departures from the plan, and why:
+
+- **E2E tests were out of scope**, in the README and in overview §19 Q10. Reversed, like i18n
+  before them, and both documents record the reversal instead of quietly dropping the line.
+  The argument that lost was cost: "two hours for shallow coverage" turned out to be well
+  under an hour for the two journeys that matter.
+- **A third npm package, `e2e/`**, not a folder inside `frontend/`. The suite drives the API as
+  much as the interface, and `@playwright/test` is neither side's dependency. The first
+  attempt put it in `frontend/` and was undone.
+- **Fixtures create their data through the API**, not through the interface: registering an
+  account and saving a drawing by hand in the browser would test the same screens twice and
+  make every test depend on the one before.
+- **The throwaway account's drawing is deleted on teardown**, not the account — no route
+  deletes a user. Without a drawing it never appears in the admin grid, which is what the
+  tests count.
+- **Not wired into CI.** A job was drafted and set aside: Postgres as a service, a
+  `backend/.env` written on the runner, `reuseExistingServer: !process.env.CI`.
+
+Traps that still bite:
+
+- **The interface follows the browser language**, so a suite written against English labels
+  fails on a French machine. `locale: "en-US"` is pinned in the Playwright config.
+- **The admin tests read the seed**: they expect `demo`, `alex` and `sam` to have a drawing and
+  sign in as `admin`. A database that was never seeded makes them fail for the right reason
+  and the wrong cause.
+- **`npm install -D typescript` brought TypeScript 7**, the Go port, where the rest of the
+  project is on `~6.0.0`. Pinned to match.

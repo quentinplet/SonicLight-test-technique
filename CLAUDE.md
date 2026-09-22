@@ -29,13 +29,15 @@ frontend/  Vue 3 SPA (Vite, <script setup>, TypeScript, Pinia, Vue Router, vue-i
 backend/   Express 5 API — TypeScript, single package
            prisma/schema.prisma, prisma/migrations/, prisma/seed.ts
            src/routes/ src/controllers/ src/services/ src/middleware/ src/schemas/ src/lib/
+e2e/       Playwright end-to-end tests — Page Object Model
+           playwright.config.ts · fixtures.ts · pages/ · tests/
 context/   Project context files read by Claude Code (see above)
 docker-compose.yml   PostgreSQL 16 + the API and the client, each with its own Dockerfile
 .github/workflows/   ci.yml — typecheck, test and build both packages on push
 ```
 
-Two independent npm packages, no workspace tooling: `frontend/` and `backend/` each have
-their own `package.json` and are installed and run separately. There is no root
+Three independent npm packages, no workspace tooling: `frontend/`, `backend/` and `e2e/`
+each have their own `package.json` and are installed and run separately. There is no root
 `package.json` and no monorepo runner.
 
 ## Commands
@@ -75,6 +77,27 @@ npx tsc --noEmit       # typecheck alone — covers src/, tests/, prisma/seed.ts
 The frontend and the API run in two terminals. With the API down, the home page shows
 "Failed to fetch" — the same opaque error as a CORS rejection; the browser console tells
 them apart (`ERR_CONNECTION_REFUSED` vs `blocked by CORS policy`).
+
+### End-to-end (`/e2e`)
+
+```bash
+npm test               # playwright test — chromium, 5 tests, list reporter
+npm run test:ui        # the Playwright UI: step through, inspect the DOM
+npm run type-check     # tsc --noEmit
+npx playwright test --headed          # watch the browser work
+npx playwright test -g "reload"       # one test, by name
+npx playwright show-trace test-results/<dir>/trace.zip   # replay a failure
+```
+
+A third package, deliberately outside `frontend/`: its dependencies are not the client's,
+and the suite drives the API as much as the interface. Chromium only, one worker, and
+`locale: "en-US"` forced in the config — the interface follows the browser language, so
+the selectors would otherwise read French on a French machine.
+
+**It runs against the dev database, seeded**: the admin tests expect `demo`, `alex` and
+`sam` to have a drawing and sign in as `admin`. Playwright reuses the API and Vite when they
+already run (`reuseExistingServer: true`) and starts them itself otherwise. Not wired into
+CI.
 
 ### Database
 
@@ -199,6 +222,11 @@ push` silently diverges the schema from the migration history; it is not used in
 - **Commit early and often.** Regular, atomic commits are an explicit evaluation
   criterion for this exercise, stated as such in the brief. One commit per coherent
   step, imperative subject line, no `wip` dumps at the end.
+- **An e2e run leaves an `e2e-<timestamp>` account behind.** No route deletes a user, so the
+  fixture deletes the drawing instead — which is enough to keep the account out of the admin
+  grid, where the tests count cards.
+- **Never drive a browser unless asked.** Quentin tests the interface himself; Playwright is
+  for the e2e suite and for reproducing a bug he asked about, not for checking a change.
 - A test that was already failing before a task started is reported, not silently fixed.
 
 ## Deployed
