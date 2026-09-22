@@ -10,21 +10,24 @@ Final polish and delivery
 ## Status
 
 In progress — 22 September 2026. **The application is deployed and working online, and the
-README is written and committed.** What is left is a short list of loose ends, then sending
-the repository link. The deadline is 23 September.
+README is written and committed.** The admin dialogs are extracted and the branches tidied;
+what is left is pushing `main`, the rate-limiting decision, then sending the repository link.
+The deadline is 23 September.
 
 ## Goals
 
-- Extract the two `<dialog>` elements from `AdminView.vue`, which stands at 207 lines against
-  the 150-line limit this project sets itself. It is the one place where the repository
-  contradicts its own written rule, and it is checkable in thirty seconds.
-- Decide the fate of `experiment/audio-engine`: keep it as a visible trace of exploration, or
-  delete it.
+- ✅ Extract the two `<dialog>` elements from `AdminView.vue`, which stood at 211 lines against
+  the 150-line limit this project sets itself. Now `DrawingDialog.vue` and
+  `DeleteDrawingDialog.vue`; the view is back to 150. Commit `8f53bec`.
+- ✅ Decide the fate of `experiment/audio-engine`: **kept**, as a visible trace of
+  exploration. Rebased onto `main` (still a single commit, it builds) and pushed.
+- ✅ Merge `feature/i18n` and push, so the bilingual interface reaches the deployed demo.
+  `feature/i18n` and `feature/eraser` deleted once merged.
+- Push `main` once `/admin` is checked in the browser — `8f53bec` is not on `origin` yet.
 - Decide on rate limiting for `POST /api/auth/login`. It is the only real security gap: the
   hand-made admin account is brute-forceable. The cost is one dependency and five lines,
   against a dependency list that has already grown by one for i18n — so it is an arbitration,
   not an obvious win.
-- Merge `feature/i18n` and push, so the bilingual interface reaches the deployed demo.
 - Send the repository link.
 
 ## Notes
