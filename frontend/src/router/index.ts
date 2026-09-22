@@ -36,9 +36,7 @@ router.beforeEach((to) => {
   const auth = useAuthStore();
   const signedIn = auth.user !== null;
 
-  if ((to.meta.requiresAuth || to.meta.requiresAdmin) && !signedIn) {
-    return { name: "login", query: { redirect: to.fullPath } };
-  }
+  if ((to.meta.requiresAuth || to.meta.requiresAdmin) && !signedIn) return { name: "login" };
   if (to.meta.requiresAdmin && !auth.isAdmin) return { name: "home" };
   if (to.meta.guestOnly && signedIn) return { name: "home" };
 });

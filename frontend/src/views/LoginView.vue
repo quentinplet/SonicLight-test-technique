@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { RouterLink, useRoute, useRouter } from "vue-router";
+import { RouterLink, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
 import type { Credentials } from "@/api/auth";
 import { errorMessage } from "@/api/errors";
@@ -12,16 +12,12 @@ const { t } = useI18n();
 
 const { notify } = useToast();
 const auth = useAuthStore();
-const route = useRoute();
 const router = useRouter();
 
 const pending = ref(false);
 const error = ref<string | null>(null);
 
-function redirectTarget(): string {
-  const target = route.query.redirect;
-  if (typeof target === "string" && target.startsWith("/") && !target.startsWith("//"))
-    return target;
+function landingPage(): string {
   return auth.isAdmin ? "/admin" : "/";
 }
 
@@ -31,7 +27,7 @@ async function onSubmit(credentials: Credentials): Promise<void> {
   try {
     await auth.login(credentials);
     notify(t("auth.signedIn"));
-    await router.replace(redirectTarget());
+    await router.replace(landingPage());
   } catch (err) {
     error.value = errorMessage(err);
   } finally {
