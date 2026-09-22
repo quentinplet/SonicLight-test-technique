@@ -8,10 +8,11 @@ export type Locale = keyof typeof LOCALES;
 
 const STORAGE_KEY = "soniclight.locale";
 
-/** The two shapes the interface needs; d() has no built-in named formats. */
+/** The two shapes the interface needs; d() has no built-in named formats. Two-digit day and
+ *  month in every locale ("numeric" pads in French, not in English): fixed-width dates. */
 const DATE_FORMATS = {
-  short: { year: "numeric", month: "numeric", day: "numeric" },
-  long: { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" },
+  short: { year: "numeric", month: "2-digit", day: "2-digit" },
+  long: { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" },
 } as const;
 
 function initialLocale(): Locale {
